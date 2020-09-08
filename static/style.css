@@ -7,6 +7,10 @@
   padding: 16px;
 }
 
+div.error {
+  background-color: crimson;
+}
+
 /* Full-width input fields */
 input[type="text"],
 input[type="password"] {

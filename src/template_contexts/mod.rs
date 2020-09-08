@@ -10,8 +10,8 @@ pub struct CamContext {
 pub struct NoContext {}
 
 #[derive(Serialize)]
-pub struct ErrorContext {
-    pub error: String,
+pub struct LoginContext {
+    pub error: Option<String>,
 }
 
 #[derive(Serialize)]

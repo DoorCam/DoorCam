@@ -12,7 +12,6 @@ use rocket_contrib::templates::Template;
 
 mod crypto;
 mod db_conn;
-mod error_request;
 mod guards;
 mod index_view;
 mod template_contexts;
@@ -26,7 +25,6 @@ fn main() {
             "/",
             routes![
                 index_view::index,
-                error_request::error,
                 user_auth::get_login,
                 user_auth::post_login_data,
                 user_requests::get_users,

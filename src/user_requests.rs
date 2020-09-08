@@ -1,6 +1,6 @@
 use crate::db_conn::DbConn;
 use crate::guards::{AdminGuard, UserGuard};
-use crate::template_contexts::{CamContext, ErrorContext, NoContext, UserOverviewContext};
+use crate::template_contexts::{CamContext, NoContext, UserOverviewContext};
 use crate::user_entry::UserEntry;
 use rocket::request::Form;
 use rocket_contrib::templates::Template;
