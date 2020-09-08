@@ -6,25 +6,19 @@ extern crate rocket;
 extern crate rocket_contrib;
 extern crate base64;
 
+use rocket_contrib::helmet::SpaceHelmet;
 use rocket_contrib::serve::StaticFiles;
 use rocket_contrib::templates::Template;
 
 mod crypto;
-
 mod db_conn;
-
-mod guards;
-
-mod index_view;
-
 mod error_request;
-
-mod user_entry;
-
-mod user_auth;
-mod user_requests;
-
+mod guards;
+mod index_view;
 mod template_contexts;
+mod user_auth;
+mod user_entry;
+mod user_requests;
 
 fn main() {
     rocket::ignite()
@@ -43,5 +37,6 @@ fn main() {
         .mount("/static", StaticFiles::from("./static"))
         .attach(Template::fairing())
         .attach(db_conn::DbConn::fairing())
+        .attach(SpaceHelmet::default())
         .launch();
 }
