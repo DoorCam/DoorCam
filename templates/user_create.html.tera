@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <link rel="stylesheet" href="/static/style.css" />
+    <title>Doorcam</title>
+  </head>
+  <body>
+    <form method="post">
+      <div class="container">
+        <h1>Register</h1>
+        <p>Please fill in this form to create an account.</p>
+        <hr />
+
+        <label for="name"><b>Name</b></label>
+        <input
+          type="text"
+          placeholder="Enter Name"
+          name="name"
+          id="name"
+          required
+        />
+
+        <label for="pw"><b>Password</b></label>
+        <input
+          type="password"
+          placeholder="Enter Password"
+          name="pw"
+          id="pw"
+          required
+        />
+
+        <label for="pw_repeat"><b>Repeat Password</b></label>
+        <input
+          type="password"
+          placeholder="Repeat Password"
+          name="pw_repeat"
+          id="pw_repeat"
+          required
+        />
+
+        <label for="admin"><b>Admin</b></label>
+        <input type="checkbox" name="admin" id="admin" />
+        <hr />
+
+        <button type="submit" class="registerbtn">Register</button>
+      </div>
+    </form>
+  </body>
+</html>

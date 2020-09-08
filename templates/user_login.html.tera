@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <link rel="stylesheet" href="/static/style.css" />
+  <title>Doorcam</title>
+</head>
+
+<body>
+  <form method="post">
+    <div class="container">
+      <h1>login</h1>
+      <hr />
+
+      <label for="name"><b>Name</b></label>
+      <input type="text" placeholder="Enter Name" name="name" id="name" required />
+
+      <label for="pw"><b>Password</b></label>
+      <input type="password" placeholder="Enter Password" name="pw" id="pw" required />
+      <hr />
+
+      <button type="submit" class="registerbtn">Register</button>
+    </div>
+  </form>
+</body>
+
+</html>

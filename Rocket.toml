@@ -1,0 +1,5 @@
+[global.databases]
+sqlite_db = { url = "db.sqlite" }
+
+[development]
+secret_key = "sKQLjJQU26MSseZfHSAjU1MWNA5HPBL6cfA3t9b7pIg="

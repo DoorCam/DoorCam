@@ -1,0 +1,24 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <link rel="stylesheet" href="/static/style.css" />
+    <title>Doorcam</title>
+</head>
+
+<body>
+    <table>
+        <tr>
+            <th>Name</th>
+            <th>Admin</th>
+        </tr>
+        {% for user in users -%}
+        <tr>
+            <td>{{ user.name }}</td>
+            <td>{{ user.admin }}</td>
+        </tr>
+        {%- endfor %}
+    </table>
+</body>
+
+</html>
