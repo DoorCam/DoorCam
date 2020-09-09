@@ -7,6 +7,10 @@
 </head>
 
 <body>
+    {% if error %}
+    <div class="error">{{ error }}</div>
+    {% endif %}
+    {% if users %}
     <table>
         <tr>
             <th>Name</th>
@@ -19,6 +23,7 @@
         </tr>
         {%- endfor %}
     </table>
+    {% endif %}
 </body>
 
 </html>

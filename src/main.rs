@@ -27,6 +27,7 @@ fn main() {
                 index_view::index,
                 user_auth::get_login,
                 user_auth::post_login_data,
+                user_auth::get_logout,
                 user_requests::get_users,
                 user_requests::get_create,
                 user_requests::post_create_data

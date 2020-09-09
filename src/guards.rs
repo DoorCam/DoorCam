@@ -128,6 +128,26 @@ impl<'a, 'r> FromRequest<'a, 'r> for UserGuard {
     }
 }
 
+pub struct OnlyUserGuard {
+    pub user: UserEntry,
+}
+
+impl<'a, 'r> FromRequest<'a, 'r> for OnlyUserGuard {
+    type Error = AuthError;
+
+    fn from_request(request: &'a Request<'r>) -> request::Outcome<OnlyUserGuard, AuthError> {
+        let user_guard = request.guard::<UserGuard>()?;
+
+        if !user_guard.user.admin {
+            Outcome::Success(OnlyUserGuard {
+                user: user_guard.user,
+            })
+        } else {
+            Outcome::Forward(())
+        }
+    }
+}
+
 pub struct AdminGuard {
     pub user: UserEntry,
 }

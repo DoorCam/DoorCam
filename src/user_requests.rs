@@ -1,8 +1,9 @@
 use crate::db_conn::DbConn;
-use crate::guards::{AdminGuard, UserGuard};
-use crate::template_contexts::{CamContext, NoContext, UserOverviewContext};
+use crate::guards::AdminGuard;
+use crate::template_contexts::{UserCreateContext, UserOverviewContext};
 use crate::user_entry::UserEntry;
-use rocket::request::Form;
+use rocket::request::{FlashMessage, Form};
+use rocket::response::{Flash, Redirect};
 use rocket_contrib::templates::Template;
 
 #[derive(FromForm)]
@@ -14,58 +15,61 @@ pub struct UserForm {
 }
 
 #[get("/admin/user/create")]
-pub fn get_create(_admin: AdminGuard) -> Template {
-    let context = NoContext {};
+pub fn get_create(_admin: AdminGuard, flash: Option<FlashMessage>) -> Template {
+    let context = UserCreateContext {
+        error: flash.map(|msg| msg.msg().to_string()),
+    };
     Template::render("user_create", &context)
 }
 
 #[post("/admin/user/create", data = "<user_data>")]
-pub fn post_create_data(user_data: Form<UserForm>, _admin: AdminGuard, conn: DbConn) -> Template {
+pub fn post_create_data(
+    user_data: Form<UserForm>,
+    _admin: AdminGuard,
+    conn: DbConn,
+) -> Result<Redirect, Flash<Redirect>> {
     if user_data.name.is_empty() {
-        let context = ErrorContext {
-            error: "Name is empty".to_string(),
-        };
-        return Template::render("error", &context);
+        return Err(Flash::error(
+            Redirect::to(uri!(get_create)),
+            "Name is empty",
+        ));
     }
     if user_data.pw.is_empty() {
-        let context = ErrorContext {
-            error: "Password is empty".to_string(),
-        };
-        return Template::render("error", &context);
+        return Err(Flash::error(
+            Redirect::to(uri!(get_create)),
+            "Password is empty".to_string(),
+        ));
     }
     if user_data.pw != user_data.pw_repeat {
-        let context = ErrorContext {
-            error: "Passwords are not the same".to_string(),
-        };
-        return Template::render("error", &context);
+        return Err(Flash::error(
+            Redirect::to(uri!(get_create)),
+            "Passwords are not the same",
+        ));
     }
     match UserEntry::create(conn, &user_data.name, &user_data.pw, user_data.admin) {
         Err(e) => {
-            let context = ErrorContext {
-                error: format!("DB Error: {}", e),
-            };
-            return Template::render("error", &context);
+            return Err(Flash::error(
+                Redirect::to(uri!(get_create)),
+                format!("DB Error: {}", e),
+            ))
         }
         _ => {}
     }
 
-    let context = CamContext {
-        cam_url: "http://doorcam.fritz.box:8081/".to_string(),
-    };
-    Template::render("cam", &context)
+    return Ok(Redirect::to(uri!(get_users)));
 }
 
 #[get("/admin/user")]
 pub fn get_users(_admin: AdminGuard, conn: DbConn) -> Template {
-    let users = match UserEntry::get_all(conn) {
-        Ok(users) => users,
-        Err(e) => {
-            let context = ErrorContext {
-                error: format!("DB Error: {}", e),
-            };
-            return Template::render("error", &context);
-        }
+    let context = match UserEntry::get_all(conn) {
+        Ok(users) => UserOverviewContext {
+            users: Some(users),
+            error: None,
+        },
+        Err(e) => UserOverviewContext {
+            error: Some(format!("DB Error: {}", e)),
+            users: None,
+        },
     };
-    let context = UserOverviewContext { users: users };
     Template::render("user_overview", &context)
 }

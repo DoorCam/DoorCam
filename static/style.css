@@ -7,7 +7,21 @@
   padding: 16px;
 }
 
-div.error {
+div.flash {
+  margin-left: 10vh;
+  margin-right: 10vh;
+  padding-left: 10vh;
+}
+
+div.flash.success {
+  background-color: lawngreen;
+}
+
+div.flash.warning {
+  background-color: darkorange;
+}
+
+div.flash.error {
   background-color: crimson;
 }
 
