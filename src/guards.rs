@@ -91,12 +91,12 @@ impl GuardManager {
             return Err(AuthError::WrongPassword);
         }
 
-        GuardManager::write_cookie(&user, cookies)?;
+        GuardManager::write_user_cookie(&user, cookies)?;
 
         return Ok(user);
     }
 
-    pub fn write_cookie(
+    fn write_user_cookie(
         user: &UserEntry,
         mut cookies: Cookies,
     ) -> Result<(), serde_json::error::Error> {
@@ -106,6 +106,10 @@ impl GuardManager {
                 .finish(),
         );
         return Ok(());
+    }
+
+    pub fn destroy_user_cookie(mut cookies: Cookies) {
+        cookies.remove_private(Cookie::named("user"));
     }
 }
 

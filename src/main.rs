@@ -25,6 +25,7 @@ fn main() {
             "/",
             routes![
                 index_view::index,
+                index_view::get_not_found,
                 user_auth::get_login,
                 user_auth::post_login_data,
                 user_auth::get_logout,
@@ -33,6 +34,7 @@ fn main() {
                 user_requests::post_create_data
             ],
         )
+        .register(catchers![index_view::not_found_catcher])
         .mount("/static", StaticFiles::from("./static"))
         .attach(Template::fairing())
         .attach(db_conn::DbConn::fairing())

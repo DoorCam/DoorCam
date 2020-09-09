@@ -40,7 +40,8 @@ pub fn post_login_data(
 }
 
 #[get("/logout")]
-pub fn get_logout() -> Flash<Redirect> {
+pub fn get_logout(cookies: Cookies) -> Flash<Redirect> {
+    GuardManager::destroy_user_cookie(cookies);
     return Flash::success(
         Redirect::to(uri!(get_login)),
         "Sie wurden erfolgreich ausgeloggt",
