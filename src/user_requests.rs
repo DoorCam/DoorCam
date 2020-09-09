@@ -1,6 +1,6 @@
 use crate::db_conn::DbConn;
 use crate::guards::AdminGuard;
-use crate::template_contexts::{UserCreateContext, UserOverviewContext};
+use crate::template_contexts::{Message, UserCreateContext, UserOverviewContext};
 use crate::user_entry::UserEntry;
 use rocket::request::{FlashMessage, Form};
 use rocket::response::{Flash, Redirect};
@@ -17,7 +17,7 @@ pub struct UserForm {
 #[get("/admin/user/create")]
 pub fn get_create(_admin: AdminGuard, flash: Option<FlashMessage>) -> Template {
     let context = UserCreateContext {
-        error: flash.map(|msg| msg.msg().to_string()),
+        error: flash.map(|msg| Message::from(msg)),
     };
     Template::render("user_create", &context)
 }
@@ -67,7 +67,10 @@ pub fn get_users(_admin: AdminGuard, conn: DbConn) -> Template {
             error: None,
         },
         Err(e) => UserOverviewContext {
-            error: Some(format!("DB Error: {}", e)),
+            error: Some(Message {
+                category: "error".to_string(),
+                content: format!("DB Error: {}", e),
+            }),
             users: None,
         },
     };

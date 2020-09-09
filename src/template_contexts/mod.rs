@@ -32,11 +32,11 @@ pub struct LoginContext {
 
 #[derive(Serialize)]
 pub struct UserCreateContext {
-    pub error: Option<String>,
+    pub error: Option<Message>,
 }
 
 #[derive(Serialize)]
 pub struct UserOverviewContext {
-    pub error: Option<String>,
+    pub error: Option<Message>,
     pub users: Option<Vec<UserEntry>>,
 }
