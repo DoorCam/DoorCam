@@ -11,7 +11,7 @@ pub struct HashEntry {
 
 #[derive(Debug, Serialize, Deserialize)]
 pub struct UserEntry {
-    pub id: i64,
+    pub id: u32,
     pub name: String,
     pub pw_hash: HashEntry,
     pub admin: bool,
@@ -28,7 +28,7 @@ impl UserEntry {
 
         conn.execute("INSERT INTO user (NAME, PW_HASH, PW_SALT, PW_HASH_CONFIG, ADMIN) VALUES (?1, ?2, ?3, ?4, ?5)", &[name, &hash.hash, &hash.salt, &hash.config, &admin])?;
         return Ok(UserEntry {
-            id: conn.last_insert_rowid(),
+            id: (conn.last_insert_rowid() as u32),
             name: name.clone(),
             pw_hash: hash,
             admin: admin,
@@ -37,7 +37,7 @@ impl UserEntry {
 
     fn row_2_user(row: &rusqlite::Row) -> Result<UserEntry, rusqlite::Error> {
         Ok(UserEntry {
-            id: row.get::<usize, i64>(0),
+            id: row.get::<usize, u32>(0),
             name: row.get::<usize, String>(1),
             pw_hash: HashEntry {
                 hash: row.get::<usize, String>(2),
@@ -77,5 +77,10 @@ impl UserEntry {
                 Ok(Err(e)) => Err(e),
                 Err(e) => Err(e),
             });
+    }
+
+    pub fn delete(conn: DbConn, id: u32) -> Result<(), rusqlite::Error> {
+        conn.execute("DELETE FROM user WHERE ID=?1", &[&id])?;
+        return Ok(());
     }
 }

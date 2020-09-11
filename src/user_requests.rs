@@ -76,3 +76,8 @@ pub fn get_users(_admin: AdminGuard, conn: DbConn) -> Template {
     };
     Template::render("user_overview", &context)
 }
+
+#[delete("/admin/user/delete/<id>")]
+pub fn delete_user(conn: DbConn, id: u32) -> Result<(), String> {
+    return UserEntry::delete(conn, id).map_err(|e| e.to_string());
+}
