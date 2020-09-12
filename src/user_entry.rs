@@ -53,14 +53,11 @@ impl UserEntry {
             conn.prepare("SELECT ID, NAME, PW_HASH, PW_SALT, PW_HASH_CONFIG, ADMIN FROM user")?;
         return stmt
             .query_map(&[], |row| UserEntry::row_2_user(&row))?
-            .fold(Ok(vec![]), |mut v, r| match r {
-                Ok(Ok(x)) => {
-                    v.as_mut().map(|v| v.push(x));
-                    v
-                }
-                Ok(Err(e)) => Err(e),
+            .map(|r| match r {
+                Ok(x) => x,
                 Err(e) => Err(e),
-            });
+            })
+            .collect();
     }
 
     pub fn get_by_name(conn: DbConn, name: &String) -> Result<Vec<UserEntry>, rusqlite::Error> {
@@ -69,14 +66,11 @@ impl UserEntry {
         )?;
         return stmt
             .query_map(&[name], |row| UserEntry::row_2_user(&row))?
-            .fold(Ok(vec![]), |mut v, r| match r {
-                Ok(Ok(x)) => {
-                    v.as_mut().map(|v| v.push(x));
-                    v
-                }
-                Ok(Err(e)) => Err(e),
+            .map(|r| match r {
+                Ok(x) => x,
                 Err(e) => Err(e),
-            });
+            })
+            .collect();
     }
 
     pub fn delete(conn: DbConn, id: u32) -> Result<(), rusqlite::Error> {
