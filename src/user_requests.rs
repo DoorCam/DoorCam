@@ -1,7 +1,8 @@
 use crate::db_conn::DbConn;
-use crate::guards::AdminGuard;
-use crate::template_contexts::{Message, UserCreateContext, UserOverviewContext};
+use crate::guards::{AdminGuard, UserGuard};
+use crate::template_contexts::{Message, UserDetailsContext, UserOverviewContext};
 use crate::user_entry::UserEntry;
+use rocket::http::Status;
 use rocket::request::{FlashMessage, Form};
 use rocket::response::{Flash, Redirect};
 use rocket_contrib::templates::Template;
@@ -16,10 +17,8 @@ pub struct UserForm {
 
 #[get("/admin/user/create")]
 pub fn get_create(_admin: AdminGuard, flash: Option<FlashMessage>) -> Template {
-    let context = UserCreateContext {
-        error: flash.map(|msg| Message::from(msg)),
-    };
-    Template::render("user_create", &context)
+    let context = UserDetailsContext::create(flash.map(|msg| Message::from(msg)));
+    Template::render("user_details", &context)
 }
 
 #[post("/admin/user/create", data = "<user_data>")]
@@ -78,6 +77,33 @@ pub fn get_users(_admin: AdminGuard, conn: DbConn) -> Template {
 }
 
 #[delete("/admin/user/delete/<id>")]
-pub fn delete_user(conn: DbConn, id: u32) -> Result<(), String> {
+pub fn delete_user(admin: AdminGuard, conn: DbConn, id: u32) -> Result<(), String> {
+    if admin.user.id == id {
+        return Err("Can't delete yourself".to_string());
+    }
     return UserEntry::delete(conn, id).map_err(|e| e.to_string());
+}
+
+#[get("/admin/user/change/<id>")]
+pub fn get_change_user(
+    user_guard: UserGuard,
+    conn: DbConn,
+    flash: Option<FlashMessage>,
+    id: u32,
+) -> Result<Template, Status> {
+    if !user_guard.user.admin && user_guard.user.id != id {
+        return Err(Status::Forbidden);
+    }
+    let context = match UserEntry::get_by_id(conn, id).as_mut() {
+        Ok(users) => match users.pop() {
+            Some(user) => UserDetailsContext::change(
+                flash.map(|msg| Message::from(msg)),
+                user_guard.user.admin,
+                user,
+            ),
+            None => UserDetailsContext::error(Message::error("No user found".to_string())),
+        },
+        Err(e) => UserDetailsContext::error(Message::error(e.to_string())),
+    };
+    Ok(Template::render("user_details", &context))
 }

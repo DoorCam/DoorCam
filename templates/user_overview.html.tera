@@ -4,6 +4,13 @@
 <head>
     <link rel="stylesheet" href="/static/style.css" />
     <title>Doorcam</title>
+    <script>
+        function delete_user(id) {
+            let xhttp = new XMLHttpRequest();
+            xhttp.open("DELETE", "user/delete/" + id, true);
+            xhttp.send();
+        }
+    </script>
 </head>
 
 <body>
@@ -15,11 +22,15 @@
         <tr>
             <th>Name</th>
             <th>Admin</th>
+            <th></th>
+            <th></th>
         </tr>
         {% for user in users -%}
         <tr>
             <td>{{ user.name }}</td>
             <td>{{ user.admin }}</td>
+            <td><a href="user/change/{{ user.id }}">Mod</a></td>
+            <td><button type="button" onclick="delete_user({{ user.id }})">Delete</button></td>
         </tr>
         {%- endfor %}
     </table>

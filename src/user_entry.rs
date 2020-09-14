@@ -60,6 +60,19 @@ impl UserEntry {
             .collect();
     }
 
+    pub fn get_by_id(conn: DbConn, id: u32) -> Result<Vec<UserEntry>, rusqlite::Error> {
+        let mut stmt = conn.prepare(
+            "SELECT ID, NAME, PW_HASH, PW_SALT, PW_HASH_CONFIG, ADMIN FROM user WHERE ID=?1",
+        )?;
+        return stmt
+            .query_map(&[&id], |row| UserEntry::row_2_user(&row))?
+            .map(|r| match r {
+                Ok(x) => x,
+                Err(e) => Err(e),
+            })
+            .collect();
+    }
+
     pub fn get_by_name(conn: DbConn, name: &String) -> Result<Vec<UserEntry>, rusqlite::Error> {
         let mut stmt = conn.prepare(
             "SELECT ID, NAME, PW_HASH, PW_SALT, PW_HASH_CONFIG, ADMIN FROM user WHERE NAME=?1",

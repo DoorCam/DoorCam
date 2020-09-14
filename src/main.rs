@@ -31,8 +31,9 @@ fn main() {
                 user_auth::get_logout,
                 user_requests::get_users,
                 user_requests::get_create,
-                user_requests::delete_user,
                 user_requests::post_create_data,
+                user_requests::get_change_user,
+                user_requests::delete_user,
             ],
         )
         .register(catchers![index_view::not_found_catcher])
