@@ -69,6 +69,7 @@ pub fn get_users(_admin: AdminGuard, conn: DbConn) -> Template {
         Ok(users) => UserOverviewContext {
             users: Some(users),
             error: None,
+            create_user_url: uri!(get_create).to_string(),
         },
         Err(e) => UserOverviewContext {
             error: Some(Message {
@@ -76,6 +77,7 @@ pub fn get_users(_admin: AdminGuard, conn: DbConn) -> Template {
                 content: format!("DB Error: {}", e),
             }),
             users: None,
+            create_user_url: uri!(get_create).to_string(),
         },
     };
     Template::render("user_overview", &context)

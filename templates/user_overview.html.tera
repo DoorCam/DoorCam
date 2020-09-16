@@ -17,6 +17,7 @@
     {% if error %}
     <div class="flash {{ error.category }}">{{ error.content }}</div>
     {% endif %}
+    <a href="{{ create_user_url }}">Create</a>
     {% if users %}
     <table>
         <tr>

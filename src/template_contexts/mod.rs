@@ -81,5 +81,6 @@ impl UserDetailsContext {
 #[derive(Serialize)]
 pub struct UserOverviewContext {
     pub error: Option<Message>,
+    pub create_user_url: String,
     pub users: Option<Vec<UserEntry>>,
 }
