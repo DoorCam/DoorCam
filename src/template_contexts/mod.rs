@@ -27,8 +27,10 @@ impl From<FlashMessage<'_, '_>> for Message {
 }
 
 #[derive(Serialize)]
-pub struct CamContext {
+pub struct MainViewContext {
     pub cam_url: String,
+    pub change_user_url: String,
+    pub logout_url: String,
 }
 
 #[derive(Serialize)]

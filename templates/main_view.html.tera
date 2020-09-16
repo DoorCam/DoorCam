@@ -8,6 +8,11 @@
 
 <body>
     <img src="{{ cam_url }}"></img>
+    <button>Open Door</button>
+    <nav>
+        <a href="{{ change_user_url }}">Change Profile</a>
+        <a href="{{ logout_url }}">Logout</a>
+    </nav>
 </body>
 
 </html>

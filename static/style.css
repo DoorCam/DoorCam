@@ -1,5 +1,27 @@
+@media (prefers-color-scheme: light) {
+  :root {
+    --bg-color: white;
+    --fg-color: black;
+  }
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bg-color: black;
+    --fg-color: white;
+  }
+}
+
 * {
   box-sizing: border-box;
+}
+
+body {
+  background-color: var(--bg-color);
+}
+
+h1 {
+  color: var(--fg-color);
 }
 
 /* Add padding to containers */
