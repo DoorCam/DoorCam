@@ -2,6 +2,7 @@ use crate::crypto;
 use crate::db_conn::{rusqlite, DbConn};
 use crate::user_entry::{HashEntry, UserEntry};
 use blake2::{Blake2b, Digest};
+use passwords::{analyzer, scorer};
 use rocket::http::{Cookie, Cookies, Status};
 use rocket::request::{self, FromRequest, Request};
 use rocket::Outcome;
@@ -13,7 +14,8 @@ pub enum AuthError {
     SerializationError(serde_json::error::Error),
     NoUser,
     WrongPassword,
-    UnknownConfig,
+    UnknownHashConfig,
+    WeakPassword,
 }
 
 impl From<rusqlite::Error> for AuthError {
@@ -35,7 +37,8 @@ impl fmt::Display for AuthError {
             AuthError::SerializationError(ref err) => err.fmt(f),
             AuthError::NoUser => write!(f, "No user found with this name"),
             AuthError::WrongPassword => write!(f, "The password is wrong"),
-            AuthError::UnknownConfig => write!(f, "The hash-config is unknown"),
+            AuthError::UnknownHashConfig => write!(f, "The hash-config is unknown"),
+            AuthError::WeakPassword => write!(f, "The password is to weak"),
         }
     }
 }
@@ -43,6 +46,13 @@ impl fmt::Display for AuthError {
 pub struct GuardManager {}
 
 impl GuardManager {
+    pub fn check_password(pw: &String) -> Result<(), AuthError> {
+        if scorer::score(&analyzer::analyze(pw.as_str())) < 80f64 {
+            return Err(AuthError::WeakPassword);
+        }
+        return Ok(());
+    }
+
     pub fn hash(pw: &String) -> HashEntry {
         let mut pw_salt: [u8; 16] = [0; 16];
 
@@ -85,7 +95,7 @@ impl GuardManager {
                     .chain(user.pw_hash.salt.clone())
                     .finalize(),
             ),
-            _ => return Err(AuthError::UnknownConfig),
+            _ => return Err(AuthError::UnknownHashConfig),
         };
         if user.pw_hash.hash != pw_hash {
             return Err(AuthError::WrongPassword);

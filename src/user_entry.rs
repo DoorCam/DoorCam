@@ -1,5 +1,5 @@
 use crate::db_conn::{rusqlite, DbConn};
-use crate::guards::GuardManager;
+use crate::guards::{AuthError, GuardManager};
 use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Serialize, Deserialize)]
@@ -23,7 +23,8 @@ impl UserEntry {
         name: &String,
         pw: &String,
         admin: bool,
-    ) -> Result<UserEntry, rusqlite::Error> {
+    ) -> Result<UserEntry, AuthError> {
+        GuardManager::check_password(pw)?;
         let hash = GuardManager::hash(&pw);
 
         conn.execute("INSERT INTO user (NAME, PW_HASH, PW_SALT, PW_HASH_CONFIG, ADMIN) VALUES (?1, ?2, ?3, ?4, ?5)", &[name, &hash.hash, &hash.salt, &hash.config, &admin])?;
@@ -92,13 +93,14 @@ impl UserEntry {
         name: &String,
         pw: &String,
         admin: bool,
-    ) -> Result<(), rusqlite::Error> {
+    ) -> Result<(), AuthError> {
         if pw.is_empty() {
             conn.execute(
                 "UPDATE user SET NAME = ?1, ADMIN = ?2 WHERE ID = ?3",
                 &[name, &admin, &id],
             )?;
         } else {
+            GuardManager::check_password(pw)?;
             let hash = GuardManager::hash(&pw);
 
             conn.execute(
