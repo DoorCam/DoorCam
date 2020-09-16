@@ -86,6 +86,29 @@ impl UserEntry {
             .collect();
     }
 
+    pub fn change(
+        conn: DbConn,
+        id: u32,
+        name: &String,
+        pw: &String,
+        admin: bool,
+    ) -> Result<(), rusqlite::Error> {
+        if pw.is_empty() {
+            conn.execute(
+                "UPDATE user SET NAME = ?1, ADMIN = ?2 WHERE ID = ?3",
+                &[name, &admin, &id],
+            )?;
+        } else {
+            let hash = GuardManager::hash(&pw);
+
+            conn.execute(
+                "UPDATE user SET NAME = ?1, PW_HASH = ?2, PW_SALT = ?3, PW_HASH_CONFIG = ?4, ADMIN = ?5 WHERE ID = ?6",
+                &[name, &hash.hash, &hash.salt, &hash.config, &admin, &id]
+            )?;
+        }
+        return Ok(());
+    }
+
     pub fn delete(conn: DbConn, id: u32) -> Result<(), rusqlite::Error> {
         conn.execute("DELETE FROM user WHERE ID=?1", &[&id])?;
         return Ok(());

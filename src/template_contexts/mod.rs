@@ -42,7 +42,7 @@ pub struct LoginContext {
 #[derive(Serialize)]
 pub struct UserDetailsContext {
     pub error: Option<Message>,
-    pub transfer_method: String,
+    pub title: String,
     pub is_admin: bool,
     pub user: Option<UserEntry>,
 }
@@ -51,7 +51,7 @@ impl UserDetailsContext {
     pub fn error(error: Message) -> UserDetailsContext {
         return UserDetailsContext {
             error: Some(error),
-            transfer_method: String::new(),
+            title: String::new(),
             is_admin: false,
             user: None,
         };
@@ -60,7 +60,7 @@ impl UserDetailsContext {
     pub fn create(error: Option<Message>) -> UserDetailsContext {
         return UserDetailsContext {
             error: error,
-            transfer_method: "post".to_string(),
+            title: "Register".to_string(),
             is_admin: true,
             user: None,
         };
@@ -69,7 +69,7 @@ impl UserDetailsContext {
     pub fn change(error: Option<Message>, is_admin: bool, user: UserEntry) -> UserDetailsContext {
         return UserDetailsContext {
             error: error,
-            transfer_method: "".to_string(),
+            title: "Change".to_string(),
             is_admin: is_admin,
             user: Some(user),
         };

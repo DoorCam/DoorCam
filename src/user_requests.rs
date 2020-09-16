@@ -12,7 +12,7 @@ pub struct UserForm {
     name: String,
     pw: String,
     pw_repeat: String,
-    admin: bool,
+    admin: Option<bool>,
 }
 
 #[get("/admin/user/create")]
@@ -45,7 +45,12 @@ pub fn post_create_data(
             "Passwords are not the same",
         ));
     }
-    match UserEntry::create(conn, &user_data.name, &user_data.pw, user_data.admin) {
+    match UserEntry::create(
+        conn,
+        &user_data.name,
+        &user_data.pw,
+        user_data.admin.unwrap_or(false),
+    ) {
         Err(e) => {
             return Err(Flash::error(
                 Redirect::to(uri!(get_create)),
@@ -77,7 +82,7 @@ pub fn get_users(_admin: AdminGuard, conn: DbConn) -> Template {
 }
 
 #[delete("/admin/user/delete/<id>")]
-pub fn delete_user(admin: AdminGuard, conn: DbConn, id: u32) -> Result<(), String> {
+pub fn delete(admin: AdminGuard, conn: DbConn, id: u32) -> Result<(), String> {
     if admin.user.id == id {
         return Err("Can't delete yourself".to_string());
     }
@@ -85,7 +90,7 @@ pub fn delete_user(admin: AdminGuard, conn: DbConn, id: u32) -> Result<(), Strin
 }
 
 #[get("/admin/user/change/<id>")]
-pub fn get_change_user(
+pub fn get_change(
     user_guard: UserGuard,
     conn: DbConn,
     flash: Option<FlashMessage>,
@@ -106,4 +111,56 @@ pub fn get_change_user(
         Err(e) => UserDetailsContext::error(Message::error(e.to_string())),
     };
     Ok(Template::render("user_details", &context))
+}
+
+#[post("/admin/user/change/<id>", data = "<user_data>")]
+pub fn post_change_data(
+    user_guard: UserGuard,
+    conn: DbConn,
+    id: u32,
+    user_data: Form<UserForm>,
+) -> Result<Redirect, Flash<Redirect>> {
+    if !user_guard.user.admin && user_guard.user.id != id {
+        return Err(Flash::error(
+            Redirect::to(uri!(get_change: id)),
+            "Forbidden",
+        ));
+    }
+    if !user_guard.user.admin && user_data.admin.is_some() {
+        return Err(Flash::error(
+            Redirect::to(uri!(get_change: id)),
+            "Don't manipulate the admin-Flag",
+        ));
+    }
+    if user_data.name.is_empty() {
+        return Err(Flash::error(
+            Redirect::to(uri!(get_change: id)),
+            "Name is empty",
+        ));
+    }
+    if !user_data.pw.is_empty() {
+        if user_data.pw != user_data.pw_repeat {
+            return Err(Flash::error(
+                Redirect::to(uri!(get_change: id)),
+                "Passwords are not the same",
+            ));
+        }
+    }
+    match UserEntry::change(
+        conn,
+        id,
+        &user_data.name,
+        &user_data.pw,
+        user_data.admin.unwrap_or(false),
+    ) {
+        Err(e) => {
+            return Err(Flash::error(
+                Redirect::to(uri!(get_change: id)),
+                format!("DB Error: {}", e),
+            ))
+        }
+        _ => {}
+    }
+
+    return Ok(Redirect::to(uri!(get_users)));
 }
