@@ -4,11 +4,22 @@
 <head>
     <link rel="stylesheet" href="/static/style.css" />
     <title>Doorcam</title>
+    <script>
+        function open_door(id) {
+            let xhttp = new XMLHttpRequest();
+            xhttp.open("GET", "api/door/open", false);
+            xhttp.send();
+            window.location.reload();
+        }
+    </script>
 </head>
 
 <body>
+    {% if error %}
+    <div class="flash {{ error.category }}">{{ error.content }}</div>
+    {% endif %}
     <img src="{{ cam_url }}"></img>
-    <button>Open Door</button>
+    <button type="button" onclick="open_door()">Open Door</button>
     <nav>
         <a href="{{ change_user_url }}">Change Profile</a>
         <a href="{{ logout_url }}">Logout</a>

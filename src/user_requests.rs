@@ -84,11 +84,14 @@ pub fn get_users(_admin: AdminGuard, conn: DbConn) -> Template {
 }
 
 #[delete("/admin/user/delete/<id>")]
-pub fn delete(admin: AdminGuard, conn: DbConn, id: u32) -> Result<(), String> {
+pub fn delete(admin: AdminGuard, conn: DbConn, id: u32) -> Flash<()> {
     if admin.user.id == id {
-        return Err("Can't delete yourself".to_string());
+        return Flash::error((), "Can't delete yourself");
     }
-    return UserEntry::delete(conn, id).map_err(|e| e.to_string());
+    return match UserEntry::delete(conn, id) {
+        Ok(_) => Flash::success((), "User deleted"),
+        Err(e) => Flash::error((), e.to_string()),
+    };
 }
 
 #[get("/admin/user/change/<id>")]

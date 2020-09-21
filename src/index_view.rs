@@ -1,15 +1,16 @@
 use crate::guards::{OnlyUserGuard, UserGuard};
-use crate::template_contexts::{MainViewContext, NoContext};
+use crate::template_contexts::{MainViewContext, Message, NoContext};
 use crate::user_auth::*;
 use crate::user_requests::*;
-use rocket::request::{FromRequest, Request};
+use rocket::request::{FlashMessage, FromRequest, Request};
 use rocket::response::Redirect;
 use rocket::Outcome;
 use rocket_contrib::templates::Template;
 
 #[get("/")]
-pub fn index(user: OnlyUserGuard) -> Template {
+pub fn index(user: OnlyUserGuard, flash: Option<FlashMessage>) -> Template {
     let context = MainViewContext {
+        error: flash.map(|msg| Message::from(msg)),
         cam_url: "http://doorcam.fritz.box:8081/".to_string(),
         change_user_url: uri!(get_change: user.user.id).to_string(),
         logout_url: uri!(get_logout).to_string(),

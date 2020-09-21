@@ -7,8 +7,9 @@
     <script>
         function delete_user(id) {
             let xhttp = new XMLHttpRequest();
-            xhttp.open("DELETE", "user/delete/" + id, true);
+            xhttp.open("DELETE", "user/delete/" + id, false);
             xhttp.send();
+            window.location.reload();
         }
     </script>
 </head>
