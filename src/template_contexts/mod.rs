@@ -30,6 +30,7 @@ impl From<FlashMessage<'_, '_>> for Message {
 pub struct MainViewContext {
     pub error: Option<Message>,
     pub cam_url: String,
+    pub activate_door_url: String,
     pub change_user_url: String,
     pub logout_url: String,
 }
@@ -83,5 +84,6 @@ impl UserDetailsContext {
 pub struct UserOverviewContext {
     pub error: Option<Message>,
     pub create_user_url: String,
+    pub logout_url: String,
     pub users: Option<Vec<UserEntry>>,
 }

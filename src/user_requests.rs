@@ -1,6 +1,7 @@
 use crate::db_conn::DbConn;
 use crate::guards::{AdminGuard, UserGuard};
 use crate::template_contexts::{Message, UserDetailsContext, UserOverviewContext};
+use crate::user_auth::*;
 use crate::user_entry::UserEntry;
 use rocket::http::Status;
 use rocket::request::{FlashMessage, Form};
@@ -70,6 +71,7 @@ pub fn get_users(_admin: AdminGuard, conn: DbConn) -> Template {
             users: Some(users),
             error: None,
             create_user_url: uri!(get_create).to_string(),
+            logout_url: uri!(get_logout).to_string(),
         },
         Err(e) => UserOverviewContext {
             error: Some(Message {
@@ -78,6 +80,7 @@ pub fn get_users(_admin: AdminGuard, conn: DbConn) -> Template {
             }),
             users: None,
             create_user_url: uri!(get_create).to_string(),
+            logout_url: uri!(get_logout).to_string(),
         },
     };
     Template::render("user_overview", &context)

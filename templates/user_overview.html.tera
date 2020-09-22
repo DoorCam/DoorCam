@@ -37,6 +37,9 @@
         {%- endfor %}
     </table>
     {% endif %}
+    <nav>
+        <a href="{{ logout_url }}">Logout</a>
+    </nav>
 </body>
 
 </html>
