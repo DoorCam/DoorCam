@@ -4,6 +4,12 @@ use std::sync::{Arc, Mutex, MutexGuard, PoisonError};
 use std::thread;
 use std::time::Duration;
 
+#[cfg(test)]
+#[path = "./door_control_test.rs"]
+mod door_control_test;
+
+const OPENING_TIME_PERIOD: Duration = Duration::from_secs(10);
+
 pub struct DoorControl {
     #[cfg(feature = "only_web")]
     is_open: Arc<Mutex<bool>>,
@@ -19,7 +25,7 @@ impl DoorControl {
         };
     }
 
-    pub fn open(&mut self) -> Result<(), PoisonError<MutexGuard<bool>>> {
+    pub fn activate_opener(&mut self) -> Result<(), PoisonError<MutexGuard<bool>>> {
         let mut state = self.is_open.lock()?;
         if *state {
             return Ok(());
@@ -27,13 +33,18 @@ impl DoorControl {
         *state = true;
         let is_open = Arc::clone(&self.is_open);
         thread::spawn(move || {
-            thread::sleep(Duration::from_secs(10));
+            thread::sleep(OPENING_TIME_PERIOD);
             match is_open.lock() {
                 Ok(mut state) => *state = false,
                 Err(_) => {}
             }
         });
         Ok(())
+    }
+
+    pub fn is_opener_active(&mut self) -> Result<bool, PoisonError<MutexGuard<bool>>> {
+        let state = self.is_open.lock()?;
+        return Ok(*state);
     }
 }
 
@@ -45,7 +56,7 @@ impl DoorControl {
         };
     }
 
-    pub fn open(&mut self) -> Result<(), PoisonError<MutexGuard<OutputDevice>>> {
+    pub fn activate_opener(&mut self) -> Result<(), PoisonError<MutexGuard<OutputDevice>>> {
         let mut dev = self.dev.lock()?;
         if dev.is_active() {
             return Ok(());
@@ -53,12 +64,17 @@ impl DoorControl {
         dev.on();
         let dev = Arc::clone(&self.dev);
         thread::spawn(move || {
-            thread::sleep(Duration::from_secs(10));
+            thread::sleep(OPENING_TIME_PERIOD);
             match dev.lock() {
                 Ok(mut dev) => dev.off(),
                 Err(_) => {}
             }
         });
         Ok(())
+    }
+
+    pub fn is_opener_active(&mut self) -> Result<bool, PoisonError<MutexGuard<OutputDevice>>> {
+        let dev = self.dev.lock()?;
+        return Ok(dev.is_active());
     }
 }

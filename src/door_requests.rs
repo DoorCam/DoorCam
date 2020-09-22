@@ -11,7 +11,7 @@ pub fn get_door_open<'r>(
         Ok(ctrl) => ctrl,
         Err(e) => return Flash::error((), e.to_string()),
     };
-    if let Err(e) = ctrl.open() {
+    if let Err(e) = ctrl.activate_opener() {
         return Flash::error((), e.to_string());
     }
     return Flash::success((), "Door opened");

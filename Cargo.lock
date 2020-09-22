@@ -323,6 +323,7 @@ version = "0.1.0"
 dependencies = [
  "base64 0.12.3",
  "blake2",
+ "matches",
  "mqttc",
  "passwords",
  "rand 0.7.3",
