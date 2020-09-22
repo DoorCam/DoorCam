@@ -20,44 +20,32 @@ mod user_auth;
 mod user_entry;
 mod user_requests;
 
-#[cfg(feature = "iot")]
 mod iot;
 
 fn main() {
-    manage_iot(
-        rocket::ignite()
-            .mount(
-                "/",
-                routes![
-                    index_view::index,
-                    index_view::get_not_found,
-                    user_auth::get_login,
-                    user_auth::post_login_data,
-                    user_auth::get_logout,
-                    user_requests::get_users,
-                    user_requests::get_create,
-                    user_requests::post_create_data,
-                    user_requests::get_change,
-                    user_requests::post_change_data,
-                    user_requests::delete,
-                    door_requests::get_door_open,
-                ],
-            )
-            .register(catchers![index_view::not_found_catcher])
-            .mount("/static", StaticFiles::from("./static"))
-            .attach(Template::fairing())
-            .attach(db_conn::DbConn::fairing())
-            .attach(SpaceHelmet::default()),
-    )
-    .launch();
-}
-
-#[cfg(feature = "only_web")]
-fn manage_iot(this: rocket::Rocket) -> rocket::Rocket {
-    this
-}
-
-#[cfg(feature = "iot")]
-fn manage_iot(this: rocket::Rocket) -> rocket::Rocket {
-    this.manage(std::sync::Mutex::new(iot::DoorControl::new(1)))
+    rocket::ignite()
+        .mount(
+            "/",
+            routes![
+                index_view::index,
+                index_view::get_not_found,
+                user_auth::get_login,
+                user_auth::post_login_data,
+                user_auth::get_logout,
+                user_requests::get_users,
+                user_requests::get_create,
+                user_requests::post_create_data,
+                user_requests::get_change,
+                user_requests::post_change_data,
+                user_requests::delete,
+                door_requests::get_door_open,
+            ],
+        )
+        .register(catchers![index_view::not_found_catcher])
+        .mount("/static", StaticFiles::from("./static"))
+        .attach(Template::fairing())
+        .attach(db_conn::DbConn::fairing())
+        .attach(SpaceHelmet::default())
+        .manage(std::sync::Mutex::new(iot::DoorControl::new(1)))
+        .launch();
 }
