@@ -1,4 +1,4 @@
-use crate::db_conn::{rusqlite, DbConn};
+use super::{rusqlite, DbConn};
 use crate::guards::{AuthError, GuardManager};
 use serde::{Deserialize, Serialize};
 

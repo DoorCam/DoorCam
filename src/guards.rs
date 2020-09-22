@@ -1,6 +1,5 @@
 use crate::crypto;
-use crate::db_conn::{rusqlite, DbConn};
-use crate::user_entry::{HashEntry, UserEntry};
+use crate::db_entry::{rusqlite, DbConn, HashEntry, UserEntry};
 use blake2::{Blake2b, Digest};
 use passwords::{analyzer, scorer};
 use rocket::http::{Cookie, Cookies, Status};

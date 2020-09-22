@@ -1,8 +1,8 @@
-use crate::db_conn::DbConn;
+use super::index_view::*;
+use super::user::*;
+use crate::db_entry::DbConn;
 use crate::guards::GuardManager;
-use crate::index_view::*;
 use crate::template_contexts::{LoginContext, Message};
-use crate::user_requests::*;
 use rocket::http::Cookies;
 use rocket::request::{FlashMessage, Form};
 use rocket::response::{Flash, Redirect};

@@ -1,8 +1,8 @@
-use crate::door_requests::*;
+use super::door::*;
+use super::user::*;
+use super::user_auth::*;
 use crate::guards::{OnlyUserGuard, UserGuard};
 use crate::template_contexts::{MainViewContext, Message, NoContext};
-use crate::user_auth::*;
-use crate::user_requests::*;
 use rocket::request::{FlashMessage, FromRequest, Request};
 use rocket::response::Redirect;
 use rocket::Outcome;

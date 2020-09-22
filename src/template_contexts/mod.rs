@@ -1,4 +1,4 @@
-use crate::user_entry::UserEntry;
+use crate::db_entry::UserEntry;
 use rocket::request::FlashMessage;
 use serde::Serialize;
 
