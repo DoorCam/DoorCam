@@ -10,6 +10,9 @@ extern crate base64;
 #[macro_use]
 extern crate matches;
 
+use std::sync::{Arc, Mutex};
+
+use rocket_contrib::databases::rusqlite;
 use rocket_contrib::helmet::SpaceHelmet;
 use rocket_contrib::serve::StaticFiles;
 use rocket_contrib::templates::Template;
@@ -22,7 +25,19 @@ mod template_contexts;
 
 mod iot;
 
-fn main() {
+fn main() -> Result<(), rusqlite::Error> {
+    let sync_flag = Arc::new(Mutex::new(false));
+    let sf = Arc::clone(&sync_flag);
+    let db = match rusqlite::Connection::open("db.sqlite") {
+        Ok(conn) => conn,
+        Err(e) => {
+            return Err(e);
+        }
+    };
+    std::thread::spawn(move || {
+        let mut iot_events = iot::EventHandler::new(sf, db);
+        iot_events.event_loop();
+    });
     rocket::ignite()
         .mount(
             "/",
@@ -46,6 +61,8 @@ fn main() {
         .attach(Template::fairing())
         .attach(db_entry::DbConn::fairing())
         .attach(SpaceHelmet::default())
-        .manage(std::sync::Mutex::new(iot::DoorControl::new(1)))
+        .manage(Mutex::new(iot::DoorControl::new(1)))
+        .manage(sync_flag)
         .launch();
+    Ok(())
 }
