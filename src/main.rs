@@ -25,13 +25,15 @@ mod template_contexts;
 
 mod iot;
 
-fn main() -> Result<(), rusqlite::Error> {
+fn main() {
+    log4rs::init_file("logger.yaml", Default::default()).unwrap();
     let sync_flag = Arc::new(Mutex::new(false));
     let sf = Arc::clone(&sync_flag);
     let db = match rusqlite::Connection::open("db.sqlite") {
         Ok(conn) => conn,
         Err(e) => {
-            return Err(e);
+            log::error!("Can't establish db connection: {}", e);
+            return;
         }
     };
     std::thread::spawn(move || {
@@ -53,7 +55,7 @@ fn main() -> Result<(), rusqlite::Error> {
                 requests::user::get_change,
                 requests::user::post_change_data,
                 requests::user::delete,
-                requests::door::get_door_open,
+                requests::door::get_open_door,
             ],
         )
         .register(catchers![requests::index_view::not_found_catcher])
@@ -64,5 +66,4 @@ fn main() -> Result<(), rusqlite::Error> {
         .manage(Mutex::new(iot::DoorControl::new(1)))
         .manage(sync_flag)
         .launch();
-    Ok(())
 }

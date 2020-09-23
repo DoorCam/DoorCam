@@ -1,7 +1,12 @@
 use super::BellButton;
 use crate::db_entry::UserEntry;
-pub use rocket_contrib::databases::rusqlite::{Connection, Error};
+use log::{error, info};
+use rocket_contrib::databases::rusqlite::{Connection, Error};
 use std::sync::{Arc, Mutex};
+use std::thread;
+use std::time::Duration;
+
+const SLEEP_PERIOD: Duration = Duration::from_millis(50);
 
 pub struct EventHandler {
     sync_flag: Arc<Mutex<bool>>,
@@ -16,26 +21,37 @@ impl EventHandler {
             conn: conn,
             buttons: Vec::new(),
         };
-        eh.fetch_user();
+        if let Err(e) = eh.fetch_user() {
+            error!("Can't fetch users in EventLoop: {}", e)
+        }
         eh
     }
 
     pub fn event_loop(&mut self) {
         loop {
+            // Sync users
             let mut should_sync = false;
-            if let Ok(flag) = self.sync_flag.lock() {
-                should_sync = *flag;
+            match self.sync_flag.lock() {
+                Ok(flag) => should_sync = *flag,
+                Err(e) => error!("Can't lock sync_flag: {}", e),
             }
             if should_sync {
-                self.fetch_user();
+                info!("Reloading users in EventLoop");
+                if let Err(e) = self.fetch_user() {
+                    error!("Can't reload users in EventLoop: {}", e)
+                }
 
-                if let Ok(mut flag) = self.sync_flag.lock() {
-                    *flag = false;
+                match self.sync_flag.lock() {
+                    Ok(mut flag) => *flag = false,
+                    Err(e) => error!("Can't lock sync_flag after sync: {}", e),
                 }
             }
+
+            // check and handle BellButton events
             for button in self.buttons.iter() {
-                button.check_events();
+                button.events();
             }
+            thread::sleep(SLEEP_PERIOD);
         }
     }
 

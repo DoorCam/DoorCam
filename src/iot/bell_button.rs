@@ -18,7 +18,7 @@ impl BellButton {
         }
     }
 
-    pub fn check_events(&self) {}
+    pub fn events(&self) {}
 
     pub fn send_bell_signal(&self) {}
 }
@@ -33,7 +33,7 @@ impl BellButton {
         }
     }
 
-    pub fn check_events(&self) {
+    pub fn events(&self) {
         if self.dev.is_active() {
             self.send_bell_signal();
         }

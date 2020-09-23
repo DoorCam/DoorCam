@@ -13,7 +13,7 @@ pub fn index(user: OnlyUserGuard, flash: Option<FlashMessage>) -> Template {
     let context = MainViewContext {
         error: flash.map(|msg| Message::from(msg)),
         cam_url: "http://doorcam.fritz.box:8081/".to_string(),
-        activate_door_url: uri!(get_door_open).to_string(),
+        activate_door_url: uri!(get_open_door).to_string(),
         change_user_url: uri!(get_change: user.user.id).to_string(),
         logout_url: uri!(get_logout).to_string(),
     };

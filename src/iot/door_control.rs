@@ -42,6 +42,7 @@ impl DoorControl {
         Ok(())
     }
 
+    #[cfg(test)]
     pub fn is_opener_active(&mut self) -> Result<bool, PoisonError<MutexGuard<bool>>> {
         let state = self.is_open.lock()?;
         return Ok(*state);
@@ -73,6 +74,7 @@ impl DoorControl {
         Ok(())
     }
 
+    #[cfg(test)]
     pub fn is_opener_active(&mut self) -> Result<bool, PoisonError<MutexGuard<OutputDevice>>> {
         let dev = self.dev.lock()?;
         return Ok(dev.is_active());

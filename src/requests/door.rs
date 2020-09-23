@@ -3,8 +3,8 @@ use crate::guards::OnlyUserGuard;
 use rocket::response::{Flash, Redirect};
 use rocket::State;
 
-#[get("/api/door/open")]
-pub fn get_door_open<'r>(
+#[get("/api/door/activate")]
+pub fn get_open_door<'r>(
     _user: OnlyUserGuard,
     door_ctrl: State<'r, std::sync::Mutex<crate::iot::DoorControl>>,
 ) -> Flash<Redirect> {
