@@ -11,13 +11,13 @@ mod door_control_test;
 const OPENING_TIME_PERIOD: Duration = Duration::from_secs(10);
 
 pub struct DoorControl {
-    #[cfg(feature = "only_web")]
+    #[cfg(not(feature = "iot"))]
     is_open: Arc<Mutex<bool>>,
     #[cfg(feature = "iot")]
     dev: Arc<Mutex<OutputDevice>>,
 }
 
-#[cfg(feature = "only_web")]
+#[cfg(not(feature = "iot"))]
 impl DoorControl {
     pub fn new(_pin: u8) -> DoorControl {
         return DoorControl {

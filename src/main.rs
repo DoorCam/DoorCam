@@ -26,9 +26,11 @@ mod template_contexts;
 mod iot;
 
 fn main() {
+    #[cfg(not(debug_assertions))]
     log4rs::init_file("logger.yaml", Default::default()).unwrap();
-    let sync_flag = Arc::new(Mutex::new(false));
-    let sf = Arc::clone(&sync_flag);
+
+    let user_sync_flag = Arc::new(Mutex::new(false));
+    let sf = Arc::clone(&user_sync_flag);
     let db = match rusqlite::Connection::open("db.sqlite") {
         Ok(conn) => conn,
         Err(e) => {
@@ -40,6 +42,7 @@ fn main() {
         let mut iot_events = iot::EventHandler::new(sf, db);
         iot_events.event_loop();
     });
+
     rocket::ignite()
         .mount(
             "/",
@@ -64,6 +67,6 @@ fn main() {
         .attach(db_entry::DbConn::fairing())
         .attach(SpaceHelmet::default())
         .manage(Mutex::new(iot::DoorControl::new(1)))
-        .manage(sync_flag)
+        .manage(user_sync_flag)
         .launch();
 }

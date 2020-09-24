@@ -5,7 +5,9 @@ use crate::template_contexts::{Message, UserDetailsContext, UserOverviewContext}
 use rocket::http::Status;
 use rocket::request::{FlashMessage, Form};
 use rocket::response::{Flash, Redirect};
+use rocket::State;
 use rocket_contrib::templates::Template;
+use std::sync::{Arc, Mutex};
 
 #[derive(FromForm)]
 pub struct UserForm {
@@ -26,6 +28,7 @@ pub fn post_create_data(
     user_data: Form<UserForm>,
     _admin: AdminGuard,
     conn: DbConn,
+    sync_flag: State<Arc<Mutex<bool>>>,
 ) -> Result<Redirect, Flash<Redirect>> {
     if user_data.name.is_empty() {
         return Err(Flash::error(
@@ -60,6 +63,12 @@ pub fn post_create_data(
         _ => {}
     }
 
+    // sync iot::EventHandler
+    match sync_flag.lock() {
+        Ok(mut sf) => *sf = true,
+        Err(e) => return Err(Flash::error(Redirect::to(uri!(get_create)), e.to_string())),
+    };
+
     return Ok(Redirect::to(uri!(get_users)));
 }
 
@@ -86,14 +95,26 @@ pub fn get_users(_admin: AdminGuard, conn: DbConn) -> Template {
 }
 
 #[delete("/admin/user/delete/<id>")]
-pub fn delete(admin: AdminGuard, conn: DbConn, id: u32) -> Flash<()> {
+pub fn delete(
+    admin: AdminGuard,
+    conn: DbConn,
+    sync_flag: State<Arc<Mutex<bool>>>,
+    id: u32,
+) -> Flash<()> {
     if admin.user.id == id {
         return Flash::error((), "Can't delete yourself");
     }
-    return match UserEntry::delete(conn, id) {
-        Ok(_) => Flash::success((), "User deleted"),
-        Err(e) => Flash::error((), e.to_string()),
+    if let Err(e) = UserEntry::delete(conn, id) {
+        return Flash::error((), e.to_string());
     };
+
+    // sync iot::EventHandler
+    match sync_flag.lock() {
+        Ok(mut sf) => *sf = true,
+        Err(e) => return Flash::error((), e.to_string()),
+    };
+
+    return Flash::success((), "User deleted");
 }
 
 #[get("/admin/user/change/<id>")]
@@ -124,6 +145,7 @@ pub fn get_change(
 pub fn post_change_data(
     user_guard: UserGuard,
     conn: DbConn,
+    sync_flag: State<Arc<Mutex<bool>>>,
     id: u32,
     user_data: Form<UserForm>,
 ) -> Result<Redirect, Flash<Redirect>> {
@@ -153,21 +175,29 @@ pub fn post_change_data(
             ));
         }
     }
-    match UserEntry::change(
+    if let Err(e) = UserEntry::change(
         conn,
         id,
         &user_data.name,
         &user_data.pw,
         user_data.admin.unwrap_or(false),
     ) {
+        return Err(Flash::error(
+            Redirect::to(uri!(get_change: id)),
+            format!("DB Error: {}", e),
+        ));
+    }
+
+    // sync iot::EventHandler
+    match sync_flag.lock() {
+        Ok(mut sf) => *sf = true,
         Err(e) => {
             return Err(Flash::error(
                 Redirect::to(uri!(get_change: id)),
-                format!("DB Error: {}", e),
+                e.to_string(),
             ))
         }
-        _ => {}
-    }
+    };
 
     return Ok(Redirect::to(uri!(get_users)));
 }

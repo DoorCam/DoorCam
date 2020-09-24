@@ -9,7 +9,7 @@ pub struct BellButton {
     topic: String,
 }
 
-#[cfg(feature = "only_web")]
+#[cfg(not(feature = "iot"))]
 impl BellButton {
     pub fn new(_user: &UserEntry) -> Self {
         BellButton {
