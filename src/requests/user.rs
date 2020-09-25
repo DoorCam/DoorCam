@@ -1,4 +1,3 @@
-use super::user_auth::*;
 use crate::db_entry::{DbConn, UserEntry};
 use crate::guards::{AdminGuard, UserGuard};
 use crate::template_contexts::{Message, UserDetailsContext, UserOverviewContext};
@@ -75,21 +74,8 @@ pub fn post_create_data(
 #[get("/admin/user")]
 pub fn get_users(_admin: AdminGuard, conn: DbConn) -> Template {
     let context = match UserEntry::get_all(conn) {
-        Ok(users) => UserOverviewContext {
-            users: Some(users),
-            error: None,
-            create_user_url: uri!(get_create).to_string(),
-            logout_url: uri!(get_logout).to_string(),
-        },
-        Err(e) => UserOverviewContext {
-            error: Some(Message {
-                category: "error".to_string(),
-                content: format!("DB Error: {}", e),
-            }),
-            users: None,
-            create_user_url: uri!(get_create).to_string(),
-            logout_url: uri!(get_logout).to_string(),
-        },
+        Ok(users) => UserOverviewContext::view(users),
+        Err(e) => UserOverviewContext::error(Message::error(format!("DB Error: {}", e))),
     };
     Template::render("user_overview", &context)
 }

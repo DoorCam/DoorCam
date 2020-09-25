@@ -47,7 +47,8 @@ fn main() {
         .mount(
             "/",
             routes![
-                requests::index_view::index,
+                requests::index_view::get_user_index_view,
+                requests::index_view::get_admin_index_view,
                 requests::index_view::get_not_found,
                 requests::user_auth::get_login,
                 requests::user_auth::post_login_data,

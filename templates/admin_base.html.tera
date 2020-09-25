@@ -1,0 +1,9 @@
+{% extends "base" %}
+{% block content %}
+{% if nav %}
+<nav>
+    <a href="{{ nav.user_overview_url }}">Users</a>
+    <a href="{{ nav.logout_url }}">Logout</a>
+</nav>
+{% endif %}
+{% endblock content %}

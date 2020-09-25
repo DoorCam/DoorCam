@@ -1,4 +1,5 @@
 use crate::db_entry::UserEntry;
+use crate::requests::{user::*, user_auth::*};
 use rocket::request::FlashMessage;
 use serde::Serialize;
 
@@ -28,7 +29,7 @@ impl From<FlashMessage<'_, '_>> for Message {
 
 #[derive(Serialize)]
 pub struct MainViewContext {
-    pub error: Option<Message>,
+    pub message: Option<Message>,
     pub cam_url: String,
     pub activate_door_url: String,
     pub change_user_url: String,
@@ -36,16 +37,38 @@ pub struct MainViewContext {
 }
 
 #[derive(Serialize)]
+pub struct AdminViewContext {
+    pub message: Option<Message>,
+    pub nav: AdminNav,
+}
+
+#[derive(Serialize)]
 pub struct NoContext {}
 
 #[derive(Serialize)]
 pub struct LoginContext {
-    pub error: Option<Message>,
+    pub message: Option<Message>,
+}
+
+#[derive(Serialize)]
+pub struct AdminNav {
+    user_overview_url: String,
+    logout_url: String,
+}
+
+impl AdminNav {
+    pub fn new() -> Self {
+        AdminNav {
+            user_overview_url: uri!(get_users).to_string(),
+            logout_url: uri!(get_logout).to_string(),
+        }
+    }
 }
 
 #[derive(Serialize)]
 pub struct UserDetailsContext {
-    pub error: Option<Message>,
+    pub message: Option<Message>,
+    pub nav: Option<AdminNav>,
     pub title: String,
     pub is_admin: bool,
     pub user: Option<UserEntry>,
@@ -54,7 +77,8 @@ pub struct UserDetailsContext {
 impl UserDetailsContext {
     pub fn error(error: Message) -> UserDetailsContext {
         return UserDetailsContext {
-            error: Some(error),
+            message: Some(error),
+            nav: Some(AdminNav::new()),
             title: String::new(),
             is_admin: false,
             user: None,
@@ -63,7 +87,8 @@ impl UserDetailsContext {
 
     pub fn create(error: Option<Message>) -> UserDetailsContext {
         return UserDetailsContext {
-            error: error,
+            message: error,
+            nav: Some(AdminNav::new()),
             title: "Register".to_string(),
             is_admin: true,
             user: None,
@@ -72,7 +97,12 @@ impl UserDetailsContext {
 
     pub fn change(error: Option<Message>, is_admin: bool, user: UserEntry) -> UserDetailsContext {
         return UserDetailsContext {
-            error: error,
+            message: error,
+            nav: if is_admin {
+                Some(AdminNav::new())
+            } else {
+                None
+            },
             title: "Change".to_string(),
             is_admin: is_admin,
             user: Some(user),
@@ -82,8 +112,28 @@ impl UserDetailsContext {
 
 #[derive(Serialize)]
 pub struct UserOverviewContext {
-    pub error: Option<Message>,
+    pub message: Option<Message>,
+    pub nav: AdminNav,
     pub create_user_url: String,
-    pub logout_url: String,
     pub users: Option<Vec<UserEntry>>,
+}
+
+impl UserOverviewContext {
+    pub fn view(users: Vec<UserEntry>) -> Self {
+        UserOverviewContext {
+            message: None,
+            nav: AdminNav::new(),
+            create_user_url: uri!(get_create).to_string(),
+            users: Some(users),
+        }
+    }
+
+    pub fn error(message: Message) -> Self {
+        UserOverviewContext {
+            message: Some(message),
+            nav: AdminNav::new(),
+            create_user_url: uri!(get_create).to_string(),
+            users: None,
+        }
+    }
 }

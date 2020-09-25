@@ -1,23 +1,32 @@
 use super::door::*;
 use super::user::*;
 use super::user_auth::*;
-use crate::guards::{OnlyUserGuard, UserGuard};
-use crate::template_contexts::{MainViewContext, Message, NoContext};
+use crate::guards::{AdminGuard, OnlyUserGuard, UserGuard};
+use crate::template_contexts::{AdminNav, AdminViewContext, MainViewContext, Message, NoContext};
 use rocket::request::{FlashMessage, FromRequest, Request};
 use rocket::response::Redirect;
 use rocket::Outcome;
 use rocket_contrib::templates::Template;
 
 #[get("/")]
-pub fn index(user: OnlyUserGuard, flash: Option<FlashMessage>) -> Template {
+pub fn get_user_index_view(user: OnlyUserGuard, flash: Option<FlashMessage>) -> Template {
     let context = MainViewContext {
-        error: flash.map(|msg| Message::from(msg)),
+        message: flash.map(|msg| Message::from(msg)),
         cam_url: "http://doorcam.fritz.box:8081/".to_string(),
         activate_door_url: uri!(get_open_door).to_string(),
         change_user_url: uri!(get_change: user.user.id).to_string(),
         logout_url: uri!(get_logout).to_string(),
     };
     Template::render("main_view", &context)
+}
+
+#[get("/admin")]
+pub fn get_admin_index_view(user: AdminGuard, flash: Option<FlashMessage>) -> Template {
+    let context = AdminViewContext {
+        message: flash.map(|msg| Message::from(msg)),
+        nav: AdminNav::new(),
+    };
+    Template::render("admin_view", &context)
 }
 
 #[get("/404")]

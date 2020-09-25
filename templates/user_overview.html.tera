@@ -1,45 +1,38 @@
-<!DOCTYPE html>
-<html lang="en">
+{% extends "admin_base" %}
 
-<head>
-    <link rel="stylesheet" href="/static/style.css" />
-    <title>Doorcam</title>
-    <script>
-        function delete_user(id) {
-            let xhttp = new XMLHttpRequest();
-            xhttp.open("DELETE", "user/delete/" + id, false);
-            xhttp.send();
-            window.location.reload();
-        }
-    </script>
-</head>
+{% block title %}Users{{ super() }}{% endblock title %}
 
-<body>
-    {% if error %}
-    <div class="flash {{ error.category }}">{{ error.content }}</div>
-    {% endif %}
-    <a href="{{ create_user_url }}">Create</a>
-    {% if users %}
-    <table>
-        <tr>
-            <th>Name</th>
-            <th>Admin</th>
-            <th></th>
-            <th></th>
-        </tr>
-        {% for user in users -%}
-        <tr>
-            <td>{{ user.name }}</td>
-            <td>{{ user.admin }}</td>
-            <td><a href="user/change/{{ user.id }}">Mod</a></td>
-            <td><button type="button" onclick="delete_user({{ user.id }})">Delete</button></td>
-        </tr>
-        {%- endfor %}
-    </table>
-    {% endif %}
-    <nav>
-        <a href="{{ logout_url }}">Logout</a>
-    </nav>
-</body>
+{% block head %}
+{{ super() }}
+<script>
+    function delete_user(id) {
+        let xhttp = new XMLHttpRequest();
+        xhttp.open("DELETE", "user/delete/" + id, false);
+        xhttp.send();
+        window.location.reload();
+    }
+</script>
+{% endblock head %}
 
-</html>
+{% block content %}
+{{ super() }}
+<a href="{{ create_user_url }}">Create</a>
+{% if users %}
+<table>
+    <tr>
+        <th>Name</th>
+        <th>Admin</th>
+        <th></th>
+        <th></th>
+    </tr>
+    {% for user in users -%}
+    <tr>
+        <td>{{ user.name }}</td>
+        <td>{{ user.admin }}</td>
+        <td><a href="user/change/{{ user.id }}">Mod</a></td>
+        <td><button type="button" onclick="delete_user({{ user.id }})">Delete</button></td>
+    </tr>
+    {%- endfor %}
+</table>
+{% endif %}
+{% endblock content %}

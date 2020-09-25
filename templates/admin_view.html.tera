@@ -1,0 +1,6 @@
+{% extends "admin_base" %}
+{% block title %}Overview{{ super() }}{% endblock title %}
+{% block content %}
+{{ super() }}
+<a href="{{ nav.user_overview_url }}">Users</a>
+{% endblock content %}

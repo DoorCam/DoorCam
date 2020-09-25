@@ -1,21 +1,13 @@
-<!DOCTYPE html>
-<html lang="en">
+{% extends "base" %}
 
-<head>
-    <link rel="stylesheet" href="/static/style.css" />
-    <title>Doorcam</title>
-</head>
+{% block title %}Doorcam{% endblock title %}
 
-<body>
-    {% if error %}
-    <div class="flash {{ error.category }}">{{ error.content }}</div>
-    {% endif %}
-    <img src="{{ cam_url }}"></img>
-    <a href="{{ activate_door_url }}">Open Door</a>
-    <nav>
-        <a href="{{ change_user_url }}">Change Profile</a>
-        <a href="{{ logout_url }}">Logout</a>
-    </nav>
-</body>
-
-</html>
+{% block content %}
+{{ super() }}
+<img src="{{ cam_url }}"></img>
+<a href="{{ activate_door_url }}">Open Door</a>
+<nav>
+    <a href="{{ change_user_url }}">Change Profile</a>
+    <a href="{{ logout_url }}">Logout</a>
+</nav>
+{% endblock content %}

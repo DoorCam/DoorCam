@@ -17,7 +17,7 @@ pub struct UserForm {
 #[get("/login")]
 pub fn get_login(flash: Option<FlashMessage>) -> Template {
     let context = LoginContext {
-        error: flash.map(|msg| Message::from(msg)),
+        message: flash.map(|msg| Message::from(msg)),
     };
     Template::render("user_login", &context)
 }
@@ -33,9 +33,9 @@ pub fn post_login_data(
         Ok(user) => user,
     };
     return Ok(Redirect::to(if user.admin {
-        uri!(get_users)
+        uri!(get_admin_index_view)
     } else {
-        uri!(index)
+        uri!(get_user_index_view)
     }));
 }
 
