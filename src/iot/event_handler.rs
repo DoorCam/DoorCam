@@ -48,8 +48,10 @@ impl EventHandler {
             }
 
             // check and handle BellButton events
-            for button in self.buttons.iter() {
-                button.events();
+            for button in self.buttons.as_mut_slice() {
+                if let Err(e) = button.events() {
+                    error!("Can't MQTT message: {}", e)
+                }
             }
             thread::sleep(SLEEP_PERIOD);
         }
