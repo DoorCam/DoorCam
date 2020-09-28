@@ -2,5 +2,6 @@
 {% block title %}Overview{{ super() }}{% endblock title %}
 {% block content %}
 {{ super() }}
+<a href="{{ nav.flat_overview_url }}">Flat</a>
 <a href="{{ nav.user_overview_url }}">Users</a>
 {% endblock content %}

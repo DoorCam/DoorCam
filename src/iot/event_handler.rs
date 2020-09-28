@@ -1,5 +1,5 @@
 use super::BellButton;
-use crate::db_entry::UserEntry;
+use crate::db_entry::FlatEntry;
 use log::{error, info};
 use rocket_contrib::databases::rusqlite::{Connection, Error};
 use std::sync::{Arc, Mutex};
@@ -58,8 +58,8 @@ impl EventHandler {
     }
 
     fn fetch_user(&mut self) -> Result<(), Error> {
-        let users = UserEntry::get_all_with_rusq(&self.conn)?;
-        self.buttons = users.iter().map(|user| BellButton::new(&user)).collect();
+        let flats = FlatEntry::get_active(&self.conn)?;
+        self.buttons = flats.iter().map(|flat| BellButton::new(&flat)).collect();
         Ok(())
     }
 }

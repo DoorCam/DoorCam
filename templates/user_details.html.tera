@@ -21,9 +21,26 @@
     <input type="password" placeholder="Repeat Password" name="pw_repeat" id="pw_repeat" {% if not user %} required
       {% endif %} />
 
-    {% if not user or is_admin %}
-    <label for="admin"><b>Admin</b></label>
-    <input type="checkbox" name="admin" id="admin" {% if user and user.admin %} checked {% endif %} />
+    {% if is_admin %}
+    <label for="user_type"><b>Admin</b></label>
+    <select name="user_type" id="user_type">
+      {% for type in types -%}
+      <option value="{{ type.0 }}" {% if user and user.user_type == type.1 %} selected {% endif %}>
+        {{ type.1 }}</option>
+      {%- endfor %}
+    </select>
+
+    <label for="active"><b>Active</b></label>
+    <input type="checkbox" name="active" id="active" {% if user and user.active or not user %} checked {% endif %} />
+
+    <label for="flat_id"><b>Flat</b></label>
+    <select name="flat_id" id="flat_id">
+      <option value="" {% if user and not user.flat_id %} selected {% endif %}></option>
+      {% for flat in flats -%}
+      <option value="{{ flat.id }}" {% if user and user.flat_id and user.flat_id == flat.id %} selected {% endif %}>
+        {{ flat.name }}</option>
+      {%- endfor %}
+    </select>
     {% endif %}
     <hr />
 

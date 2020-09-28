@@ -74,12 +74,12 @@ impl GuardManager {
     }
 
     pub fn auth(
-        conn: DbConn,
+        conn: &DbConn,
         cookies: Cookies,
         name: &String,
         pw: &String,
     ) -> Result<UserEntry, AuthError> {
-        let user = UserEntry::get_by_name(conn, &name)?.pop();
+        let user = UserEntry::get_active_by_name(&conn, &name)?.pop();
         let user = match user {
             Some(user) => user,
             None => return Err(AuthError::NoUser),
@@ -125,6 +125,17 @@ impl GuardManager {
 pub struct UserGuard {
     pub user: UserEntry,
 }
+
+impl UserGuard {
+    pub fn is_user(&self) -> bool {
+        self.user.user_type.is_user()
+    }
+
+    pub fn is_admin(&self) -> bool {
+        self.user.user_type.is_admin()
+    }
+}
+
 impl<'a, 'r> FromRequest<'a, 'r> for UserGuard {
     type Error = AuthError;
 
@@ -151,7 +162,7 @@ impl<'a, 'r> FromRequest<'a, 'r> for OnlyUserGuard {
     fn from_request(request: &'a Request<'r>) -> request::Outcome<OnlyUserGuard, AuthError> {
         let user_guard = request.guard::<UserGuard>()?;
 
-        if !user_guard.user.admin {
+        if !user_guard.user.user_type.is_user() {
             Outcome::Success(OnlyUserGuard {
                 user: user_guard.user,
             })
@@ -171,7 +182,7 @@ impl<'a, 'r> FromRequest<'a, 'r> for AdminGuard {
     fn from_request(request: &'a Request<'r>) -> request::Outcome<AdminGuard, AuthError> {
         let user_guard = request.guard::<UserGuard>()?;
 
-        if user_guard.user.admin {
+        if user_guard.user.user_type.is_admin() {
             Outcome::Success(AdminGuard {
                 user: user_guard.user,
             })
