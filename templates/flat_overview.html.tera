@@ -1,0 +1,46 @@
+{% extends "admin_base" %}
+
+{% block title %}Users{{ super() }}{% endblock title %}
+
+{% block head %}
+{{ super() }}
+<script>
+    function delete_flat(id) {
+        let xhttp = new XMLHttpRequest();
+        xhttp.open("DELETE", "flat/delete/" + id, false);
+        xhttp.send();
+        window.location.reload();
+    }
+</script>
+{% endblock head %}
+
+{% block content %}
+{{ super() }}
+<a href="{{ create_flat_url }}">Create</a>
+{% if flats %}
+<table>
+    <tr>
+        <th>Name</th>
+        <th>Pin</th>
+        <th>Local Adress</th>
+        <th>Broker Adress</th>
+        <th>MQTT Bell Topic</th>
+        <th>Active</th>
+        <th></th>
+        <th></th>
+    </tr>
+    {% for flat in flats -%}
+    <tr>
+        <td>{{ flat.name }}</td>
+        <td>{{ flat.bell_button_pin }}</td>
+        <td>{{ flat.local_address }}</td>
+        <td>{{ flat.broker_address }}:{{ flat.broker_port }}</td>
+        <td>{{ flat.bell_topic }}</td>
+        <td>{{ flat.active }}</td>
+        <td><a href="flat/change/{{ flat.id }}">Mod</a></td>
+        <td><button type="button" onclick="delete_flat({{ flat.id }})">Delete</button></td>
+    </tr>
+    {%- endfor %}
+</table>
+{% endif %}
+{% endblock content %}

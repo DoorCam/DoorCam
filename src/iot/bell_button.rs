@@ -1,4 +1,4 @@
-use crate::db_entry::UserEntry;
+use crate::db_entry::FlatEntry;
 #[cfg(feature = "iot")]
 use rumqttc::{Client, ClientError, MqttOptions, QoS};
 #[cfg(feature = "iot")]
@@ -9,15 +9,14 @@ pub struct BellButton {
     dev: Button,
     #[cfg(feature = "iot")]
     mqtt_client: Client,
+    #[cfg(feature = "iot")]
     topic: String,
 }
 
 #[cfg(not(feature = "iot"))]
 impl BellButton {
-    pub fn new(_user: &UserEntry) -> Self {
-        BellButton {
-            topic: String::new(),
-        }
+    pub fn new(_flat: &FlatEntry) -> Self {
+        BellButton {}
     }
 
     pub fn events(&self) -> Result<(), String> {
@@ -27,13 +26,13 @@ impl BellButton {
 
 #[cfg(feature = "iot")]
 impl BellButton {
-    pub fn new(_user: &UserEntry) -> Self {
-        let mqtt_conn_options = MqttOptions::new("doorcam", "test.mosquitto.org", 1883);
+    pub fn new(flat: &FlatEntry) -> Self {
+        let mqtt_conn_options = MqttOptions::new("doorcam", flat.broker_address.clone(), 1883);
         let (client, _) = Client::new(mqtt_conn_options, 5);
         BellButton {
-            dev: Button::new(0),
+            dev: Button::new(flat.bell_button_pin),
             mqtt_client: client,
-            topic: String::new(),
+            topic: flat.bell_topic.clone(),
         }
     }
 

@@ -2,6 +2,8 @@
 {% block content %}
 {% if nav %}
 <nav>
+    <a href="{{ nav.admin_view_url }}">Overview</a>
+    <a href="{{ nav.flat_overview_url }}">Flats</a>
     <a href="{{ nav.user_overview_url }}">Users</a>
     <a href="{{ nav.logout_url }}">Logout</a>
 </nav>

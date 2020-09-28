@@ -21,14 +21,18 @@
 <table>
     <tr>
         <th>Name</th>
-        <th>Admin</th>
+        <th>Type</th>
+        <th>Active</th>
+        <th>Flat</th>
         <th></th>
         <th></th>
     </tr>
     {% for user in users -%}
     <tr>
         <td>{{ user.name }}</td>
-        <td>{{ user.admin }}</td>
+        <td>{{ user.user_type }}</td>
+        <td>{{ user.active }}</td>
+        <td>{{ user.flat_name }}</td>
         <td><a href="user/change/{{ user.id }}">Mod</a></td>
         <td><button type="button" onclick="delete_user({{ user.id }})">Delete</button></td>
     </tr>

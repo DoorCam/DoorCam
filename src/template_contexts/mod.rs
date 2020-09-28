@@ -1,5 +1,4 @@
-use crate::db_entry::UserEntry;
-use crate::requests::{user::*, user_auth::*};
+use crate::requests::{flat::*, index_view::*, user::*, user_auth::*};
 use rocket::request::FlashMessage;
 use serde::Serialize;
 
@@ -52,6 +51,8 @@ pub struct LoginContext {
 
 #[derive(Serialize)]
 pub struct AdminNav {
+    admin_view_url: String,
+    flat_overview_url: String,
     user_overview_url: String,
     logout_url: String,
 }
@@ -59,81 +60,16 @@ pub struct AdminNav {
 impl AdminNav {
     pub fn new() -> Self {
         AdminNav {
+            admin_view_url: uri!(get_admin_index_view).to_string(),
+            flat_overview_url: uri!(get_flats).to_string(),
             user_overview_url: uri!(get_users).to_string(),
             logout_url: uri!(get_logout).to_string(),
         }
     }
 }
 
-#[derive(Serialize)]
-pub struct UserDetailsContext {
-    pub message: Option<Message>,
-    pub nav: Option<AdminNav>,
-    pub title: String,
-    pub is_admin: bool,
-    pub user: Option<UserEntry>,
-}
+pub mod user_contexts;
+pub use user_contexts::{UserDetailsContext, UserOverviewContext};
 
-impl UserDetailsContext {
-    pub fn error(error: Message) -> UserDetailsContext {
-        return UserDetailsContext {
-            message: Some(error),
-            nav: Some(AdminNav::new()),
-            title: String::new(),
-            is_admin: false,
-            user: None,
-        };
-    }
-
-    pub fn create(error: Option<Message>) -> UserDetailsContext {
-        return UserDetailsContext {
-            message: error,
-            nav: Some(AdminNav::new()),
-            title: "Register".to_string(),
-            is_admin: true,
-            user: None,
-        };
-    }
-
-    pub fn change(error: Option<Message>, is_admin: bool, user: UserEntry) -> UserDetailsContext {
-        return UserDetailsContext {
-            message: error,
-            nav: if is_admin {
-                Some(AdminNav::new())
-            } else {
-                None
-            },
-            title: "Change".to_string(),
-            is_admin: is_admin,
-            user: Some(user),
-        };
-    }
-}
-
-#[derive(Serialize)]
-pub struct UserOverviewContext {
-    pub message: Option<Message>,
-    pub nav: AdminNav,
-    pub create_user_url: String,
-    pub users: Option<Vec<UserEntry>>,
-}
-
-impl UserOverviewContext {
-    pub fn view(users: Vec<UserEntry>) -> Self {
-        UserOverviewContext {
-            message: None,
-            nav: AdminNav::new(),
-            create_user_url: uri!(get_create).to_string(),
-            users: Some(users),
-        }
-    }
-
-    pub fn error(message: Message) -> Self {
-        UserOverviewContext {
-            message: Some(message),
-            nav: AdminNav::new(),
-            create_user_url: uri!(get_create).to_string(),
-            users: None,
-        }
-    }
-}
+pub mod flat_contexts;
+pub use flat_contexts::{FlatDetailsContext, FlatOverviewContext};

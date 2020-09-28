@@ -21,7 +21,7 @@ pub fn get_user_index_view(user: OnlyUserGuard, flash: Option<FlashMessage>) -> 
 }
 
 #[get("/admin")]
-pub fn get_admin_index_view(user: AdminGuard, flash: Option<FlashMessage>) -> Template {
+pub fn get_admin_index_view(_admin: AdminGuard, flash: Option<FlashMessage>) -> Template {
     let context = AdminViewContext {
         message: flash.map(|msg| Message::from(msg)),
         nav: AdminNav::new(),

@@ -59,6 +59,12 @@ fn main() {
                 requests::user::get_change,
                 requests::user::post_change_data,
                 requests::user::delete,
+                requests::flat::get_flats,
+                requests::flat::get_create,
+                requests::flat::post_create_data,
+                requests::flat::get_change,
+                requests::flat::post_change_data,
+                requests::flat::delete,
                 requests::door::get_open_door,
             ],
         )
