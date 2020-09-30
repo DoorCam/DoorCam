@@ -43,7 +43,7 @@ pub struct UserDetailsContext {
 
 impl UserDetailsContext {
     pub fn error(error: Message) -> Self {
-        return UserDetailsContext {
+        UserDetailsContext {
             message: Some(error),
             nav: Some(AdminNav::new()),
             title: String::new(),
@@ -51,11 +51,11 @@ impl UserDetailsContext {
             user: None,
             types: UserType::get_list(),
             flats: Vec::new(),
-        };
+        }
     }
 
     pub fn create(error: Option<Message>, flats: Vec<FlatEntry>) -> Self {
-        return UserDetailsContext {
+        UserDetailsContext {
             message: error,
             nav: Some(AdminNav::new()),
             title: "Register".to_string(),
@@ -63,7 +63,7 @@ impl UserDetailsContext {
             user: None,
             types: UserType::get_list(),
             flats: flats,
-        };
+        }
     }
 
     pub fn change(
@@ -72,7 +72,7 @@ impl UserDetailsContext {
         user: UserEntry,
         flats: Vec<FlatEntry>,
     ) -> Self {
-        return UserDetailsContext {
+        UserDetailsContext {
             message: error,
             nav: if is_admin {
                 Some(AdminNav::new())
@@ -84,6 +84,6 @@ impl UserDetailsContext {
             user: Some(user),
             types: UserType::get_list(),
             flats: flats,
-        };
+        }
     }
 }

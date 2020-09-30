@@ -45,14 +45,15 @@ impl fmt::Display for AuthError {
 pub struct GuardManager {}
 
 impl GuardManager {
-    pub fn check_password(pw: &String) -> Result<(), AuthError> {
-        if scorer::score(&analyzer::analyze(pw.as_str())) < 80f64 {
+    /// Checks whether the password is secure or errors if it is weak
+    pub fn check_password(pw: &str) -> Result<(), AuthError> {
+        if scorer::score(&analyzer::analyze(pw)) < 80f64 {
             return Err(AuthError::WeakPassword);
         }
-        return Ok(());
+        Ok(())
     }
 
-    pub fn hash(pw: &String) -> HashEntry {
+    pub fn hash(pw: &str) -> HashEntry {
         let mut pw_salt: [u8; 16] = [0; 16];
 
         crypto::fill_rand_array(&mut pw_salt);
@@ -60,24 +61,24 @@ impl GuardManager {
 
         let pw_hash = base64::encode(
             Blake2b::new()
-                .chain(pw.clone())
+                .chain(pw)
                 .chain(b"$")
                 .chain(pw_salt.clone())
                 .finalize(),
         );
 
-        return HashEntry {
+        HashEntry {
             hash: pw_hash,
             salt: pw_salt,
             config: "Blake2b".to_string(),
-        };
+        }
     }
 
     pub fn auth(
         conn: &DbConn,
         cookies: Cookies,
         name: &String,
-        pw: &String,
+        pw: &str,
     ) -> Result<UserEntry, AuthError> {
         let user = UserEntry::get_active_by_name(&conn, &name)?.pop();
         let user = match user {
@@ -89,7 +90,7 @@ impl GuardManager {
             "plain" => user.pw_hash.hash.clone(),
             "Blake2b" => base64::encode(
                 Blake2b::new()
-                    .chain(pw.clone())
+                    .chain(pw)
                     .chain(b"$")
                     .chain(user.pw_hash.salt.clone())
                     .finalize(),
@@ -102,7 +103,7 @@ impl GuardManager {
 
         GuardManager::write_user_cookie(&user, cookies)?;
 
-        return Ok(user);
+        Ok(user)
     }
 
     fn write_user_cookie(
@@ -114,7 +115,7 @@ impl GuardManager {
                 .permanent()
                 .finish(),
         );
-        return Ok(());
+        Ok(())
     }
 
     pub fn destroy_user_cookie(mut cookies: Cookies) {

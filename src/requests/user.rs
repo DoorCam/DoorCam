@@ -20,7 +20,7 @@ pub struct UserForm {
 pub fn get_create(_admin: AdminGuard, conn: DbConn, flash: Option<FlashMessage>) -> Template {
     let context = match FlatEntry::get_all(&conn) {
         Err(e) => UserDetailsContext::error(Message::error(e.to_string())),
-        Ok(flats) => UserDetailsContext::create(flash.map(|msg| Message::from(msg)), flats),
+        Ok(flats) => UserDetailsContext::create(flash.map(Message::from), flats),
     };
     Template::render("user_details", &context)
 }
@@ -49,7 +49,7 @@ pub fn post_create_data(
             "Passwords are not the same",
         ));
     }
-    match UserEntry::create(
+    if let Err(e) = UserEntry::create(
         &conn,
         &user_data.name,
         &user_data.pw,
@@ -57,13 +57,10 @@ pub fn post_create_data(
         user_data.active.unwrap_or(false),
         user_data.flat_id,
     ) {
-        Err(e) => {
-            return Err(Flash::error(
-                Redirect::to(uri!(get_create)),
-                format!("DB Error: {}", e),
-            ))
-        }
-        _ => {}
+        return Err(Flash::error(
+            Redirect::to(uri!(get_create)),
+            format!("DB Error: {}", e),
+        ));
     }
 
     return Ok(Redirect::to(uri!(get_users)));
@@ -87,7 +84,7 @@ pub fn delete(admin: AdminGuard, conn: DbConn, id: u32) -> Flash<()> {
         return Flash::error((), e.to_string());
     };
 
-    return Flash::success((), "User deleted");
+    Flash::success((), "User deleted")
 }
 
 #[get("/admin/user/change/<id>")]
@@ -112,7 +109,7 @@ pub fn get_change(
     let context = match UserEntry::get_by_id(&conn, id).as_mut() {
         Ok(users) => match users.pop() {
             Some(user) => UserDetailsContext::change(
-                flash.map(|msg| Message::from(msg)),
+                flash.map(Message::from),
                 user_guard.user.user_type.is_admin(),
                 user,
                 flats,
@@ -153,13 +150,11 @@ pub fn post_change_data(
             "Name is empty",
         ));
     }
-    if !user_data.pw.is_empty() {
-        if user_data.pw != user_data.pw_repeat {
-            return Err(Flash::error(
-                Redirect::to(uri!(get_change: id)),
-                "Passwords are not the same",
-            ));
-        }
+    if !user_data.pw.is_empty() && user_data.pw != user_data.pw_repeat {
+        return Err(Flash::error(
+            Redirect::to(uri!(get_change: id)),
+            "Passwords are not the same",
+        ));
     }
     if let Err(e) = UserEntry::change(
         &conn,

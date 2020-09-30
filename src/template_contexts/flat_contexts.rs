@@ -40,29 +40,29 @@ pub struct FlatDetailsContext {
 
 impl FlatDetailsContext {
     pub fn error(error: Message) -> Self {
-        return FlatDetailsContext {
+        FlatDetailsContext {
             message: Some(error),
             nav: AdminNav::new(),
             title: String::new(),
             flat: None,
-        };
+        }
     }
 
     pub fn create(error: Option<Message>) -> Self {
-        return FlatDetailsContext {
+        FlatDetailsContext {
             message: error,
             nav: AdminNav::new(),
             title: "Register".to_string(),
             flat: None,
-        };
+        }
     }
 
     pub fn change(error: Option<Message>, flat: FlatEntry) -> Self {
-        return FlatDetailsContext {
+        FlatDetailsContext {
             message: error,
             nav: AdminNav::new(),
             title: "Change".to_string(),
             flat: Some(flat),
-        };
+        }
     }
 }

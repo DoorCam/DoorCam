@@ -10,18 +10,18 @@ pub struct Message {
 
 impl Message {
     pub fn error(msg: String) -> Message {
-        return Message {
+        Message {
             category: "error".to_string(),
             content: msg,
-        };
+        }
     }
 }
 
 impl From<FlashMessage<'_, '_>> for Message {
     fn from(msg: FlashMessage) -> Message {
         return Message {
-            category: msg.name().to_string().clone(),
-            content: msg.msg().to_string().clone(),
+            category: msg.name().to_string(),
+            content: msg.msg().to_string(),
         };
     }
 }

@@ -27,7 +27,7 @@ impl FlatEntry {
         conn.execute(
             "INSERT INTO flat (name, active, bell_button_pin, local_address, broker_address, broker_port, bell_topic) VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7)",
             &[name, &active, &bell_button_pin, local_address, broker_address, &broker_port, bell_topic])?;
-        return Ok(FlatEntry {
+        Ok(FlatEntry {
             id: (conn.last_insert_rowid() as u32),
             name: name.clone(),
             active: active,
@@ -36,7 +36,7 @@ impl FlatEntry {
             broker_address: broker_address.clone(),
             broker_port: broker_port,
             bell_topic: bell_topic.clone(),
-        });
+        })
     }
 
     fn row_2_user(row: &rusqlite::Row) -> Result<FlatEntry, rusqlite::Error> {
@@ -94,11 +94,11 @@ impl FlatEntry {
             "UPDATE flat SET name = ?1, active = ?2, bell_button_pin = ?3, local_address = ?4, broker_address = ?5, broker_port = ?6, bell_topic = ?7 WHERE id = ?8",
             &[&self.name, &self.active, &self.bell_button_pin, &self.local_address, &self.broker_address, &self.broker_port, &self.bell_topic, &self.id],
         )?;
-        return Ok(());
+        Ok(())
     }
 
     pub fn delete(conn: &DbConn, id: u32) -> Result<(), rusqlite::Error> {
         conn.execute("DELETE FROM flat WHERE id=?1", &[&id])?;
-        return Ok(());
+        Ok(())
     }
 }

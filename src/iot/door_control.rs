@@ -1,3 +1,4 @@
+use log::{error, info};
 #[cfg(feature = "iot")]
 use rust_gpiozero::output_devices::OutputDevice;
 use std::sync::{Arc, Mutex, MutexGuard, PoisonError};
@@ -20,9 +21,9 @@ pub struct DoorControl {
 #[cfg(not(feature = "iot"))]
 impl DoorControl {
     pub fn new(_pin: u8) -> DoorControl {
-        return DoorControl {
+        DoorControl {
             is_open: Arc::new(Mutex::new(false)),
-        };
+        }
     }
 
     pub fn activate_opener(&mut self) -> Result<(), PoisonError<MutexGuard<bool>>> {
@@ -30,13 +31,14 @@ impl DoorControl {
         if *state {
             return Ok(());
         }
+        info!("Activating opener");
         *state = true;
         let is_open = Arc::clone(&self.is_open);
         thread::spawn(move || {
             thread::sleep(OPENING_TIME_PERIOD);
             match is_open.lock() {
                 Ok(mut state) => *state = false,
-                Err(_) => {}
+                Err(e) => error!("Can't deactivate opener: {}", e),
             }
         });
         Ok(())
@@ -45,7 +47,7 @@ impl DoorControl {
     #[cfg(test)]
     pub fn is_opener_active(&mut self) -> Result<bool, PoisonError<MutexGuard<bool>>> {
         let state = self.is_open.lock()?;
-        return Ok(*state);
+        Ok(*state)
     }
 }
 
@@ -62,13 +64,14 @@ impl DoorControl {
         if dev.is_active() {
             return Ok(());
         }
+        info!("Activating opener");
         dev.on();
         let dev = Arc::clone(&self.dev);
         thread::spawn(move || {
             thread::sleep(OPENING_TIME_PERIOD);
             match dev.lock() {
                 Ok(mut dev) => dev.off(),
-                Err(_) => {}
+                Err(e) => error!("Can't deactivate opener: {}", e),
             }
         });
         Ok(())

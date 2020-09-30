@@ -16,17 +16,11 @@ pub enum UserType {
 
 impl UserType {
     pub fn is_user(&self) -> bool {
-        match self {
-            UserType::User => true,
-            _ => false,
-        }
+        matches!(self, UserType::User)
     }
 
     pub fn is_admin(&self) -> bool {
-        match self {
-            UserType::Admin => true,
-            _ => false,
-        }
+        matches!(self, UserType::Admin)
     }
 
     pub fn get_list() -> Vec<(u16, String)> {

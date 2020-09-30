@@ -36,7 +36,7 @@ impl UserEntry {
             "INSERT INTO client_user (name, pw_hash, pw_salt, pw_config, user_type, active, flat_id) VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7)",
             &[name, &hash.hash, &hash.salt, &hash.config, &user_type, &active, &flat_id]
         )?;
-        return Ok(UserEntry {
+        Ok(UserEntry {
             id: (conn.last_insert_rowid() as u32),
             name: name.clone(),
             pw_hash: hash,
@@ -44,7 +44,7 @@ impl UserEntry {
             active: active,
             flat_id: flat_id,
             flat_name: None,
-        });
+        })
     }
 
     fn row_2_user(row: &rusqlite::Row) -> Result<UserEntry, rusqlite::Error> {
@@ -127,11 +127,11 @@ impl UserEntry {
                 &[name, &hash.hash, &hash.salt, &hash.config, &user_type, &active, &flat_id, &id]
             )?;
         }
-        return Ok(());
+        Ok(())
     }
 
     pub fn delete(conn: &DbConn, id: u32) -> Result<(), rusqlite::Error> {
         conn.execute("DELETE FROM user WHERE ID=?1", &[&id])?;
-        return Ok(());
+        Ok(())
     }
 }
