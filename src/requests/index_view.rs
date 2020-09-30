@@ -11,7 +11,7 @@ use rocket_contrib::templates::Template;
 #[get("/")]
 pub fn get_user_index_view(user: OnlyUserGuard, flash: Option<FlashMessage>) -> Template {
     let context = MainViewContext {
-        message: flash.map(|msg| Message::from(msg)),
+        message: flash.map(Message::from),
         cam_url: "http://doorcam.fritz.box:8081/".to_string(),
         activate_door_url: uri!(get_open_door).to_string(),
         change_user_url: uri!(get_change: user.user.id).to_string(),
@@ -23,7 +23,7 @@ pub fn get_user_index_view(user: OnlyUserGuard, flash: Option<FlashMessage>) -> 
 #[get("/admin")]
 pub fn get_admin_index_view(_admin: AdminGuard, flash: Option<FlashMessage>) -> Template {
     let context = AdminViewContext {
-        message: flash.map(|msg| Message::from(msg)),
+        message: flash.map(Message::from),
         nav: AdminNav::new(),
     };
     Template::render("admin_view", &context)

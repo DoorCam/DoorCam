@@ -16,7 +16,7 @@ pub struct LoginForm {
 #[get("/login")]
 pub fn get_login(flash: Option<FlashMessage>) -> Template {
     let context = LoginContext {
-        message: flash.map(|msg| Message::from(msg)),
+        message: flash.map(Message::from),
     };
     Template::render("login", &context)
 }

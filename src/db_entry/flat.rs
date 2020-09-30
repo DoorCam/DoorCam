@@ -30,11 +30,11 @@ impl FlatEntry {
         Ok(FlatEntry {
             id: (conn.last_insert_rowid() as u32),
             name: name.clone(),
-            active: active,
-            bell_button_pin: bell_button_pin,
+            active,
+            bell_button_pin,
             local_address: local_address.clone(),
             broker_address: broker_address.clone(),
-            broker_port: broker_port,
+            broker_port,
             bell_topic: bell_topic.clone(),
         })
     }

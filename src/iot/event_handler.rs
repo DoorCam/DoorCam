@@ -18,7 +18,7 @@ impl EventHandler {
     pub fn new(sf: Arc<Mutex<bool>>, conn: Connection) -> Self {
         let mut eh = EventHandler {
             sync_flag: sf,
-            conn: conn,
+            conn,
             buttons: Vec::new(),
         };
         if let Err(e) = eh.fetch_user() {

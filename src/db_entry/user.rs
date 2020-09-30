@@ -40,9 +40,9 @@ impl UserEntry {
             id: (conn.last_insert_rowid() as u32),
             name: name.clone(),
             pw_hash: hash,
-            user_type: user_type,
-            active: active,
-            flat_id: flat_id,
+            user_type,
+            active,
+            flat_id,
             flat_name: None,
         })
     }

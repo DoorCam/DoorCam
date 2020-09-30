@@ -62,7 +62,7 @@ impl UserDetailsContext {
             is_admin: true,
             user: None,
             types: UserType::get_list(),
-            flats: flats,
+            flats,
         }
     }
 
@@ -80,10 +80,10 @@ impl UserDetailsContext {
                 None
             },
             title: "Change".to_string(),
-            is_admin: is_admin,
+            is_admin,
             user: Some(user),
             types: UserType::get_list(),
-            flats: flats,
+            flats,
         }
     }
 }

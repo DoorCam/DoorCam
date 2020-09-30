@@ -23,7 +23,7 @@ pub struct FlatForm {
 impl FormToEntry<FlatEntry> for FlatForm {
     fn to_entry(self, id: u32) -> FlatEntry {
         FlatEntry {
-            id: id,
+            id,
             name: self.name,
             active: self.active,
             bell_button_pin: self.bell_button_pin,
@@ -37,7 +37,7 @@ impl FormToEntry<FlatEntry> for FlatForm {
 
 #[get("/admin/flat/create")]
 pub fn get_create(_admin: AdminGuard, flash: Option<FlashMessage>) -> Template {
-    let context = FlatDetailsContext::create(flash.map(|msg| Message::from(msg)));
+    let context = FlatDetailsContext::create(flash.map(Message::from));
     Template::render("flat_details", &context)
 }
 
@@ -54,7 +54,7 @@ pub fn post_create_data(
             "Name is empty",
         ));
     }
-    match FlatEntry::create(
+    if let Err(e) = FlatEntry::create(
         &conn,
         &flat_data.name,
         flat_data.active,
@@ -64,13 +64,10 @@ pub fn post_create_data(
         flat_data.broker_port,
         &flat_data.bell_topic,
     ) {
-        Err(e) => {
-            return Err(Flash::error(
-                Redirect::to(uri!(get_create)),
-                format!("DB Error: {}", e),
-            ))
-        }
-        _ => {}
+        return Err(Flash::error(
+            Redirect::to(uri!(get_create)),
+            format!("DB Error: {}", e),
+        ));
     }
 
     // sync iot::EventHandler
@@ -108,7 +105,7 @@ pub fn delete(
         Err(e) => return Flash::error((), e.to_string()),
     };
 
-    return Flash::success((), "Flat deleted");
+    Flash::success((), "Flat deleted")
 }
 
 #[get("/admin/flat/change/<id>")]
@@ -120,7 +117,7 @@ pub fn get_change(
 ) -> Result<Template, Status> {
     let context = match FlatEntry::get_by_id(&conn, id).as_mut() {
         Ok(flats) => match flats.pop() {
-            Some(flat) => FlatDetailsContext::change(flash.map(|msg| Message::from(msg)), flat),
+            Some(flat) => FlatDetailsContext::change(flash.map(Message::from), flat),
             None => FlatDetailsContext::error(Message::error("No flat found".to_string())),
         },
         Err(e) => FlatDetailsContext::error(Message::error(e.to_string())),
