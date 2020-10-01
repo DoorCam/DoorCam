@@ -163,7 +163,7 @@ impl<'a, 'r> FromRequest<'a, 'r> for OnlyUserGuard {
     fn from_request(request: &'a Request<'r>) -> request::Outcome<OnlyUserGuard, AuthError> {
         let user_guard = request.guard::<UserGuard>()?;
 
-        if !user_guard.user.user_type.is_user() {
+        if user_guard.is_user() {
             Outcome::Success(OnlyUserGuard {
                 user: user_guard.user,
             })
@@ -183,7 +183,7 @@ impl<'a, 'r> FromRequest<'a, 'r> for AdminGuard {
     fn from_request(request: &'a Request<'r>) -> request::Outcome<AdminGuard, AuthError> {
         let user_guard = request.guard::<UserGuard>()?;
 
-        if user_guard.user.user_type.is_admin() {
+        if user_guard.is_admin() {
             Outcome::Success(AdminGuard {
                 user: user_guard.user,
             })
