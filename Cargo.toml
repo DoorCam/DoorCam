@@ -10,6 +10,8 @@ edition = "2018"
 default = []
 iot = ["rust_gpiozero", "rumqttc"]
 
+# TODO https://doc.rust-lang.org/cargo/reference/overriding-dependencies.html of rocket_contrib regarding rusqlite's feature bundled and newer Tera-Version
+
 [dependencies]
 rocket = "0.4.5"
 serde = { version = "1.0.115", features = ["derive"] }

@@ -24,6 +24,7 @@ impl BellButton {
     }
 }
 
+// TODO rewrite with own thread, dev.wait_for_press and Drop-trait
 #[cfg(feature = "iot")]
 impl BellButton {
     pub fn new(flat: &FlatEntry) -> Self {
