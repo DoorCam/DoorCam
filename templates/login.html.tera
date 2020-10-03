@@ -6,7 +6,7 @@
 {{ super() }}
 <form method="post">
   <div class="container">
-    <h1>login</h1>
+    <h1>Login</h1>
     <hr />
 
     <label for="name"><b>Name</b></label>
@@ -16,7 +16,7 @@
     <input type="password" placeholder="Enter Password" name="pw" id="pw" required />
     <hr />
 
-    <button type="submit" class="registerbtn">Register</button>
+    <button type="submit" class="registerbtn">Login</button>
   </div>
 </form>
 {% endblock content %}

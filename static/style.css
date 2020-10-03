@@ -4,14 +4,12 @@
     --fg-color: black;
   }
 }
-
 @media (prefers-color-scheme: dark) {
   :root {
     --bg-color: black;
     --fg-color: white;
   }
 }
-
 * {
   box-sizing: border-box;
 }
@@ -48,8 +46,8 @@ div.flash.error {
 }
 
 /* Full-width input fields */
-input[type="text"],
-input[type="password"] {
+input[type=text],
+input[type=password] {
   width: 100%;
   padding: 15px;
   margin: 5px 0 22px 0;
@@ -58,8 +56,8 @@ input[type="password"] {
   background: #f1f1f1;
 }
 
-input[type="text"]:focus,
-input[type="password"]:focus {
+input[type=text]:focus,
+input[type=password]:focus {
   background-color: #ddd;
   outline: none;
 }
@@ -81,8 +79,32 @@ hr {
   width: 100%;
   opacity: 0.9;
 }
-
 .registerbtn:hover {
   opacity: 1;
 }
 
+#main-navigation .nav-item {
+  padding: 5px;
+}
+
+.btn {
+  border-radius: 0rem;
+}
+
+#main-card {
+  margin-top: 20px;
+  max-width: 70vw;
+  margin-left: 15vw;
+}
+@media (max-width: 1024px) {
+  #main-card {
+    max-width: 80vw;
+    margin-left: 10vw;
+  }
+}
+@media (max-width: 768px) {
+  #main-card {
+    max-width: 100vw;
+    margin-left: 0vw;
+  }
+}

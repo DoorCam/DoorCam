@@ -16,9 +16,21 @@
 
 {% block content %}
 {{ super() }}
-<a href="{{ create_user_url }}">Create</a>
+<div class="card" id="main-card">
+<div class="card-header">
+<h2 class="float-left">User Overview</h2>
+<a href="{{ create_user_url }}" class="btn btn-success float-right">Create</a>
+</div>
 {% if users %}
-<table>
+<table class="table table-striped">
+    <colgroup>
+        <col width="20%">
+        <col width="20%">
+        <col width="20%">
+        <col width="40%">
+        <col>
+        <col>
+    </colgroup>
     <tr>
         <th>Name</th>
         <th>Type</th>
@@ -31,12 +43,13 @@
     <tr>
         <td>{{ user.name }}</td>
         <td>{{ user.user_type }}</td>
-        <td>{{ user.active }}</td>
+        <td><i class="fas fa-{% if user.active %}check{% else %}times{% endif %}"></i></td>
         <td>{{ user.flat_name }}</td>
-        <td><a href="user/change/{{ user.id }}">Mod</a></td>
-        <td><button type="button" onclick="delete_user({{ user.id }})">Delete</button></td>
+        <td><a href="user/change/{{ user.id }}" class="btn btn-success"><i class="fas fa-edit"></i></a></td>
+        <td><button type="button" onclick="delete_user({{ user.id }})" class="btn btn-danger"><i class="fas fa-trash"></i></button></td>
     </tr>
     {%- endfor %}
 </table>
+</div>
 {% endif %}
 {% endblock content %}
