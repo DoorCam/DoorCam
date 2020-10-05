@@ -5,4 +5,4 @@ pub mod bell_button;
 pub use bell_button::BellButton;
 
 pub mod event_handler;
-pub use event_handler::EventHandler;
+pub use event_handler::event_loop;

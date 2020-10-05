@@ -25,6 +25,7 @@ rumqttc = { version = "0.0.7", optional = true }
 rust_gpiozero = { version = "0.2.0", optional = true }
 log4rs = "0.13.0"
 log = "0.4.11"
+rsevents = "0.2.1"
 
 [dependencies.rocket_contrib]
 version = "0.4.5"
