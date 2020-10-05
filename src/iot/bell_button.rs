@@ -35,7 +35,7 @@ impl BellButton {
 
         thread::spawn(move || loop {
             dev.wait_for_press(None);
-            info!("Button pressed");
+            info!("IoT: Button pressed");
 
             match drop.lock() {
                 Ok(state) => {
@@ -43,7 +43,7 @@ impl BellButton {
                         break;
                     }
                 }
-                Err(e) => error!("Can't lock drop: {}", e),
+                Err(e) => error!("IoT: Can't lock drop: {}", e),
             }
 
             BellButton::send_bell_signal(&mut mqtt_client, &topic);
@@ -54,7 +54,7 @@ impl BellButton {
 
     fn send_bell_signal(mqtt_client: &mut Client, topic: &String) {
         if let Err(e) = mqtt_client.publish(topic, QoS::ExactlyOnce, false, b"".to_vec()) {
-            error!("Can't send Bell Signal: {}", e);
+            error!("IoT: Can't send Bell Signal: {}", e);
         }
     }
 }
@@ -64,7 +64,7 @@ impl Drop for BellButton {
     fn drop(&mut self) {
         match self.drop_flag.lock() {
             Ok(mut state) => *state = true,
-            Err(e) => error!("Can't lock drop: {}", e),
+            Err(e) => error!("IoT: Can't lock drop: {}", e),
         }
     }
 }

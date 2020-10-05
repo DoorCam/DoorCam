@@ -30,7 +30,7 @@ fn main() {
     #[cfg(not(debug_assertions))]
     log4rs::init_file("logger.yaml", Default::default()).unwrap();
 
-    let flat_sync = Arc::new(AutoResetEvent::new(State::Unset));
+    let flat_sync_event = Arc::new(AutoResetEvent::new(State::Unset));
     let db = match rusqlite::Connection::open("db.sqlite") {
         Ok(conn) => conn,
         Err(e) => {
@@ -38,7 +38,7 @@ fn main() {
             return;
         }
     };
-    iot::event_loop(&flat_sync, db);
+    iot::event_loop(&flat_sync_event, db);
 
     rocket::ignite()
         .mount(
@@ -71,6 +71,6 @@ fn main() {
         .attach(db_entry::DbConn::fairing())
         .attach(SpaceHelmet::default())
         .manage(Mutex::new(iot::DoorControl::new(1)))
-        .manage(flat_sync)
+        .manage(flat_sync_event)
         .launch();
 }

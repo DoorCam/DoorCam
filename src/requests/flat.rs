@@ -7,7 +7,8 @@ use rocket::request::{FlashMessage, Form};
 use rocket::response::{Flash, Redirect};
 use rocket::State;
 use rocket_contrib::templates::Template;
-use std::sync::{Arc, Mutex};
+use rsevents::AutoResetEvent;
+use std::sync::Arc;
 
 #[derive(FromForm)]
 pub struct FlatForm {
@@ -46,7 +47,7 @@ pub fn post_create_data(
     flat_data: Form<FlatForm>,
     _admin: AdminGuard,
     conn: DbConn,
-    sync_flag: State<Arc<Mutex<bool>>>,
+    flat_sync_event: State<Arc<AutoResetEvent>>,
 ) -> Result<Redirect, Flash<Redirect>> {
     if flat_data.name.is_empty() {
         return Err(Flash::error(
@@ -71,10 +72,7 @@ pub fn post_create_data(
     }
 
     // sync iot::EventHandler
-    match sync_flag.lock() {
-        Ok(mut sf) => *sf = true,
-        Err(e) => return Err(Flash::error(Redirect::to(uri!(get_create)), e.to_string())),
-    };
+    flat_sync_event.set();
 
     return Ok(Redirect::to(uri!(get_flats)));
 }
@@ -92,7 +90,7 @@ pub fn get_flats(_admin: AdminGuard, conn: DbConn) -> Template {
 pub fn delete(
     _admin: AdminGuard,
     conn: DbConn,
-    sync_flag: State<Arc<Mutex<bool>>>,
+    flat_sync_event: State<Arc<AutoResetEvent>>,
     id: u32,
 ) -> Flash<()> {
     if let Err(e) = FlatEntry::delete(&conn, id) {
@@ -100,10 +98,7 @@ pub fn delete(
     };
 
     // sync iot::EventHandler
-    match sync_flag.lock() {
-        Ok(mut sf) => *sf = true,
-        Err(e) => return Flash::error((), e.to_string()),
-    };
+    flat_sync_event.set();
 
     Flash::success((), "Flat deleted")
 }
@@ -129,7 +124,7 @@ pub fn get_change(
 pub fn post_change_data(
     _admin: AdminGuard,
     conn: DbConn,
-    sync_flag: State<Arc<Mutex<bool>>>,
+    flat_sync_event: State<Arc<AutoResetEvent>>,
     id: u32,
     flat_data: Form<FlatForm>,
 ) -> Result<Redirect, Flash<Redirect>> {
@@ -147,15 +142,7 @@ pub fn post_change_data(
     }
 
     // sync iot::EventHandler
-    match sync_flag.lock() {
-        Ok(mut sf) => *sf = true,
-        Err(e) => {
-            return Err(Flash::error(
-                Redirect::to(uri!(get_change: id)),
-                e.to_string(),
-            ))
-        }
-    };
+    flat_sync_event.set();
 
     return Ok(Redirect::to(uri!(get_flats)));
 }

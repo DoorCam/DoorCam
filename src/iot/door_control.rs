@@ -31,14 +31,14 @@ impl DoorControl {
         if *state {
             return Ok(());
         }
-        info!("Activating opener");
+        info!("IoT: Activating opener");
         *state = true;
         let is_open = Arc::clone(&self.is_open);
         thread::spawn(move || {
             thread::sleep(OPENING_TIME_PERIOD);
             match is_open.lock() {
                 Ok(mut state) => *state = false,
-                Err(e) => error!("Can't deactivate opener: {}", e),
+                Err(e) => error!("IoT: Can't deactivate opener: {}", e),
             }
         });
         Ok(())
@@ -64,14 +64,14 @@ impl DoorControl {
         if dev.is_active() {
             return Ok(());
         }
-        info!("Activating opener");
+        info!("IoT: Activating opener");
         dev.on();
         let dev = Arc::clone(&self.dev);
         thread::spawn(move || {
             thread::sleep(OPENING_TIME_PERIOD);
             match dev.lock() {
                 Ok(mut dev) => dev.off(),
-                Err(e) => error!("Can't deactivate opener: {}", e),
+                Err(e) => error!("IoT: Can't deactivate opener: {}", e),
             }
         });
         Ok(())
