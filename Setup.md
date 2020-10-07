@@ -18,6 +18,7 @@ Clone this repository, cd into it.
 <!--- TODO add fix for libsqlite.so -->
 
 ```sh
+ROCKET_ENV=production
 cargo build --release --features iot
 ```
 
