@@ -47,6 +47,7 @@ impl UserEntry {
         })
     }
 
+    /// Converts a rusqlite row to an UserEntry
     fn row_2_user(row: &rusqlite::Row) -> Result<UserEntry, rusqlite::Error> {
         Ok(UserEntry {
             id: row.get::<usize, u32>(0),

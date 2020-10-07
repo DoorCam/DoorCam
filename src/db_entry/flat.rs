@@ -39,7 +39,8 @@ impl FlatEntry {
         })
     }
 
-    fn row_2_user(row: &rusqlite::Row) -> Result<FlatEntry, rusqlite::Error> {
+    /// Converts a rusqlite row to a FlatEntry
+    fn row_2_flat(row: &rusqlite::Row) -> Result<FlatEntry, rusqlite::Error> {
         Ok(FlatEntry {
             id: row.get::<usize, u32>(0),
             name: row.get::<usize, String>(1),
@@ -56,7 +57,7 @@ impl FlatEntry {
         let mut stmt =
             conn.prepare("SELECT id, name, active, bell_button_pin, local_address, broker_address, broker_port, bell_topic FROM flat")?;
         return stmt
-            .query_map(&[], |row| FlatEntry::row_2_user(&row))?
+            .query_map(&[], |row| FlatEntry::row_2_flat(&row))?
             .map(|r| match r {
                 Ok(x) => x,
                 Err(e) => Err(e),
@@ -64,11 +65,16 @@ impl FlatEntry {
             .collect();
     }
 
+    /// # Get all active flats
+    ///
+    /// ## Arguments
+    ///
+    /// * `con` - A rusqlite connection and not the rocket wrapper
     pub fn get_active(conn: &rusqlite::Connection) -> Result<Vec<FlatEntry>, rusqlite::Error> {
         let mut stmt =
             conn.prepare("SELECT id, name, active, bell_button_pin, local_address, broker_address, broker_port, bell_topic FROM flat WHERE active = true")?;
         return stmt
-            .query_map(&[], |row| FlatEntry::row_2_user(&row))?
+            .query_map(&[], |row| FlatEntry::row_2_flat(&row))?
             .map(|r| match r {
                 Ok(x) => x,
                 Err(e) => Err(e),
@@ -81,7 +87,7 @@ impl FlatEntry {
             "SELECT id, name, active, bell_button_pin, local_address, broker_address, broker_port, bell_topic FROM flat WHERE ID=?1",
         )?;
         return stmt
-            .query_map(&[&id], |row| FlatEntry::row_2_user(&row))?
+            .query_map(&[&id], |row| FlatEntry::row_2_flat(&row))?
             .map(|r| match r {
                 Ok(x) => x,
                 Err(e) => Err(e),

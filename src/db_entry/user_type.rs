@@ -23,6 +23,7 @@ impl UserType {
         matches!(self, UserType::Admin)
     }
 
+    /// get a Vector of touples of the value and string of all types
     pub fn get_list() -> Vec<(u16, String)> {
         vec![UserType::User.into(), UserType::Admin.into()]
     }
@@ -64,6 +65,7 @@ impl Into<(u16, String)> for UserType {
     }
 }
 
+/// needed to convert from the raw SQL-value
 impl FromSql for UserType {
     fn column_result(value: ValueRef<'_>) -> FromSqlResult<Self> {
         match UserType::try_from(u16::column_result(value)?) {
@@ -73,6 +75,7 @@ impl FromSql for UserType {
     }
 }
 
+/// needed to convert to the raw SQL-value
 impl ToSql for UserType {
     fn to_sql(&self) -> rusqlite::Result<ToSqlOutput<'_>> {
         let num: u16 = self.clone().into();
@@ -80,6 +83,7 @@ impl ToSql for UserType {
     }
 }
 
+/// needed to convert from the raw Form-value
 impl<'v> FromFormValue<'v> for UserType {
     type Error = &'v RawStr;
 
