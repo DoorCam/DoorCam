@@ -13,6 +13,7 @@ pub struct LoginForm {
     pw: String,
 }
 
+/// Get the login form
 #[get("/login")]
 pub fn get_login(flash: Option<FlashMessage>) -> Template {
     let context = LoginContext {
@@ -21,6 +22,7 @@ pub fn get_login(flash: Option<FlashMessage>) -> Template {
     Template::render("login", &context)
 }
 
+/// Post the user-data to do the login logic
 #[post("/login", data = "<user_data>")]
 pub fn post_login_data(
     user_data: Form<LoginForm>,
@@ -31,6 +33,8 @@ pub fn post_login_data(
         Err(e) => return Err(Flash::error(Redirect::to(uri!(get_login)), e.to_string())),
         Ok(user) => user,
     };
+
+    // Redirects to the user-type based main-site
     return Ok(Redirect::to(if user.user_type.is_admin() {
         uri!(get_admin_index_view)
     } else {
@@ -38,6 +42,7 @@ pub fn post_login_data(
     }));
 }
 
+/// Get logout to destroy the user-cookie
 #[get("/logout")]
 pub fn get_logout(cookies: Cookies) -> Flash<Redirect> {
     GuardManager::destroy_user_cookie(cookies);

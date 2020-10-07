@@ -6,7 +6,7 @@ use serde::{Deserialize, Serialize};
 pub struct HashEntry {
     pub hash: String,
     pub salt: String,
-    pub config: String,
+    pub config: String, // TODO change to enum
 }
 
 #[derive(Debug, Serialize, Deserialize)]

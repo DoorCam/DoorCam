@@ -6,6 +6,7 @@ use rsevents::{AutoResetEvent, Awaitable};
 use std::sync::Arc;
 use std::thread;
 
+/// Create multi-threaded event-loops in order to sync with the web application and creates and drops BellButtons, which have their own event-loop
 pub fn event_loop(flat_sync_event: &Arc<AutoResetEvent>, conn: Connection) {
     let flat_sync_event = Arc::clone(&flat_sync_event);
     thread::spawn(move || {
@@ -19,6 +20,7 @@ pub fn event_loop(flat_sync_event: &Arc<AutoResetEvent>, conn: Connection) {
     });
 }
 
+/// Fetches all active flats from the database if a flat has been changed
 fn fetch_flats(buttons: &mut Vec<BellButton>, conn: &Connection) {
     let flats = match FlatEntry::get_active(&conn) {
         Ok(f) => f,
@@ -27,5 +29,5 @@ fn fetch_flats(buttons: &mut Vec<BellButton>, conn: &Connection) {
             return;
         }
     };
-    *buttons = flats.iter().map(|flat| BellButton::new(&flat)).collect();
+    *buttons = flats.iter().map(BellButton::new).collect();
 }

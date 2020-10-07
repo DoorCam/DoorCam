@@ -53,6 +53,7 @@ impl GuardManager {
         Ok(())
     }
 
+    /// Creates a HashEntry out of a password with a random salt and the currently most secure Hashing algorithm
     pub fn hash(pw: &str) -> HashEntry {
         let mut pw_salt: [u8; 16] = [0; 16];
 
@@ -74,18 +75,21 @@ impl GuardManager {
         }
     }
 
+    /// Checks whether the given credentials are valid and writes the user-cookie
     pub fn auth(
         conn: &DbConn,
         cookies: Cookies,
         name: &String,
         pw: &str,
     ) -> Result<UserEntry, AuthError> {
+        // Get UserEntry
         let user = UserEntry::get_active_by_name(&conn, &name)?.pop();
         let user = match user {
             Some(user) => user,
             None => return Err(AuthError::NoUser),
         };
 
+        // Create hash with matching config
         let pw_hash = match user.pw_hash.config.as_str() {
             "plain" => user.pw_hash.hash.clone(),
             "Blake2b" => base64::encode(
@@ -97,6 +101,7 @@ impl GuardManager {
             ),
             _ => return Err(AuthError::UnknownHashConfig),
         };
+
         if user.pw_hash.hash != pw_hash {
             return Err(AuthError::WrongPassword);
         }
@@ -140,6 +145,7 @@ impl UserGuard {
 impl<'a, 'r> FromRequest<'a, 'r> for UserGuard {
     type Error = AuthError;
 
+    /// Checks for valid user-cookie in a request
     fn from_request(request: &'a Request<'r>) -> request::Outcome<UserGuard, AuthError> {
         return request
             .cookies()
@@ -160,6 +166,7 @@ pub struct OnlyUserGuard {
 impl<'a, 'r> FromRequest<'a, 'r> for OnlyUserGuard {
     type Error = AuthError;
 
+    /// Checks if a valid client is a user
     fn from_request(request: &'a Request<'r>) -> request::Outcome<OnlyUserGuard, AuthError> {
         let user_guard = request.guard::<UserGuard>()?;
 
@@ -180,6 +187,7 @@ pub struct AdminGuard {
 impl<'a, 'r> FromRequest<'a, 'r> for AdminGuard {
     type Error = AuthError;
 
+    /// Checks if a valid client is an admin
     fn from_request(request: &'a Request<'r>) -> request::Outcome<AdminGuard, AuthError> {
         let user_guard = request.guard::<UserGuard>()?;
 

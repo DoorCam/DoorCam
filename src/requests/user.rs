@@ -16,6 +16,7 @@ pub struct UserForm {
     flat_id: Option<u32>,
 }
 
+/// Get the form to create an user
 #[get("/admin/user/create")]
 pub fn get_create(_admin: AdminGuard, conn: DbConn, flash: Option<FlashMessage>) -> Template {
     let context = match FlatEntry::get_all(&conn) {
@@ -25,6 +26,7 @@ pub fn get_create(_admin: AdminGuard, conn: DbConn, flash: Option<FlashMessage>)
     Template::render("user_details", &context)
 }
 
+/// Post the user-data in order to create an user
 #[post("/admin/user/create", data = "<user_data>")]
 pub fn post_create_data(
     user_data: Form<UserForm>,
@@ -66,6 +68,7 @@ pub fn post_create_data(
     return Ok(Redirect::to(uri!(get_users)));
 }
 
+/// Shows all users
 #[get("/admin/user")]
 pub fn get_users(_admin: AdminGuard, conn: DbConn) -> Template {
     let context = match UserEntry::get_all(&conn) {
@@ -75,6 +78,7 @@ pub fn get_users(_admin: AdminGuard, conn: DbConn) -> Template {
     Template::render("user_overview", &context)
 }
 
+/// Deletes an user
 #[delete("/admin/user/delete/<id>")]
 pub fn delete(admin: AdminGuard, conn: DbConn, id: u32) -> Flash<()> {
     if admin.user.id == id {
@@ -87,6 +91,7 @@ pub fn delete(admin: AdminGuard, conn: DbConn, id: u32) -> Flash<()> {
     Flash::success((), "User deleted")
 }
 
+/// Get the form to modify an user
 #[get("/admin/user/change/<id>")]
 pub fn get_change(
     user_guard: UserGuard,
@@ -94,9 +99,12 @@ pub fn get_change(
     flash: Option<FlashMessage>,
     id: u32,
 ) -> Result<Template, Status> {
+    // An ordinary user is only allowed to modify himself
     if !user_guard.user.user_type.is_admin() && user_guard.user.id != id {
         return Err(Status::Forbidden);
     }
+
+    // Get all FlatEntrys to display them in a select-box
     let flats = match FlatEntry::get_all(&conn) {
         Err(e) => {
             return Ok(Template::render(
@@ -106,6 +114,8 @@ pub fn get_change(
         }
         Ok(flats) => flats,
     };
+
+    // Get the UserEntry in order to know the old values
     let context = match UserEntry::get_by_id(&conn, id).as_mut() {
         Ok(users) => match users.pop() {
             Some(user) => UserDetailsContext::change(
@@ -121,6 +131,7 @@ pub fn get_change(
     Ok(Template::render("user_details", &context))
 }
 
+/// Post user data to modify the user
 #[post("/admin/user/change/<id>", data = "<user_data>")]
 pub fn post_change_data(
     user_guard: UserGuard,
@@ -128,12 +139,15 @@ pub fn post_change_data(
     id: u32,
     user_data: Form<UserForm>,
 ) -> Result<Redirect, Flash<Redirect>> {
+    // An ordinary user is only allowed to modify himself
     if user_guard.is_user() && user_guard.user.id != id {
         return Err(Flash::error(
             Redirect::to(uri!(get_change: id)),
             "Forbidden",
         ));
     }
+
+    // A non-admin isn't allowed to change these fields
     if !user_guard.user.user_type.is_admin()
         && (user_data.user_type.is_some()
             || user_data.active.is_some()
@@ -144,18 +158,23 @@ pub fn post_change_data(
             "Don't manipulate the user-type or active-Flag",
         ));
     }
+
     if user_data.name.is_empty() {
         return Err(Flash::error(
             Redirect::to(uri!(get_change: id)),
             "Name is empty",
         ));
     }
+
+    // If the password is updated, the two fields must be the same
     if !user_data.pw.is_empty() && user_data.pw != user_data.pw_repeat {
         return Err(Flash::error(
             Redirect::to(uri!(get_change: id)),
             "Passwords are not the same",
         ));
     }
+
+    // Unwraps all optional fields with its user-type based default value
     if let Err(e) = UserEntry::change(
         &conn,
         id,
