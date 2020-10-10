@@ -6,10 +6,12 @@
 {{ super() }}
 <script>
     function delete_flat(id) {
-        let xhttp = new XMLHttpRequest();
-        xhttp.open("DELETE", "flat/delete/" + id, false);
-        xhttp.send();
-        window.location.reload();
+        if (confirm("Do you really want to delete this flat?")) {
+            let xhttp = new XMLHttpRequest();
+            xhttp.open("DELETE", "flat/delete/" + id, false);
+            xhttp.send();
+            window.location.reload();
+        }
     }
 </script>
 {% endblock head %}
@@ -18,7 +20,7 @@
 {{ super() }}
 <div class="card" id="main-card">
 <div class="card-header">
-<h2 class="float-left">Flat Overview</h2>
+<h1 class="float-left">Flat Overview</h1>
 <a href="{{ create_flat_url }}" class="btn btn-success float-right"><i class="fas fa-plus"></i>&nbsp;Create</a>
 </div>
 {% if flats %}

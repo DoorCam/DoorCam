@@ -4,7 +4,10 @@
 
 {% block content %}
 {{ super() }}
+<div class="card" id="main-card">
+<div class="card-header">
 <h1>{{ title }} Flat</h1>
+</div>
 <form method="post">
   <div class="container">
 
@@ -12,10 +15,10 @@
     <input type="text" placeholder="Enter Name" name="name" id="name" {% if flat %} value="{{ flat.name }}" {% endif %}
       required />
 
-    <label for="bell_button_pin"><b>Bell Button Pin</b></label>
+    <label for="bell_button_pin"><b>Bell Button Pin</b></label><br>
     <input type="number" name="bell_button_pin" id="bell_button_pin" {% if flat %} value="{{ flat.bell_button_pin }}"
       {% endif %} required />
-
+    <br><br>
     <label for="local_address"><b>Local Address</b></label>
     <input type="text" placeholder="Enter Local Address" name="local_address" id="local_address" {% if flat %}
       value="{{ flat.local_address }}" {% endif %} required />
@@ -23,11 +26,11 @@
     <label for="broker_address"><b>Broker Address</b></label>
     <input type="text" placeholder="Enter Broker Address" name="broker_address" id="broker_address" {% if flat %}
       value="{{ flat.broker_address }}" {% endif %} required />
-
-    <label for="broker_port"><b>Broker Port</b></label>
+    <br>
+    <label for="broker_port"><b>Broker Port</b></label><br>
     <input type="number" name="broker_port" id="broker_port"
       value="{% if flat %}{{ flat.broker_port }}{% else %}1883{% endif %}" required />
-
+    <br><br>
     <label for="bell_topic"><b>Bell Topic</b></label>
     <input type="text" placeholder="Enter Bell Topic" name="bell_topic" id="bell_topic" {% if flat %}
       value="{{ flat.bell_topic }}" {% endif %} required />
@@ -36,7 +39,8 @@
     <input type="checkbox" name="active" id="active" {% if flat and flat.active or not flat %} checked {% endif %} />
     <hr />
 
-    <button type="submit" class="registerbtn">Register</button>
+    <button type="submit" class="registerbtn">{{ title }}</button>
   </div>
 </form>
+</div>
 {% endblock content %}

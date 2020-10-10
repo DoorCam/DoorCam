@@ -4,7 +4,10 @@
 
 {% block content %}
 {{ super() }}
+<div class="card" id="main-card">
+<div class="card-header">
 <h1>{{ title }} User</h1>
+</div>
 <form method="post">
   <div class="container">
     <p>Please fill in this form to create an account.</p>
@@ -44,7 +47,8 @@
     {% endif %}
     <hr />
 
-    <button type="submit" class="registerbtn">Register</button>
+    <button type="submit" class="registerbtn">{{ title }}</button>
   </div>
 </form>
+</div>
 {% endblock content %}
