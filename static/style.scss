@@ -1,3 +1,4 @@
+//Theme specific values
 @media (prefers-color-scheme: light) {
   :root {
     --bg-color: white;
@@ -12,10 +13,14 @@
   }
 }
 
+//Sizes
 $phone: 512px;
 $smalltablet: 768px;
 $tablet: 1024px;
 $smalldesktop: 1366px;
+
+//Colors
+$btn-text-color: white;
 
 
 * {
@@ -93,9 +98,13 @@ hr {
 }
 
 #main-navigation {
-    .nav-item {
-        padding: 5px;
+  .nav-item {
+    padding: 5px 10px;
+    margin: 0 5px;
+    a {
+      color: black;
     }
+  }
 }
 
 .btn {
@@ -115,6 +124,3 @@ hr {
         margin-left: 0vw;
     }
 }
-
-
-

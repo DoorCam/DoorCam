@@ -2,17 +2,19 @@
 {% block content %}
 {% if nav %}
 <nav class="navbar navbar-expand-lg navbar-light bg-light" id="main-navigation">
-  <a class="navbar-brand" href="#">DoorCam</a>
+  <a class="navbar-brand" href="{{ nav.admin_view_url }}">DoorCam</a>
   <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
     <span class="navbar-toggler-icon"></span>
   </button>
 
   <div class="collapse navbar-collapse">
+    <ul class="navbar-nav mr-auto">
+      <li class="nav-item main-menu-item"><a href="{{ nav.flat_overview_url }}"><i class="fas fa-home"></i>&nbsp;Flats</a></li>
+      <li class="nav-item main-menu-item"><a href="{{ nav.user_overview_url }}"><i class="fas fa-users"></i>&nbsp;Users</a></li>
+      
+    </ul>
     <ul class="navbar-nav ml-auto">
-    <li class="nav-item"><a href="{{ nav.admin_view_url }}">Overview</a></li>
-    <li class="nav-item"><a href="{{ nav.flat_overview_url }}">Flats</a></li>
-    <li class="nav-item"><a href="{{ nav.user_overview_url }}">Users</a></li>
-    <li class="nav-item"><a href="{{ nav.logout_url }}">Logout</a></li>
+      <li class="nav-item btn btn-danger" id="logout"><a href="{{ nav.logout_url }}"><i class="fas fa-sign-out-alt"></i>&nbsp;Logout</a></li>
     </ul>
   </div>
 </nav>

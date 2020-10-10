@@ -19,7 +19,7 @@
 <div class="card" id="main-card">
 <div class="card-header">
 <h2 class="float-left">User Overview</h2>
-<a href="{{ create_user_url }}" class="btn btn-success float-right">Create</a>
+<a href="{{ create_user_url }}" class="btn btn-success float-right"><i class="fas fa-plus"></i>&nbsp;Create</a>
 </div>
 {% if users %}
 <table class="table table-striped">

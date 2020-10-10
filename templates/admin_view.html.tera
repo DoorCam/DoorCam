@@ -2,6 +2,13 @@
 {% block title %}Overview{{ super() }}{% endblock title %}
 {% block content %}
 {{ super() }}
-<a href="{{ nav.flat_overview_url }}">Flat</a>
-<a href="{{ nav.user_overview_url }}">Users</a>
+<div class="card" id="main-card">
+<div class="card-header">
+<h2 class="float-left">Admin Overview</h2>
+</div>
+<div class="p-3">
+<div class="row">
+    <div class="col-md-6"><a href="{{ nav.flat_overview_url }}" class="btn btn-success w-100">Flat</a></div>
+    <div class="col-md-6"><a href="{{ nav.user_overview_url }}" class="btn btn-success w-100">Users</a></div>
+</div>
 {% endblock content %}

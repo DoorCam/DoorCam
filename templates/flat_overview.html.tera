@@ -16,9 +16,23 @@
 
 {% block content %}
 {{ super() }}
-<a href="{{ create_flat_url }}">Create</a>
+<div class="card" id="main-card">
+<div class="card-header">
+<h2 class="float-left">Flat Overview</h2>
+<a href="{{ create_flat_url }}" class="btn btn-success float-right"><i class="fas fa-plus"></i>&nbsp;Create</a>
+</div>
 {% if flats %}
-<table>
+<table class="table table-striped">
+    <colgroup>
+        <col width="20%">
+        <col width="15%">
+        <col width="15%">
+        <col width="20%">
+        <col width="20%">
+        <col width="10%">
+        <col>
+        <col>
+    </colgroup>
     <tr>
         <th>Name</th>
         <th>Pin</th>
@@ -37,8 +51,12 @@
         <td>{{ flat.broker_address }}:{{ flat.broker_port }}</td>
         <td>{{ flat.bell_topic }}</td>
         <td>{{ flat.active }}</td>
-        <td><a href="flat/change/{{ flat.id }}">Mod</a></td>
-        <td><button type="button" onclick="delete_flat({{ flat.id }})">Delete</button></td>
+        <td>
+            <a href="flat/change/{{ flat.id }}" class="btn btn-success"><i class="fas fa-edit"></i></a>
+        </td>
+        <td>
+            <button type="button" onclick="delete_flat({{ flat.id }})" class="btn btn-danger"><i class="fas fa-trash"></i></button>
+        </td>
     </tr>
     {%- endfor %}
 </table>
