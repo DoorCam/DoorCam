@@ -1,3 +1,4 @@
+///All logic which is not web-based.
 pub mod door_control;
 pub use door_control::DoorControl;
 

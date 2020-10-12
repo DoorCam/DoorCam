@@ -11,6 +11,7 @@ mod door_control_test;
 
 const OPENING_TIME_PERIOD: Duration = Duration::from_secs(10);
 
+///Used to activate the door-opener.
 pub struct DoorControl {
     #[cfg(not(feature = "iot"))]
     is_open: Arc<Mutex<bool>>,

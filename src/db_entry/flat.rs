@@ -1,6 +1,7 @@
 use super::{rusqlite, DbConn};
 use serde::{Deserialize, Serialize};
 
+/// Flat entry of the corresponding "flat" table.
 #[derive(Debug, Serialize, Deserialize)]
 pub struct FlatEntry {
     pub id: u32,

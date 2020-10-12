@@ -8,6 +8,7 @@ use serde::{Deserialize, Serialize};
 use std::convert::TryFrom;
 use std::fmt;
 
+/// A logical enum of the user_type database field.
 #[derive(Copy, Clone, Debug, Serialize, Deserialize)]
 pub enum UserType {
     User,

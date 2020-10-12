@@ -1,3 +1,4 @@
+///All user-facing logic.
 pub mod door;
 pub mod flat;
 pub mod index_view;

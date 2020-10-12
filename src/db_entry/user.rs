@@ -2,6 +2,7 @@ use super::{rusqlite, DbConn, UserType};
 use crate::guards::{AuthError, GuardManager};
 use serde::{Deserialize, Serialize};
 
+/// Logical entry of the hash with its parameters.
 #[derive(Debug, Serialize, Deserialize)]
 pub struct HashEntry {
     pub hash: String,
@@ -9,6 +10,7 @@ pub struct HashEntry {
     pub config: String, // TODO change to enum
 }
 
+/// User entry of the corresponding "client_user" table.
 #[derive(Debug, Serialize, Deserialize)]
 pub struct UserEntry {
     pub id: u32,

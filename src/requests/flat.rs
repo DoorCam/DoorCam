@@ -10,6 +10,7 @@ use rocket_contrib::templates::Template;
 use rsevents::AutoResetEvent;
 use std::sync::Arc;
 
+/// Struct which retrieves all form data from the flat details.
 #[derive(FromForm)]
 pub struct FlatForm {
     name: String,

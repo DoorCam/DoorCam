@@ -1,3 +1,4 @@
+///Syncs the flats between web and IoT and manages the BellButtons.
 use super::BellButton;
 use crate::db_entry::FlatEntry;
 use log::{error, info};

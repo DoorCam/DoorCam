@@ -15,7 +15,7 @@ There is a [base file](../templates/base.html.tera) which nearly all other templ
 
 ### [Template Contexts](../src/template_contexts)
 
-Here are all contexts which are needed to generate the templates.
+Here are all contexts which are needed to generate the HTML from the templates.
 
 ### [Requests](../src/requests)
 
@@ -39,7 +39,7 @@ Checks whether the button is pushed and sends a signal to the MQTT-Broker.
 
 #### [Event Handler](../src/iot/event_handler.rs)
 
-Syncs the flats between web and iot and manages the BellButtons.
+Syncs the flats between web and IoT and manages the BellButtons.
 
 ### [Guards](../src/guards.rs)
 

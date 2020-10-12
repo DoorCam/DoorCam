@@ -1,3 +1,4 @@
+/// Are used for the authentification and authorization.
 use crate::crypto;
 use crate::db_entry::{rusqlite, DbConn, HashEntry, UserEntry};
 use blake2::{Blake2b, Digest};
@@ -7,6 +8,7 @@ use rocket::request::{self, FromRequest, Request};
 use rocket::Outcome;
 use std::fmt;
 
+/// All errors which could happen during user creation and authentification.
 #[derive(Debug)]
 pub enum AuthError {
     DbError(rusqlite::Error),
@@ -42,6 +44,7 @@ impl fmt::Display for AuthError {
     }
 }
 
+/// Used for user creation and authentification
 pub struct GuardManager {}
 
 impl GuardManager {
@@ -111,6 +114,7 @@ impl GuardManager {
         Ok(user)
     }
 
+    /// Writes an encrypted cookie with the serialized user data.
     fn write_user_cookie(
         user: &UserEntry,
         mut cookies: Cookies,
@@ -123,11 +127,13 @@ impl GuardManager {
         Ok(())
     }
 
+    /// Destroys the private encrypted user cookie.
     pub fn destroy_user_cookie(mut cookies: Cookies) {
         cookies.remove_private(Cookie::named("user"));
     }
 }
 
+/// A guard which allows all authentificated users.
 pub struct UserGuard {
     pub user: UserEntry,
 }
@@ -159,6 +165,7 @@ impl<'a, 'r> FromRequest<'a, 'r> for UserGuard {
     }
 }
 
+/// A guard which allows only users.
 pub struct OnlyUserGuard {
     pub user: UserEntry,
 }
@@ -180,6 +187,7 @@ impl<'a, 'r> FromRequest<'a, 'r> for OnlyUserGuard {
     }
 }
 
+/// A guard which allows only administrators.
 pub struct AdminGuard {
     pub user: UserEntry,
 }

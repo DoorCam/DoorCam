@@ -6,6 +6,8 @@ use rocket::request::{FlashMessage, Form};
 use rocket::response::{Flash, Redirect};
 use rocket_contrib::templates::Template;
 
+/// Struct with all user-details form data.
+/// The optional values have to be considered as non-admins editing themselves aren't allowed to change these values.
 #[derive(FromForm)]
 pub struct UserForm {
     name: String,

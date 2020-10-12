@@ -7,6 +7,7 @@ use rocket::request::{FlashMessage, Form};
 use rocket::response::{Flash, Redirect};
 use rocket_contrib::templates::Template;
 
+/// Struct with all login form data.
 #[derive(FromForm)]
 pub struct LoginForm {
     name: String,

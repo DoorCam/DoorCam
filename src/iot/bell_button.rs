@@ -10,6 +10,7 @@ use std::sync::{Arc, Mutex};
 #[cfg(feature = "iot")]
 use std::thread;
 
+/// Checks whether the button is pushed and sends a signal to the MQTT-Broker.
 pub struct BellButton {
     #[cfg(feature = "iot")]
     drop_flag: Arc<Mutex<bool>>,
