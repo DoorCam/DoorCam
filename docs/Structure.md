@@ -25,7 +25,7 @@ All user-facing logic.
 
 All structs and functions used to communicate with the database and represent the data.
 
-### [IoT](../scr/iot)
+### [IoT](../../tree/scr/iot)
 
 All logic which is not web-based.
 
