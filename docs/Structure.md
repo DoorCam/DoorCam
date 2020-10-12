@@ -1,46 +1,46 @@
 # Structure
 
-## static
+## [Static](../static)
 
-Contains all static files for the webserver.
-e.g.: \*.css
+Contains all static files for the webserver,
+e.g.: \*.css.
 
-## templates
+## [Templates](../templates)
 
-All dynamic files for the webserver. The templating engine is [Tera](https://tera.netlify.app).
-e.g.: \*.html.css
-There is a [base file](./templates/base.html.tera) which nearly all other templates are derived from. For the admin views there is a superset of this called admin_base
+All dynamic files for the webserver. The templating engine is [Tera](https://tera.netlify.app),
+e.g.: \*.html.tera.
+There is a [base file](../templates/base.html.tera) which nearly all other templates are derived from. For the admin views there is a superset of this called [admin_base](../templates/admin_base.html.tera).
 
-## src
+## [Source](../src)
 
-### template_contexts
+### [Template Contexts](../src/template_contexts)
 
 Here are all contexts which are needed to generate the templates.
 
-### requests
+### [Requests](../src/requests)
 
 All user-facing logic.
 
-### db_entry
+### [Database Entry](../src/db_entry)
 
 All structs and functions used to communicate with the database and represent the data.
 
-### iot
+### [IoT](../scr/iot)
 
 All logic which is not web-based.
 
-#### door_control
+#### [Door Control](../src/iot/door_control.rs)
 
 Used to activate the door-opener.
 
-#### bell_button
+#### [Bell Button](../src/iot/bell_button.rs)
 
 Checks whether the button is pushed and sends a signal to the MQTT-Broker.
 
-#### event_handler
+#### [Event Handler](../src/iot/event_handler.rs)
 
 Syncs the flats between web and iot and manages the BellButtons.
 
-### guards
+### [Guards](../src/guards.rs)
 
 Are used for the authentification and authorization.

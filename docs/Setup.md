@@ -20,6 +20,7 @@ Clone this repository, cd into it.
 ```sh
 ROCKET_ENV=production
 cargo build --release --features iot
+cp db_template.sqlite db.sqlite
 ```
 
 ## systemd
