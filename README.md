@@ -5,8 +5,8 @@ It communicates to the flat(s) with MQTT.
 
 ## Install
 
-See [Setup.md](Setup.md)
+See [Setup.md](docs/Setup.md)
 
 ## Contributing
 
-For an overview of the project, there is [Structure.md](Structure.md)
+For an overview of the project, there is [Structure.md](docs/Structure.md)
