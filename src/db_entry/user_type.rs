@@ -8,6 +8,10 @@ use serde::{Deserialize, Serialize};
 use std::convert::TryFrom;
 use std::fmt;
 
+#[cfg(test)]
+#[path = "./user_type_test.rs"]
+mod user_type_test;
+
 /// A logical enum of the user_type database field.
 #[derive(Copy, Clone, Debug, Serialize, Deserialize)]
 pub enum UserType {

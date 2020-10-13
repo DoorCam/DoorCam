@@ -1,7 +1,7 @@
 use super::FormToEntry;
 use crate::db_entry::{DbConn, FlatEntry};
-use crate::guards::AdminGuard;
 use crate::template_contexts::{FlatDetailsContext, FlatOverviewContext, Message};
+use crate::utils::guards::AdminGuard;
 use rocket::http::Status;
 use rocket::request::{FlashMessage, Form};
 use rocket::response::{Flash, Redirect};

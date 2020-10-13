@@ -1,8 +1,8 @@
 use super::door::*;
 use super::user::*;
 use super::user_auth::*;
-use crate::guards::{AdminGuard, OnlyUserGuard, UserGuard};
 use crate::template_contexts::{AdminNav, AdminViewContext, MainViewContext, Message, NoContext};
+use crate::utils::guards::{AdminGuard, OnlyUserGuard, UserGuard};
 use rocket::request::{FlashMessage, FromRequest, Request};
 use rocket::response::Redirect;
 use rocket::Outcome;
