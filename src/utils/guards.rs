@@ -1,9 +1,13 @@
-/// Are used for the authentification and authorization.
+/// Are used for the authorization.
 use super::auth_manager::AuthError;
 use crate::db_entry::UserEntry;
 use rocket::http::Status;
 use rocket::request::{self, FromRequest, Request};
 use rocket::Outcome;
+
+#[cfg(test)]
+#[path = "./guards_test.rs"]
+mod guards_test;
 
 /// A guard which allows all authentificated users.
 pub struct UserGuard {

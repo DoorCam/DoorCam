@@ -1,4 +1,4 @@
-/// Are used for the authentification and authorization.
+/// Are used for the authentification.
 use super::crypto;
 use crate::db_entry::{rusqlite, DbConn, HashEntry, UserEntry};
 use blake2::{Blake2b, Digest};
@@ -6,7 +6,7 @@ use passwords::{analyzer, scorer};
 use rocket::http::{Cookie, Cookies};
 use std::fmt;
 
-/// All errors which could happen during user creation and authentification.
+/// All errors which could happen during user creation, authentification and authorization.
 #[derive(Debug)]
 pub enum AuthError {
     DbError(rusqlite::Error),
