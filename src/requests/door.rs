@@ -1,5 +1,5 @@
 use super::index_view::*;
-use crate::guards::OnlyUserGuard;
+use crate::utils::guards::OnlyUserGuard;
 use rocket::response::{Flash, Redirect};
 use rocket::State;
 

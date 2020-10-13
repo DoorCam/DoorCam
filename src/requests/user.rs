@@ -1,6 +1,6 @@
 use crate::db_entry::{DbConn, FlatEntry, UserEntry, UserType};
-use crate::guards::{AdminGuard, UserGuard};
 use crate::template_contexts::{Message, UserDetailsContext, UserOverviewContext};
+use crate::utils::guards::{AdminGuard, UserGuard};
 use rocket::http::Status;
 use rocket::request::{FlashMessage, Form};
 use rocket::response::{Flash, Redirect};

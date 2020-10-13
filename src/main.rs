@@ -18,11 +18,10 @@ use rocket_contrib::helmet::SpaceHelmet;
 use rocket_contrib::serve::StaticFiles;
 use rocket_contrib::templates::Template;
 
-mod crypto;
 mod db_entry;
-mod guards;
 mod requests;
 mod template_contexts;
+mod utils;
 
 mod iot;
 
