@@ -26,3 +26,9 @@ cp db_template.sqlite db.sqlite
 ## systemd
 
 <!--- TODO add system -->
+
+## Start
+
+Go to \<IP-adress-of-Pi\>.
+Enter the credentials 'admin', 'admin'.
+Change the credentials.
