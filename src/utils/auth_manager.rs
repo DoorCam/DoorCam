@@ -1,4 +1,4 @@
-/// Are used for the authentification.
+/// Is used for the authentification.
 use super::crypto;
 use crate::db_entry::{rusqlite, DbConn, HashEntry, UserEntry};
 use blake2::{Blake2b, Digest};

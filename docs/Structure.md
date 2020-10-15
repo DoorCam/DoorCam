@@ -13,6 +13,9 @@ There is a [base file](../templates/base.html.tera) which nearly all other templ
 
 ## [Source](../src)
 
+This folder contains the Rust source code and unit-tests,
+e.g.: \*.rs, \*\_test.rs.
+
 ### [Template Contexts](../src/template_contexts)
 
 Here are all contexts which are needed to generate the HTML from the templates.
@@ -41,6 +44,18 @@ Checks whether the button is pushed and sends a signal to the MQTT-Broker.
 
 Syncs the flats between web and IoT and manages the BellButtons.
 
-### [Guards](../src/guards.rs)
+### [Utils](../src/utils)
 
-Are used for the authentification and authorization.
+Small helper functions and structs which aren't apprppriate in other folders.
+
+#### [Crypto](../src/utils/crypto.rs)
+
+Cryptographic helper/wrapper function(s).
+
+#### [Auth Manager](../src/utils/auth_manager.rs)
+
+Is used for the authentification.
+
+#### [Guards](../src/utils/guards.rs)
+
+Are used for the authorization. See [Rocket documentation](https://rocket.rs/v0.4/guide/requests/#request-guards).

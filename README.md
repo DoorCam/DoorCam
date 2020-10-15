@@ -9,4 +9,4 @@ See [Setup.md](docs/Setup.md)
 
 ## Contributing
 
-For an overview of the project, there is [Structure.md](docs/Structure.md)
+For an overview of the project, there is an overview of [Technologies](docs/Technologies.md) and of the [Structure](docs/Structure.md)
