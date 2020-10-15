@@ -17,6 +17,8 @@ Clone this repository, cd into it.
 
 <!--- TODO add fix for libsqlite.so -->
 
+See [fix](https://users.rust-lang.org/t/linker-cannot-find-lsqlite3/23230).
+
 ```sh
 ROCKET_ENV=production
 cargo build --release --features iot
