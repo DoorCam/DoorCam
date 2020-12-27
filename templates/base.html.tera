@@ -6,6 +6,7 @@
     <link rel="stylesheet" href="/static/bootstrap.min.css" />
     <link rel="stylesheet" href="/static/style.css" />
     <link rel="stylesheet" href="/static/fontawesome/css/all.css" />
+    <link rel="stylesheet" href="/static/fonts/roboto.css" />
     <script src="/static/jquery.min.js"></script>
     <script src="/static/bootstrap.min.js"></script>
     <title>{% block title %} - Doorcam{% endblock title %}</title>

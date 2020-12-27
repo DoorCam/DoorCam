@@ -4,10 +4,25 @@
 
 {% block content %}
 {{ super() }}
-<img src="{{ cam_url }}"></img>
-<a href="{{ activate_door_url }}">Open Door</a>
+<nav class="navbar navbar-expand-lg navbar-light bg-light fixed-top " id="main-navigation">
+  <a class="navbar-brand" href="/">DoorCam</a>
+  <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+    <span class="navbar-toggler-icon"></span>
+  </button>
+  <div class="collapse navbar-collapse" id="navbarSupportedContent">
+    <ul class="navbar-nav mr-auto">
+      <a href="{{ change_user_url }}" class="nav-item main-menu-item"><i class="fas fa-user"></i>&nbsp;Change Profile</a>
+    </ul>
+    <ul class="navbar-nav ml-auto">
+      <li class="nav-item btn btn-danger" id="logout"><a href="{{ logout_url }}"><i class="fas fa-sign-out-alt"></i>&nbsp;Logout</a></li>
+    </ul>
+</nav>
+
+
 <nav>
     <a href="{{ change_user_url }}">Change Profile</a>
     <a href="{{ logout_url }}">Logout</a>
 </nav>
+<img src="{{ cam_url }}" style="width: 100vw; height: calc(100vh - 94px); background: yellow; margin-top: 32px">
+<a href="{{ activate_door_url }}" class="btn btn-success form-control">Open Door</a>
 {% endblock content %}
