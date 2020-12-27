@@ -9,6 +9,7 @@
     <link rel="stylesheet" href="/static/fonts/roboto.css" />
     <script src="/static/jquery.min.js"></script>
     <script src="/static/bootstrap.min.js"></script>
+    <script src="/static/functions.js"></script>
     <title>{% block title %} - Doorcam{% endblock title %}</title>
     {% endblock head %}
 </head>
@@ -20,12 +21,6 @@
         <span class="closebtn" onclick="this.parentElement.style.display='none';">&times;</span> 
         {{ message.content }}
     </div>
-    <script>
-        //Hide message after 5s
-        setTimeout(function() {
-            $('.flash').fadeOut("slow", () => {});
-        }, 5000);
-    </script>
     {% endif %}
     {% block content %}{% endblock content %}
 </body>

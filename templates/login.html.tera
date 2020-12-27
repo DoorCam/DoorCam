@@ -17,6 +17,7 @@
     <hr />
 
     <button type="submit" class="registerbtn">Login</button>
+    <script>hideMessage()</script>
   </div>
 </form>
 {% endblock content %}

@@ -25,4 +25,5 @@
 </nav>
 <img src="{{ cam_url }}" style="width: 100vw; height: calc(100vh - 94px); background: yellow; margin-top: 32px">
 <a href="{{ activate_door_url }}" class="btn btn-success form-control">Open Door</a>
+<script>hideMessage()</script>
 {% endblock content %}

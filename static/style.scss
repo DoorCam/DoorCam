@@ -46,6 +46,22 @@ div.flash {
   width: 90vw;
   margin-left: 5vw;
   padding: 10px;
+  z-index: 99999;
+
+  .closebtn {
+    margin-left: 15px;
+    color: black;
+    font-weight: bold;
+    float: right;
+    font-size: 22px;
+    line-height: 20px;
+    cursor: pointer;
+    transition: 0.3s;
+  }
+  
+  .closebtn:hover {
+    color: darkgray;
+  }
 }
 
 div.flash.success {
@@ -57,23 +73,10 @@ div.flash.warning {
 }
 
 div.flash.error {
-  background-color: crimson;
+  background-color: #dc3545;
 }
 
-.closebtn {
-  margin-left: 15px;
-  color: black;
-  font-weight: bold;
-  float: right;
-  font-size: 22px;
-  line-height: 20px;
-  cursor: pointer;
-  transition: 0.3s;
-}
 
-.closebtn:hover {
-  color: darkgray;
-}
 
 /* Full-width input fields */
 input[type="text"],
