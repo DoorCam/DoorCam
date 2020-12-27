@@ -28,9 +28,11 @@ h1 {
 }
 
 div.flash {
-  margin-left: 10vh;
-  margin-right: 10vh;
-  padding-left: 10vh;
+  margin-top: 5vw;
+  position: absolute;
+  width: 90vw;
+  margin-left: 5vw;
+  padding: 10px;
 }
 
 div.flash.success {
@@ -43,6 +45,21 @@ div.flash.warning {
 
 div.flash.error {
   background-color: crimson;
+}
+
+.closebtn {
+  margin-left: 15px;
+  color: black;
+  font-weight: bold;
+  float: right;
+  font-size: 22px;
+  line-height: 20px;
+  cursor: pointer;
+  transition: 0.3s;
+}
+
+.closebtn:hover {
+  color: darkgray;
 }
 
 /* Full-width input fields */
@@ -89,6 +106,9 @@ hr {
 }
 #main-navigation .nav-item a {
   color: black;
+}
+#main-navigation .navbar-brand {
+  font-weight: bold;
 }
 
 .btn {

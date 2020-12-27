@@ -52,7 +52,7 @@
         <td>{{ flat.local_address }}</td>
         <td>{{ flat.broker_address }}:{{ flat.broker_port }}</td>
         <td>{{ flat.bell_topic }}</td>
-        <td>{{ flat.active }}</td>
+        <td><i class="fas fa-{% if flat.active %}check{% else %}times{% endif %}"></i></td>
         <td>
             <a href="flat/change/{{ flat.id }}" class="btn btn-success"><i class="fas fa-edit"></i></a>
         </td>
