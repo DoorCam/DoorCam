@@ -23,7 +23,7 @@
     <a href="{{ change_user_url }}">Change Profile</a>
     <a href="{{ logout_url }}">Logout</a>
 </nav>
-<img src="{{ cam_url }}" style="width: 100vw; height: calc(100vh - 94px); background: yellow; margin-top: 32px">
+<img src="{{ cam_url }}" style="width: 100vw; height: calc(100vh - 94px); margin-top: 32px">
 <a href="{{ activate_door_url }}" class="btn btn-success form-control">Open Door</a>
 <script>hideMessage()</script>
 {% endblock content %}

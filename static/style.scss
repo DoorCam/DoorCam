@@ -8,8 +8,47 @@
 
 @media (prefers-color-scheme: dark) {
   :root {
-    --bg-color: black;
+    --bg-color: #06090f;
     --fg-color: white;
+  }
+  .bg-light {
+    background-color: #161b22!important;
+  }
+  #main-navigation {
+    .nav-item {
+      a {
+        color: #f0f6fc !important;
+      }
+    }
+    .navbar-brand {
+      color: var(--fg-color);
+    }
+  } 
+  .card {
+    background-color: #0d1117;
+    border: 1px solid #30363d;
+  }
+  .table {
+    color: #c9d1d9;
+  }
+  input, input[type=text], input[type=password] {
+    background: rgba(1, 4, 9, 0.3) !important;
+    color: white;
+  }
+  label {
+    color: #c9d1d9;
+  }
+  p {
+    color: #c9d1d9;
+  }
+  select {
+    color: white;
+    option {
+      background: #21262d;
+      &:hover {
+        background: #161b22;
+      }
+    }
   }
 }
 
@@ -80,7 +119,9 @@ div.flash.error {
 
 /* Full-width input fields */
 input[type="text"],
-input[type="password"] {
+input[type="number"],
+input[type="password"],
+select {
   width: 100%;
   padding: 15px;
   margin: 5px 0 22px 0;

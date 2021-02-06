@@ -35,7 +35,7 @@
 
     <label for="active"><b>Active</b></label>
     <input type="checkbox" name="active" id="active" {% if user and user.active or not user %} checked {% endif %} />
-
+    <br>
     <label for="flat_id"><b>Flat</b></label>
     <select name="flat_id" id="flat_id">
       <option value="" {% if user and not user.flat_id %} selected {% endif %}></option>
