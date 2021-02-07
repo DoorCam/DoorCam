@@ -6,7 +6,8 @@
 {{ super() }}
 <div class="card" id="main-card">
 <div class="card-header">
-<h1>{{ title }} User</h1>
+<h1 class="float-left">{{ title }} User</h1>
+<a href="#" onclick="window.location.href=(document.referrer == '' ? '/' : document.referrer)" class="btn btn-success float-right"><i class="fas fa-angle-left"></i> Zurück</a>
 </div>
 <form method="post">
   <div class="container">
