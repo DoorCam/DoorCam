@@ -22,6 +22,6 @@ jobs:
         override: true
         components: rustc
     - name: Build
-      run: cargo build --verbose
+      run: cargo build --release --verbose
     - name: Run tests
-      run: cargo test --verbose
+      run: cargo test --release --verbose
