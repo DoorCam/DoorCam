@@ -3,14 +3,24 @@
 
 <head>
     {% block head %}
+    <link rel="stylesheet" href="/static/bootstrap.min.css" />
     <link rel="stylesheet" href="/static/style.css" />
+    <link rel="stylesheet" href="/static/fontawesome/css/all.css" />
+    <link rel="stylesheet" href="/static/fonts/roboto.css" />
+    <script src="/static/jquery.min.js"></script>
+    <script src="/static/bootstrap.min.js"></script>
+    <script src="/static/functions.js"></script>
     <title>{% block title %} - Doorcam{% endblock title %}</title>
     {% endblock head %}
 </head>
 
-<body>
+<body class="mbg1">
     {% if message %}
-    <div class="flash {{ message.category }}">{{ message.content }}</div>
+    <!--<div class="flash {{ message.category }}">{{ message.content }}</div>-->
+    <div class="flash {{ message.category }}">
+        <span class="closebtn" onclick="this.parentElement.style.display='none';">&times;</span> 
+        {{ message.content }}
+    </div>
     {% endif %}
     {% block content %}{% endblock content %}
 </body>
