@@ -30,6 +30,7 @@ impl BellButton {
         let mqtt_conn_options =
             MqttOptions::new("doorcam", flat.broker_address.clone(), flat.broker_port);
         let (mut mqtt_client, _) = Client::new(mqtt_conn_options, 5);
+
         let topic = flat.bell_topic.clone();
 
         let mut dev = Button::new(flat.bell_button_pin);

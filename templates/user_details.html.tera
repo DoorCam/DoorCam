@@ -4,7 +4,11 @@
 
 {% block content %}
 {{ super() }}
-<h1>{{ title }} User</h1>
+<div class="card" id="main-card">
+<div class="card-header">
+<h1 class="float-left">{{ title }} User</h1>
+<a href="#" onclick="window.location.href=(document.referrer == '' ? '/' : document.referrer)" class="btn btn-success float-right"><i class="fas fa-angle-left"></i> Zurück</a>
+</div>
 <form method="post">
   <div class="container">
     <p>Please fill in this form to create an account.</p>
@@ -32,7 +36,7 @@
 
     <label for="active"><b>Active</b></label>
     <input type="checkbox" name="active" id="active" {% if user and user.active or not user %} checked {% endif %} />
-
+    <br>
     <label for="flat_id"><b>Flat</b></label>
     <select name="flat_id" id="flat_id">
       <option value="" {% if user and not user.flat_id %} selected {% endif %}></option>
@@ -44,7 +48,8 @@
     {% endif %}
     <hr />
 
-    <button type="submit" class="registerbtn">Register</button>
+    <button type="submit" class="registerbtn">{{ title }}</button>
   </div>
 </form>
+</div>
 {% endblock content %}
