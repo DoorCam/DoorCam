@@ -11,8 +11,7 @@ use std::fmt;
 pub enum AuthError {
     DbError(rusqlite::Error),
     SerializationError(serde_json::error::Error),
-    NoUser,
-    WrongPassword,
+    InvalidCredentials,
     UnknownHashConfig,
     WeakPassword,
 }
@@ -34,8 +33,7 @@ impl fmt::Display for AuthError {
         match *self {
             AuthError::DbError(ref err) => err.fmt(f),
             AuthError::SerializationError(ref err) => err.fmt(f),
-            AuthError::NoUser => write!(f, "No user found with this name"),
-            AuthError::WrongPassword => write!(f, "The password is wrong"),
+            AuthError::InvalidCredentials => write!(f, "The credentials are invalid"),
             AuthError::UnknownHashConfig => write!(f, "The hash-config is unknown"),
             AuthError::WeakPassword => write!(f, "The password is to weak"),
         }
@@ -87,12 +85,15 @@ impl AuthManager {
         let user = UserEntry::get_active_by_name(&conn, &name)?.pop();
         let user = match user {
             Some(user) => user,
-            None => return Err(AuthError::NoUser),
+            None => {
+                Blake2b::new().finalize();
+                return Err(AuthError::InvalidCredentials);
+            }
         };
 
         // Create hash with matching config
         let pw_hash = match user.pw_hash.config.as_str() {
-            "plain" => user.pw_hash.hash.clone(),
+            "plain" => pw.to_string(),
             "Blake2b" => base64::encode(
                 Blake2b::new()
                     .chain(pw)
@@ -104,7 +105,7 @@ impl AuthManager {
         };
 
         if user.pw_hash.hash != pw_hash {
-            return Err(AuthError::WrongPassword);
+            return Err(AuthError::InvalidCredentials);
         }
 
         AuthManager::write_user_cookie(&user, cookies)?;
