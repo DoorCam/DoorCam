@@ -10,6 +10,7 @@ extern crate base64;
 #[macro_use]
 extern crate matches;
 
+use rsevents::{AutoResetEvent, State};
 use std::sync::{Arc, Mutex};
 
 use rocket_contrib::databases::rusqlite;
@@ -29,8 +30,7 @@ fn main() {
     #[cfg(not(debug_assertions))]
     log4rs::init_file("logger.yaml", Default::default()).unwrap();
 
-    let user_sync_flag = Arc::new(Mutex::new(false));
-    let sf = Arc::clone(&user_sync_flag);
+    let flat_sync_event = Arc::new(AutoResetEvent::new(State::Unset));
     let db = match rusqlite::Connection::open("db.sqlite") {
         Ok(conn) => conn,
         Err(e) => {
@@ -38,10 +38,7 @@ fn main() {
             return;
         }
     };
-    std::thread::spawn(move || {
-        let mut iot_events = iot::EventHandler::new(sf, db);
-        iot_events.event_loop();
-    });
+    iot::event_loop(&flat_sync_event, db);
 
     rocket::ignite()
         .mount(
@@ -74,6 +71,6 @@ fn main() {
         .attach(db_entry::DbConn::fairing())
         .attach(SpaceHelmet::default())
         .manage(Mutex::new(iot::DoorControl::new(1)))
-        .manage(user_sync_flag)
+        .manage(flat_sync_event)
         .launch();
 }

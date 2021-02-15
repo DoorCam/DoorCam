@@ -1,16 +1,18 @@
 use crate::db_entry::FlatEntry;
 #[cfg(feature = "iot")]
-use rumqttc::{Client, ClientError, MqttOptions, QoS};
+use log::{error, info};
+#[cfg(feature = "iot")]
+use rumqttc::{Client, MqttOptions, QoS};
 #[cfg(feature = "iot")]
 use rust_gpiozero::input_devices::Button;
+#[cfg(feature = "iot")]
+use std::sync::{Arc, Mutex};
+#[cfg(feature = "iot")]
+use std::thread;
 
 pub struct BellButton {
     #[cfg(feature = "iot")]
-    dev: Button,
-    #[cfg(feature = "iot")]
-    mqtt_client: Client,
-    #[cfg(feature = "iot")]
-    topic: String,
+    drop_flag: Arc<Mutex<bool>>,
 }
 
 #[cfg(not(feature = "iot"))]
@@ -18,36 +20,51 @@ impl BellButton {
     pub fn new(_flat: &FlatEntry) -> Self {
         BellButton {}
     }
-
-    pub fn events(&self) -> Result<(), String> {
-        Ok(())
-    }
 }
 
-// TODO rewrite with own thread, dev.wait_for_press and Drop-trait
 #[cfg(feature = "iot")]
 impl BellButton {
     pub fn new(flat: &FlatEntry) -> Self {
         let mqtt_conn_options =
             MqttOptions::new("doorcam", flat.broker_address.clone(), flat.broker_port);
-        let (client, _) = Client::new(mqtt_conn_options, 5);
-        BellButton {
-            dev: Button::new(flat.bell_button_pin),
-            mqtt_client: client,
-            topic: flat.bell_topic.clone(),
-        }
+        let (mut mqtt_client, _) = Client::new(mqtt_conn_options, 5);
+        let mut dev = Button::new(flat.bell_button_pin);
+        let topic = flat.bell_topic.clone();
+        let drop_flag = Arc::new(Mutex::new(false));
+        let drop = drop_flag.clone();
+
+        thread::spawn(move || loop {
+            dev.wait_for_press(None);
+            info!("IoT: Button pressed");
+
+            match drop.lock() {
+                Ok(state) => {
+                    if *state {
+                        break;
+                    }
+                }
+                Err(e) => error!("IoT: Can't lock drop: {}", e),
+            }
+
+            BellButton::send_bell_signal(&mut mqtt_client, &topic);
+        });
+
+        BellButton { drop_flag }
     }
 
-    pub fn events(&mut self) -> Result<(), ClientError> {
-        if self.dev.is_active() {
-            self.send_bell_signal()?;
+    fn send_bell_signal(mqtt_client: &mut Client, topic: &String) {
+        if let Err(e) = mqtt_client.publish(topic, QoS::ExactlyOnce, false, b"".to_vec()) {
+            error!("IoT: Can't send Bell Signal: {}", e);
         }
-        Ok(())
     }
+}
 
-    pub fn send_bell_signal(&mut self) -> Result<(), ClientError> {
-        self.mqtt_client
-            .publish(&self.topic, QoS::ExactlyOnce, false, b"".to_vec())?;
-        Ok(())
+#[cfg(feature = "iot")]
+impl Drop for BellButton {
+    fn drop(&mut self) {
+        match self.drop_flag.lock() {
+            Ok(mut state) => *state = true,
+            Err(e) => error!("IoT: Can't lock drop: {}", e),
+        }
     }
 }
