@@ -1,8 +1,9 @@
-pub mod door_control;
+///All logic which is not web-based.
+mod door_control;
 pub use door_control::DoorControl;
 
-pub mod bell_button;
-pub use bell_button::BellButton;
+mod bell_button;
+use bell_button::BellButton;
 
-pub mod event_handler;
+mod event_handler;
 pub use event_handler::event_loop;

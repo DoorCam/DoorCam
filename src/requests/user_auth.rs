@@ -1,18 +1,20 @@
 use super::index_view::*;
 use crate::db_entry::DbConn;
-use crate::guards::GuardManager;
 use crate::template_contexts::{LoginContext, Message};
+use crate::utils::auth_manager::AuthManager;
 use rocket::http::Cookies;
 use rocket::request::{FlashMessage, Form};
 use rocket::response::{Flash, Redirect};
 use rocket_contrib::templates::Template;
 
+/// Struct with all login form data.
 #[derive(FromForm)]
 pub struct LoginForm {
     name: String,
     pw: String,
 }
 
+/// Get the login form
 #[get("/login")]
 pub fn get_login(flash: Option<FlashMessage>) -> Template {
     let context = LoginContext {
@@ -21,16 +23,19 @@ pub fn get_login(flash: Option<FlashMessage>) -> Template {
     Template::render("login", &context)
 }
 
+/// Post the user-data to do the login logic
 #[post("/login", data = "<user_data>")]
 pub fn post_login_data(
     user_data: Form<LoginForm>,
     conn: DbConn,
     cookies: Cookies,
 ) -> Result<Redirect, Flash<Redirect>> {
-    let user = match GuardManager::auth(&conn, cookies, &user_data.name, &user_data.pw) {
+    let user = match AuthManager::auth(&conn, cookies, &user_data.name, &user_data.pw) {
         Err(e) => return Err(Flash::error(Redirect::to(uri!(get_login)), e.to_string())),
         Ok(user) => user,
     };
+
+    // Redirects to the user-type based main-site
     return Ok(Redirect::to(if user.user_type.is_admin() {
         uri!(get_admin_index_view)
     } else {
@@ -38,9 +43,10 @@ pub fn post_login_data(
     }));
 }
 
+/// Get logout to destroy the user-cookie
 #[get("/logout")]
 pub fn get_logout(cookies: Cookies) -> Flash<Redirect> {
-    GuardManager::destroy_user_cookie(cookies);
+    AuthManager::destroy_user_cookie(cookies);
     return Flash::success(
         Redirect::to(uri!(get_login)),
         "Sie wurden erfolgreich ausgeloggt",

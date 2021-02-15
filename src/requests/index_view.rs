@@ -1,13 +1,14 @@
 use super::door::*;
 use super::user::*;
 use super::user_auth::*;
-use crate::guards::{AdminGuard, OnlyUserGuard, UserGuard};
 use crate::template_contexts::{AdminNav, AdminViewContext, MainViewContext, Message, NoContext};
+use crate::utils::guards::{AdminGuard, OnlyUserGuard, UserGuard};
 use rocket::request::{FlashMessage, FromRequest, Request};
 use rocket::response::Redirect;
 use rocket::Outcome;
 use rocket_contrib::templates::Template;
 
+/// Get the index-view of an user
 #[get("/")]
 pub fn get_user_index_view(user: OnlyUserGuard, flash: Option<FlashMessage>) -> Template {
     let context = MainViewContext {
@@ -20,6 +21,7 @@ pub fn get_user_index_view(user: OnlyUserGuard, flash: Option<FlashMessage>) -> 
     Template::render("main_view", &context)
 }
 
+/// Get the index-view of an admin
 #[get("/admin")]
 pub fn get_admin_index_view(_admin: AdminGuard, flash: Option<FlashMessage>) -> Template {
     let context = AdminViewContext {

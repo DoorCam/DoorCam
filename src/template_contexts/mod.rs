@@ -1,7 +1,9 @@
+///Here are all contexts which are needed to generate the HTML from the templates.
 use crate::requests::{flat::*, index_view::*, user::*, user_auth::*};
 use rocket::request::FlashMessage;
 use serde::Serialize;
 
+/// Struct which is used to show the user a message
 #[derive(Serialize)]
 pub struct Message {
     pub category: String,
@@ -49,6 +51,7 @@ pub struct LoginContext {
     pub message: Option<Message>,
 }
 
+/// A struct which is used in all other admin contextes to show the nav-bar
 #[derive(Serialize)]
 pub struct AdminNav {
     admin_view_url: String,

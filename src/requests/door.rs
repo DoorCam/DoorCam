@@ -1,8 +1,9 @@
 use super::index_view::*;
-use crate::guards::OnlyUserGuard;
+use crate::utils::guards::OnlyUserGuard;
 use rocket::response::{Flash, Redirect};
 use rocket::State;
 
+/// Get to activate the door opener
 #[get("/api/door/activate")]
 pub fn get_open_door<'r>(
     _user: OnlyUserGuard,
@@ -12,8 +13,10 @@ pub fn get_open_door<'r>(
         Ok(ctrl) => ctrl,
         Err(e) => return Flash::error(Redirect::to(uri!(get_user_index_view)), e.to_string()),
     };
+
     if let Err(e) = ctrl.activate_opener() {
         return Flash::error(Redirect::to(uri!(get_user_index_view)), e.to_string());
     }
+
     return Flash::success(Redirect::to(uri!(get_user_index_view)), "Door opened");
 }

@@ -11,6 +11,7 @@ mod door_control_test;
 
 const OPENING_TIME_PERIOD: Duration = Duration::from_secs(10);
 
+///Used to activate the door-opener.
 pub struct DoorControl {
     #[cfg(not(feature = "iot"))]
     is_open: Arc<Mutex<bool>>,
@@ -26,13 +27,18 @@ impl DoorControl {
         }
     }
 
+    /// Activates the opener for the OPENING_TIME_PERIOD
     pub fn activate_opener(&mut self) -> Result<(), PoisonError<MutexGuard<bool>>> {
         let mut state = self.is_open.lock()?;
+        // Stop if the opener is active
         if *state {
             return Ok(());
         }
+
         info!("IoT: Activating opener");
         *state = true;
+
+        // Spawn thread which waits the OPENING_TIME_PERIOD and stops the opener
         let is_open = Arc::clone(&self.is_open);
         thread::spawn(move || {
             thread::sleep(OPENING_TIME_PERIOD);
@@ -59,13 +65,18 @@ impl DoorControl {
         };
     }
 
+    /// Activates the opener for the OPENING_TIME_PERIOD
     pub fn activate_opener(&mut self) -> Result<(), PoisonError<MutexGuard<OutputDevice>>> {
         let mut dev = self.dev.lock()?;
+        // Stop if the opener is active
         if dev.is_active() {
             return Ok(());
         }
+
         info!("IoT: Activating opener");
         dev.on();
+
+        // Spawn thread which waits the OPENING_TIME_PERIOD and stops the opener
         let dev = Arc::clone(&self.dev);
         thread::spawn(move || {
             thread::sleep(OPENING_TIME_PERIOD);

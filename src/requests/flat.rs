@@ -1,7 +1,7 @@
 use super::FormToEntry;
 use crate::db_entry::{DbConn, FlatEntry};
-use crate::guards::AdminGuard;
 use crate::template_contexts::{FlatDetailsContext, FlatOverviewContext, Message};
+use crate::utils::guards::AdminGuard;
 use rocket::http::Status;
 use rocket::request::{FlashMessage, Form};
 use rocket::response::{Flash, Redirect};
@@ -10,6 +10,7 @@ use rocket_contrib::templates::Template;
 use rsevents::AutoResetEvent;
 use std::sync::Arc;
 
+/// Struct which retrieves all form data from the flat details.
 #[derive(FromForm)]
 pub struct FlatForm {
     name: String,
@@ -36,12 +37,14 @@ impl FormToEntry<FlatEntry> for FlatForm {
     }
 }
 
+/// get form to create a flat
 #[get("/admin/flat/create")]
 pub fn get_create(_admin: AdminGuard, flash: Option<FlashMessage>) -> Template {
     let context = FlatDetailsContext::create(flash.map(Message::from));
     Template::render("flat_details", &context)
 }
 
+/// post flat-data to create a flat
 #[post("/admin/flat/create", data = "<flat_data>")]
 pub fn post_create_data(
     flat_data: Form<FlatForm>,
@@ -77,6 +80,7 @@ pub fn post_create_data(
     return Ok(Redirect::to(uri!(get_flats)));
 }
 
+/// get all flats
 #[get("/admin/flat")]
 pub fn get_flats(_admin: AdminGuard, conn: DbConn) -> Template {
     let context = match FlatEntry::get_all(&conn) {
@@ -86,6 +90,7 @@ pub fn get_flats(_admin: AdminGuard, conn: DbConn) -> Template {
     Template::render("flat_overview", &context)
 }
 
+/// delete a flat by id
 #[delete("/admin/flat/delete/<id>")]
 pub fn delete(
     _admin: AdminGuard,
@@ -103,6 +108,7 @@ pub fn delete(
     Flash::success((), "Flat deleted")
 }
 
+/// get the form for modifying a flat
 #[get("/admin/flat/change/<id>")]
 pub fn get_change(
     _admin: AdminGuard,
@@ -110,6 +116,7 @@ pub fn get_change(
     flash: Option<FlashMessage>,
     id: u32,
 ) -> Result<Template, Status> {
+    // get the FlatEntry to show its values
     let context = match FlatEntry::get_by_id(&conn, id).as_mut() {
         Ok(flats) => match flats.pop() {
             Some(flat) => FlatDetailsContext::change(flash.map(Message::from), flat),
@@ -120,6 +127,7 @@ pub fn get_change(
     Ok(Template::render("flat_details", &context))
 }
 
+/// post the form-data to modify the flat
 #[post("/admin/flat/change/<id>", data = "<flat_data>")]
 pub fn post_change_data(
     _admin: AdminGuard,

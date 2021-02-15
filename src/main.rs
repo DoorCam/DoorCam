@@ -18,11 +18,10 @@ use rocket_contrib::helmet::SpaceHelmet;
 use rocket_contrib::serve::StaticFiles;
 use rocket_contrib::templates::Template;
 
-mod crypto;
 mod db_entry;
-mod guards;
 mod requests;
 mod template_contexts;
+mod utils;
 
 mod iot;
 
@@ -30,6 +29,7 @@ fn main() {
     #[cfg(not(debug_assertions))]
     log4rs::init_file("logger.yaml", Default::default()).unwrap();
 
+    // IoT event_loop
     let flat_sync_event = Arc::new(AutoResetEvent::new(State::Unset));
     let db = match rusqlite::Connection::open("db.sqlite") {
         Ok(conn) => conn,
@@ -40,6 +40,7 @@ fn main() {
     };
     iot::event_loop(&flat_sync_event, db);
 
+    // Web
     rocket::ignite()
         .mount(
             "/",
