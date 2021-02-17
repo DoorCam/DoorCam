@@ -1,0 +1,5 @@
+{% extends "admin_base" %}
+
+{% block content_head %}
+<a href="#" onclick="window.location.href=(document.referrer == '' ? '/' : document.referrer)" class="btn text-primary float-right"><i class="fas fa-angle-left"></i> Back</a>
+{% endblock content_head %}

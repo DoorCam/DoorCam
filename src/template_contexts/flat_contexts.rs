@@ -52,7 +52,7 @@ impl FlatDetailsContext {
         FlatDetailsContext {
             message: error,
             nav: AdminNav::new(),
-            title: "Register".to_string(),
+            title: "Create".to_string(),
             flat: None,
         }
     }

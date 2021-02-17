@@ -1,4 +1,4 @@
-{% extends "admin_base" %}
+{% extends "admin_details" %}
 
 {% block title %}{{ title }} User{{ super() }}{% endblock title %}
 
@@ -6,14 +6,13 @@
 {{ super() }}
 <div class="card" id="main-card">
 <div class="card-header">
+{% block content_head %}
 <h1 class="float-left">{{ title }} User</h1>
-<a href="#" onclick="window.location.href=(document.referrer == '' ? '/' : document.referrer)" class="btn btn-success float-right"><i class="fas fa-angle-left"></i> Zurück</a>
+{{ super() }}
+{% endblock content_head %}
 </div>
 <form method="post">
   <div class="container">
-    <p>Please fill in this form to create an account.</p>
-    <hr />
-
     <label for="name"><b>Name</b></label>
     <input type="text" placeholder="Enter Name" name="name" id="name" {% if user %} value="{{ user.name }}" {% endif %}
       required />

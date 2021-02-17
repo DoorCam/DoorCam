@@ -58,7 +58,7 @@ impl UserDetailsContext {
         UserDetailsContext {
             message: error,
             nav: Some(AdminNav::new()),
-            title: "Register".to_string(),
+            title: "Create".to_string(),
             is_admin: true,
             user: None,
             types: UserType::get_list(),
