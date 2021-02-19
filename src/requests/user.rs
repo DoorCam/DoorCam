@@ -118,16 +118,13 @@ pub fn get_change(
     };
 
     // Get the UserEntry in order to know the old values
-    let context = match UserEntry::get_by_id(&conn, id).as_mut() {
-        Ok(users) => match users.pop() {
-            Some(user) => UserDetailsContext::change(
-                flash.map(Message::from),
-                user_guard.user.user_type.is_admin(),
-                user,
-                flats,
-            ),
-            None => UserDetailsContext::error(Message::error("No user found".to_string())),
-        },
+    let context = match UserEntry::get_by_id(&conn, id) {
+        Ok(user) => UserDetailsContext::change(
+            flash.map(Message::from),
+            user_guard.user.user_type.is_admin(),
+            user,
+            flats,
+        ),
         Err(e) => UserDetailsContext::error(Message::error(e.to_string())),
     };
     Ok(Template::render("user_details", &context))
@@ -189,7 +186,7 @@ pub fn post_change_data(
             user_data.active.unwrap_or(false)
         },
         if user_guard.is_user() {
-            user_guard.user.flat_id
+            user_guard.user.flat.map(|flat| flat.id)
         } else {
             user_data.flat_id
         },

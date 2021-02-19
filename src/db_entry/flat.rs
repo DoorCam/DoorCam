@@ -83,7 +83,7 @@ impl FlatEntry {
             .collect();
     }
 
-    pub fn get_by_id(conn: &DbConn, id: u32) -> Result<Vec<FlatEntry>, rusqlite::Error> {
+    pub fn get_by_id(conn: &DbConn, id: u32) -> Result<FlatEntry, rusqlite::Error> {
         let mut stmt = conn.prepare(
             "SELECT id, name, active, bell_button_pin, local_address, broker_address, broker_port, bell_topic FROM flat WHERE ID=?1",
         )?;
@@ -93,7 +93,9 @@ impl FlatEntry {
                 Ok(x) => x,
                 Err(e) => Err(e),
             })
-            .collect();
+            .collect::<Result<Vec<FlatEntry>, rusqlite::Error>>()?
+            .pop()
+            .ok_or_else(|| rusqlite::Error::QueryReturnedNoRows);
     }
 
     pub fn change(&self, conn: &DbConn) -> Result<(), rusqlite::Error> {

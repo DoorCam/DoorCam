@@ -117,11 +117,8 @@ pub fn get_change(
     id: u32,
 ) -> Result<Template, Status> {
     // get the FlatEntry to show its values
-    let context = match FlatEntry::get_by_id(&conn, id).as_mut() {
-        Ok(flats) => match flats.pop() {
-            Some(flat) => FlatDetailsContext::change(flash.map(Message::from), flat),
-            None => FlatDetailsContext::error(Message::error("No flat found".to_string())),
-        },
+    let context = match FlatEntry::get_by_id(&conn, id) {
+        Ok(flat) => FlatDetailsContext::change(flash.map(Message::from), flat),
         Err(e) => FlatDetailsContext::error(Message::error(e.to_string())),
     };
     Ok(Template::render("flat_details", &context))

@@ -1,4 +1,4 @@
-use super::{rusqlite, DbConn, UserType};
+use super::{rusqlite, DbConn, FlatEntry, UserType};
 use crate::utils::auth_manager::{AuthError, AuthManager};
 use serde::{Deserialize, Serialize};
 
@@ -18,8 +18,7 @@ pub struct UserEntry {
     pub pw_hash: HashEntry,
     pub user_type: UserType,
     pub active: bool,
-    pub flat_id: Option<u32>,
-    pub flat_name: Option<String>,
+    pub flat: Option<FlatEntry>,
 }
 
 impl UserEntry {
@@ -44,13 +43,15 @@ impl UserEntry {
             pw_hash: hash,
             user_type,
             active,
-            flat_id,
-            flat_name: None,
+            flat: match flat_id {
+                Some(flat_id) => Some(FlatEntry::get_by_id(&conn, flat_id)?),
+                None => None,
+            },
         })
     }
 
     /// Converts a rusqlite row to an UserEntry
-    fn row_2_user(row: &rusqlite::Row) -> Result<UserEntry, rusqlite::Error> {
+    fn row_2_user(conn: &DbConn, row: &rusqlite::Row) -> Result<UserEntry, rusqlite::Error> {
         Ok(UserEntry {
             id: row.get::<usize, u32>(0),
             name: row.get::<usize, String>(1),
@@ -61,16 +62,18 @@ impl UserEntry {
             },
             user_type: row.get::<usize, UserType>(5),
             active: row.get::<usize, bool>(6),
-            flat_id: row.get::<usize, Option<u32>>(7),
-            flat_name: row.get::<usize, Option<String>>(8),
+            flat: match row.get::<usize, Option<u32>>(7) {
+                Some(flat_id) => Some(FlatEntry::get_by_id(&conn, flat_id)?),
+                None => None,
+            },
         })
     }
 
     pub fn get_all(conn: &DbConn) -> Result<Vec<UserEntry>, rusqlite::Error> {
         let mut stmt =
-            conn.prepare("SELECT c.id, c.name, c.pw_hash, c.pw_salt, c.pw_config, c.user_type, c.active, c.flat_id, f.name FROM client_user AS c LEFT JOIN flat AS f ON c.flat_id = f.id")?;
+            conn.prepare("SELECT id, name, pw_hash, pw_salt, pw_config, user_type, active, flat_id FROM client_user")?;
         return stmt
-            .query_map(&[], |row| UserEntry::row_2_user(&row))?
+            .query_map(&[], |row| UserEntry::row_2_user(&conn, &row))?
             .map(|r| match r {
                 Ok(x) => x,
                 Err(e) => Err(e),
@@ -78,17 +81,19 @@ impl UserEntry {
             .collect();
     }
 
-    pub fn get_by_id(conn: &DbConn, id: u32) -> Result<Vec<UserEntry>, rusqlite::Error> {
+    pub fn get_by_id(conn: &DbConn, id: u32) -> Result<UserEntry, rusqlite::Error> {
         let mut stmt = conn.prepare(
-            "SELECT c.id, c.name, c.pw_hash, c.pw_salt, c.pw_config, c.user_type, c.active, c.flat_id, f.name FROM client_user AS c LEFT JOIN flat AS f ON c.flat_id = f.id WHERE c.id=?1",
+            "SELECT id, name, pw_hash, pw_salt, pw_config, user_type, active, flat_id FROM client_user WHERE id=?1",
         )?;
         return stmt
-            .query_map(&[&id], |row| UserEntry::row_2_user(&row))?
+            .query_map(&[&id], |row| UserEntry::row_2_user(&conn, &row))?
             .map(|r| match r {
                 Ok(x) => x,
                 Err(e) => Err(e),
             })
-            .collect();
+            .collect::<Result<Vec<UserEntry>, rusqlite::Error>>()?
+            .pop()
+            .ok_or_else(|| rusqlite::Error::QueryReturnedNoRows);
     }
 
     pub fn get_active_by_name(
@@ -96,10 +101,10 @@ impl UserEntry {
         name: &String,
     ) -> Result<Vec<UserEntry>, rusqlite::Error> {
         let mut stmt = conn.prepare(
-            "SELECT c.id, c.name, c.pw_hash, c.pw_salt, c.pw_config, c.user_type, c.active, c.flat_id, f.name FROM client_user AS c LEFT JOIN flat AS f ON c.flat_id = f.id WHERE c.name = ?1 AND c.active = 1",
+            "SELECT id, name, pw_hash, pw_salt, pw_config, user_type, active, flat_id FROM client_user WHERE name = ?1 AND active = 1",
         )?;
         return stmt
-            .query_map(&[name], |row| UserEntry::row_2_user(&row))?
+            .query_map(&[name], |row| UserEntry::row_2_user(&conn, &row))?
             .map(|r| match r {
                 Ok(x) => x,
                 Err(e) => Err(e),

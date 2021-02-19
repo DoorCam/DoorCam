@@ -13,7 +13,12 @@ use rocket_contrib::templates::Template;
 pub fn get_user_index_view(user: OnlyUserGuard, flash: Option<FlashMessage>) -> Template {
     let context = MainViewContext {
         message: flash.map(Message::from),
-        cam_url: "http://doorcam.fritz.box:8081/".to_string(),
+        cam_url: format!(
+            "http://{}:8081/",
+            user.user
+                .flat
+                .map_or_else(String::new, |flat| flat.local_address)
+        ),
         activate_door_url: uri!(get_open_door).to_string(),
         change_user_url: uri!(get_change: user.user.id).to_string(),
         logout_url: uri!(get_logout).to_string(),

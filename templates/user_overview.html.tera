@@ -46,7 +46,7 @@
         <td>{{ user.name }}</td>
         <td>{{ user.user_type }}</td>
         <td><i class="fas fa-{% if user.active %}check{% else %}times{% endif %}"></i></td>
-        <td>{{ user.flat_name }}</td>
+        <td>{% if user.flat %}{{ user.flat.name }}{% endif %}</td>
         <td><a href="user/change/{{ user.id }}" class="btn btn-success"><i class="fas fa-edit"></i></a></td>
         <td><button type="button" onclick="delete_user({{ user.id }})" class="btn btn-danger"><i class="fas fa-trash"></i></button></td>
     </tr>
