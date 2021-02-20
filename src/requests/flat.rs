@@ -118,7 +118,8 @@ pub fn get_change(
 ) -> Result<Template, Status> {
     // get the FlatEntry to show its values
     let context = match FlatEntry::get_by_id(&conn, id) {
-        Ok(flat) => FlatDetailsContext::change(flash.map(Message::from), flat),
+        Ok(Some(flat)) => FlatDetailsContext::change(flash.map(Message::from), flat),
+        Ok(None) => FlatDetailsContext::error(Message::error("No flat found".to_string())),
         Err(e) => FlatDetailsContext::error(Message::error(e.to_string())),
     };
     Ok(Template::render("flat_details", &context))

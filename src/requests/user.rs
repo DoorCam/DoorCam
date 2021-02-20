@@ -119,12 +119,13 @@ pub fn get_change(
 
     // Get the UserEntry in order to know the old values
     let context = match UserEntry::get_by_id(&conn, id) {
-        Ok(user) => UserDetailsContext::change(
+        Ok(Some(user)) => UserDetailsContext::change(
             flash.map(Message::from),
             user_guard.user.user_type.is_admin(),
             user,
             flats,
         ),
+        Ok(None) => UserDetailsContext::error(Message::error("No user found".to_string())),
         Err(e) => UserDetailsContext::error(Message::error(e.to_string())),
     };
     Ok(Template::render("user_details", &context))

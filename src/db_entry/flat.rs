@@ -83,9 +83,9 @@ impl FlatEntry {
             .collect();
     }
 
-    pub fn get_by_id(conn: &DbConn, id: u32) -> Result<FlatEntry, rusqlite::Error> {
+    pub fn get_by_id(conn: &DbConn, id: u32) -> Result<Option<FlatEntry>, rusqlite::Error> {
         let mut stmt = conn.prepare(
-            "SELECT id, name, active, bell_button_pin, local_address, broker_address, broker_port, bell_topic FROM flat WHERE ID=?1",
+            "SELECT id, name, active, bell_button_pin, local_address, broker_address, broker_port, bell_topic FROM flat WHERE ID=?1 LIMIT 1",
         )?;
         return stmt
             .query_map(&[&id], |row| FlatEntry::row_2_flat(&row))?
@@ -93,21 +93,23 @@ impl FlatEntry {
                 Ok(x) => x,
                 Err(e) => Err(e),
             })
-            .collect::<Result<Vec<FlatEntry>, rusqlite::Error>>()?
-            .pop()
-            .ok_or_else(|| rusqlite::Error::QueryReturnedNoRows);
+            .next()
+            .map_or_else(
+                || Ok(None),
+                |entry_result| entry_result.map(|entry| Some(entry)),
+            );
     }
 
     pub fn change(&self, conn: &DbConn) -> Result<(), rusqlite::Error> {
         conn.execute(
-            "UPDATE flat SET name = ?1, active = ?2, bell_button_pin = ?3, local_address = ?4, broker_address = ?5, broker_port = ?6, bell_topic = ?7 WHERE id = ?8",
+            "UPDATE flat SET name = ?1, active = ?2, bell_button_pin = ?3, local_address = ?4, broker_address = ?5, broker_port = ?6, bell_topic = ?7 WHERE id = ?8 LIMIT 1",
             &[&self.name, &self.active, &self.bell_button_pin, &self.local_address, &self.broker_address, &self.broker_port, &self.bell_topic, &self.id],
         )?;
         Ok(())
     }
 
     pub fn delete(conn: &DbConn, id: u32) -> Result<(), rusqlite::Error> {
-        conn.execute("DELETE FROM flat WHERE id=?1", &[&id])?;
+        conn.execute("DELETE FROM flat WHERE id=?1 LIMIT 1", &[&id])?;
         Ok(())
     }
 }
