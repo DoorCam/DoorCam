@@ -41,8 +41,8 @@ impl FlatEntry {
     }
 
     /// Converts a rusqlite row to a FlatEntry
-    fn row_2_flat(row: &rusqlite::Row) -> Result<FlatEntry, rusqlite::Error> {
-        Ok(FlatEntry {
+    fn row_2_flat(row: &rusqlite::Row) -> FlatEntry {
+        FlatEntry {
             id: row.get::<usize, u32>(0),
             name: row.get::<usize, String>(1),
             active: row.get::<usize, bool>(2),
@@ -51,7 +51,7 @@ impl FlatEntry {
             broker_address: row.get::<usize, String>(5),
             broker_port: row.get::<usize, u16>(6),
             bell_topic: row.get::<usize, String>(7),
-        })
+        }
     }
 
     pub fn get_all(conn: &DbConn) -> Result<Vec<FlatEntry>, rusqlite::Error> {
@@ -59,10 +59,6 @@ impl FlatEntry {
             conn.prepare("SELECT id, name, active, bell_button_pin, local_address, broker_address, broker_port, bell_topic FROM flat")?;
         return stmt
             .query_map(&[], |row| FlatEntry::row_2_flat(&row))?
-            .map(|r| match r {
-                Ok(x) => x,
-                Err(e) => Err(e),
-            })
             .collect();
     }
 
@@ -76,10 +72,6 @@ impl FlatEntry {
             conn.prepare("SELECT id, name, active, bell_button_pin, local_address, broker_address, broker_port, bell_topic FROM flat WHERE active = true")?;
         return stmt
             .query_map(&[], |row| FlatEntry::row_2_flat(&row))?
-            .map(|r| match r {
-                Ok(x) => x,
-                Err(e) => Err(e),
-            })
             .collect();
     }
 
@@ -89,15 +81,8 @@ impl FlatEntry {
         )?;
         return stmt
             .query_map(&[&id], |row| FlatEntry::row_2_flat(&row))?
-            .map(|r| match r {
-                Ok(x) => x,
-                Err(e) => Err(e),
-            })
             .next()
-            .map_or_else(
-                || Ok(None),
-                |entry_result| entry_result.map(|entry| Some(entry)),
-            );
+            .map_or_else(|| Ok(None), |entry_result| entry_result.map(Some));
     }
 
     pub fn change(&self, conn: &DbConn) -> Result<(), rusqlite::Error> {

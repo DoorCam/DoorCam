@@ -1,4 +1,4 @@
-use super::FormToEntry;
+use super::FormIntoEntry;
 use crate::db_entry::{DbConn, FlatEntry};
 use crate::template_contexts::{FlatDetailsContext, FlatOverviewContext, Message};
 use crate::utils::guards::AdminGuard;
@@ -22,8 +22,8 @@ pub struct FlatForm {
     bell_topic: String,
 }
 
-impl FormToEntry<FlatEntry> for FlatForm {
-    fn to_entry(self, id: u32) -> FlatEntry {
+impl FormIntoEntry<FlatEntry> for FlatForm {
+    fn into_entry(self, id: u32) -> FlatEntry {
         FlatEntry {
             id,
             name: self.name,
@@ -140,7 +140,7 @@ pub fn post_change_data(
             "Name is empty",
         ));
     }
-    if let Err(e) = flat_data.into_inner().to_entry(id).change(&conn) {
+    if let Err(e) = flat_data.into_inner().into_entry(id).change(&conn) {
         return Err(Flash::error(
             Redirect::to(uri!(get_change: id)),
             format!("DB Error: {}", e),

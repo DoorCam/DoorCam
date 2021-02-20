@@ -5,9 +5,9 @@ use rocket::State;
 
 /// Get to activate the door opener
 #[get("/api/door/activate")]
-pub fn get_open_door<'r>(
+pub fn get_open_door(
     _user: OnlyUserGuard,
-    door_ctrl: State<'r, std::sync::Mutex<crate::iot::DoorControl>>,
+    door_ctrl: State<'_, std::sync::Mutex<crate::iot::DoorControl>>,
 ) -> Flash<Redirect> {
     let mut ctrl = match door_ctrl.lock() {
         Ok(ctrl) => ctrl,

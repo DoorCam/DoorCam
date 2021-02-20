@@ -92,10 +92,7 @@ impl UserEntry {
                 Err(e) => Err(e),
             })
             .next()
-            .map_or_else(
-                || Ok(None),
-                |entry_result| entry_result.map(|entry| Some(entry)),
-            );
+            .map_or_else(|| Ok(None), |entry_result| entry_result.map(Some));
     }
 
     pub fn get_active_by_name(
@@ -112,10 +109,7 @@ impl UserEntry {
                 Err(e) => Err(e),
             })
             .next()
-            .map_or_else(
-                || Ok(None),
-                |entry_result| entry_result.map(|entry| Some(entry)),
-            );
+            .map_or_else(|| Ok(None), |entry_result| entry_result.map(Some));
     }
 
     pub fn change(
