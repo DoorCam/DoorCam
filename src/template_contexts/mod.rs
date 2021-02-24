@@ -11,8 +11,8 @@ pub struct Message {
 }
 
 impl Message {
-    pub fn error(msg: String) -> Message {
-        Message {
+    pub fn error(msg: String) -> Self {
+        Self {
             category: "error".to_string(),
             content: msg,
         }
@@ -20,8 +20,8 @@ impl Message {
 }
 
 impl From<FlashMessage<'_, '_>> for Message {
-    fn from(msg: FlashMessage) -> Message {
-        return Message {
+    fn from(msg: FlashMessage) -> Self {
+        return Self {
             category: msg.name().to_string(),
             content: msg.msg().to_string(),
         };
@@ -62,7 +62,7 @@ pub struct AdminNav {
 
 impl AdminNav {
     pub fn new() -> Self {
-        AdminNav {
+        Self {
             admin_view_url: uri!(get_admin_index_view).to_string(),
             flat_overview_url: uri!(get_flats).to_string(),
             user_overview_url: uri!(get_users).to_string(),

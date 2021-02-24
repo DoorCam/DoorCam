@@ -13,7 +13,7 @@ pub struct FlatOverviewContext {
 
 impl FlatOverviewContext {
     pub fn view(flats: Vec<FlatEntry>) -> Self {
-        FlatOverviewContext {
+        Self {
             message: None,
             nav: AdminNav::new(),
             create_flat_url: uri!(get_create).to_string(),
@@ -22,7 +22,7 @@ impl FlatOverviewContext {
     }
 
     pub fn error(message: Message) -> Self {
-        FlatOverviewContext {
+        Self {
             message: Some(message),
             nav: AdminNav::new(),
             create_flat_url: uri!(get_create).to_string(),
@@ -40,7 +40,7 @@ pub struct FlatDetailsContext {
 
 impl FlatDetailsContext {
     pub fn error(error: Message) -> Self {
-        FlatDetailsContext {
+        Self {
             message: Some(error),
             nav: AdminNav::new(),
             title: String::new(),
@@ -49,7 +49,7 @@ impl FlatDetailsContext {
     }
 
     pub fn create(error: Option<Message>) -> Self {
-        FlatDetailsContext {
+        Self {
             message: error,
             nav: AdminNav::new(),
             title: "Create".to_string(),
@@ -58,7 +58,7 @@ impl FlatDetailsContext {
     }
 
     pub fn change(error: Option<Message>, flat: FlatEntry) -> Self {
-        FlatDetailsContext {
+        Self {
             message: error,
             nav: AdminNav::new(),
             title: "Change".to_string(),

@@ -15,6 +15,7 @@ pub struct FlatEntry {
 }
 
 impl FlatEntry {
+    #[allow(clippy::too_many_arguments, clippy::ptr_arg)]
     pub fn create(
         conn: &DbConn,
         name: &String,
@@ -24,11 +25,11 @@ impl FlatEntry {
         broker_address: &String,
         broker_port: u16,
         bell_topic: &String,
-    ) -> Result<FlatEntry, rusqlite::Error> {
+    ) -> Result<Self, rusqlite::Error> {
         conn.execute(
             "INSERT INTO flat (name, active, bell_button_pin, local_address, broker_address, broker_port, bell_topic) VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7)",
             &[name, &active, &bell_button_pin, local_address, broker_address, &broker_port, bell_topic])?;
-        Ok(FlatEntry {
+        Ok(Self {
             id: (conn.last_insert_rowid() as u32),
             name: name.clone(),
             active,
@@ -41,8 +42,8 @@ impl FlatEntry {
     }
 
     /// Converts a rusqlite row to a FlatEntry
-    fn row_2_flat(row: &rusqlite::Row) -> FlatEntry {
-        FlatEntry {
+    fn row_2_flat(row: &rusqlite::Row) -> Self {
+        Self {
             id: row.get::<usize, u32>(0),
             name: row.get::<usize, String>(1),
             active: row.get::<usize, bool>(2),
@@ -54,12 +55,10 @@ impl FlatEntry {
         }
     }
 
-    pub fn get_all(conn: &DbConn) -> Result<Vec<FlatEntry>, rusqlite::Error> {
+    pub fn get_all(conn: &DbConn) -> Result<Vec<Self>, rusqlite::Error> {
         let mut stmt =
             conn.prepare("SELECT id, name, active, bell_button_pin, local_address, broker_address, broker_port, bell_topic FROM flat")?;
-        return stmt
-            .query_map(&[], |row| FlatEntry::row_2_flat(&row))?
-            .collect();
+        return stmt.query_map(&[], |row| Self::row_2_flat(&row))?.collect();
     }
 
     /// # Get all active flats
@@ -67,20 +66,18 @@ impl FlatEntry {
     /// ## Arguments
     ///
     /// * `con` - A rusqlite connection and not the rocket wrapper
-    pub fn get_active(conn: &rusqlite::Connection) -> Result<Vec<FlatEntry>, rusqlite::Error> {
+    pub fn get_active(conn: &rusqlite::Connection) -> Result<Vec<Self>, rusqlite::Error> {
         let mut stmt =
             conn.prepare("SELECT id, name, active, bell_button_pin, local_address, broker_address, broker_port, bell_topic FROM flat WHERE active = true")?;
-        return stmt
-            .query_map(&[], |row| FlatEntry::row_2_flat(&row))?
-            .collect();
+        return stmt.query_map(&[], |row| Self::row_2_flat(&row))?.collect();
     }
 
-    pub fn get_by_id(conn: &DbConn, id: u32) -> Result<Option<FlatEntry>, rusqlite::Error> {
+    pub fn get_by_id(conn: &DbConn, id: u32) -> Result<Option<Self>, rusqlite::Error> {
         let mut stmt = conn.prepare(
             "SELECT id, name, active, bell_button_pin, local_address, broker_address, broker_port, bell_topic FROM flat WHERE ID=?1 LIMIT 1",
         )?;
         return stmt
-            .query_map(&[&id], |row| FlatEntry::row_2_flat(&row))?
+            .query_map(&[&id], |row| Self::row_2_flat(&row))?
             .next()
             .map_or_else(|| Ok(None), |entry_result| entry_result.map(Some));
     }

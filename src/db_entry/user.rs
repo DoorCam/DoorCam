@@ -22,6 +22,7 @@ pub struct UserEntry {
 }
 
 impl UserEntry {
+    #[allow(clippy::ptr_arg)]
     pub fn create(
         conn: &DbConn,
         name: &String,
@@ -29,7 +30,7 @@ impl UserEntry {
         user_type: UserType,
         active: bool,
         flat_id: Option<u32>,
-    ) -> Result<UserEntry, AuthError> {
+    ) -> Result<Self, AuthError> {
         AuthManager::check_password(pw)?;
         let hash = AuthManager::hash(&pw);
 
@@ -37,7 +38,7 @@ impl UserEntry {
             "INSERT INTO client_user (name, pw_hash, pw_salt, pw_config, user_type, active, flat_id) VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7)",
             &[name, &hash.hash, &hash.salt, &hash.config, &user_type, &active, &flat_id]
         )?;
-        Ok(UserEntry {
+        Ok(Self {
             id: (conn.last_insert_rowid() as u32),
             name: name.clone(),
             pw_hash: hash,
@@ -51,8 +52,8 @@ impl UserEntry {
     }
 
     /// Converts a rusqlite row to an UserEntry
-    fn row_2_user(conn: &DbConn, row: &rusqlite::Row) -> Result<UserEntry, rusqlite::Error> {
-        Ok(UserEntry {
+    fn row_2_user(conn: &DbConn, row: &rusqlite::Row) -> Result<Self, rusqlite::Error> {
+        Ok(Self {
             id: row.get::<usize, u32>(0),
             name: row.get::<usize, String>(1),
             pw_hash: HashEntry {
@@ -69,11 +70,11 @@ impl UserEntry {
         })
     }
 
-    pub fn get_all(conn: &DbConn) -> Result<Vec<UserEntry>, rusqlite::Error> {
+    pub fn get_all(conn: &DbConn) -> Result<Vec<Self>, rusqlite::Error> {
         let mut stmt =
             conn.prepare("SELECT id, name, pw_hash, pw_salt, pw_config, user_type, active, flat_id FROM client_user")?;
         return stmt
-            .query_map(&[], |row| UserEntry::row_2_user(&conn, &row))?
+            .query_map(&[], |row| Self::row_2_user(&conn, &row))?
             .map(|r| match r {
                 Ok(x) => x,
                 Err(e) => Err(e),
@@ -81,12 +82,12 @@ impl UserEntry {
             .collect();
     }
 
-    pub fn get_by_id(conn: &DbConn, id: u32) -> Result<Option<UserEntry>, rusqlite::Error> {
+    pub fn get_by_id(conn: &DbConn, id: u32) -> Result<Option<Self>, rusqlite::Error> {
         let mut stmt = conn.prepare(
             "SELECT id, name, pw_hash, pw_salt, pw_config, user_type, active, flat_id FROM client_user WHERE id=?1 LIMIT 1",
         )?;
         return stmt
-            .query_map(&[&id], |row| UserEntry::row_2_user(&conn, &row))?
+            .query_map(&[&id], |row| Self::row_2_user(&conn, &row))?
             .map(|r| match r {
                 Ok(x) => x,
                 Err(e) => Err(e),
@@ -95,15 +96,16 @@ impl UserEntry {
             .map_or_else(|| Ok(None), |entry_result| entry_result.map(Some));
     }
 
+    #[allow(clippy::ptr_arg)]
     pub fn get_active_by_name(
         conn: &DbConn,
         name: &String,
-    ) -> Result<Option<UserEntry>, rusqlite::Error> {
+    ) -> Result<Option<Self>, rusqlite::Error> {
         let mut stmt = conn.prepare(
             "SELECT id, name, pw_hash, pw_salt, pw_config, user_type, active, flat_id FROM client_user WHERE name = ?1 AND active = 1 LIMIT 1",
         )?;
         return stmt
-            .query_map(&[name], |row| UserEntry::row_2_user(&conn, &row))?
+            .query_map(&[name], |row| Self::row_2_user(&conn, &row))?
             .map(|r| match r {
                 Ok(x) => x,
                 Err(e) => Err(e),
@@ -112,6 +114,7 @@ impl UserEntry {
             .map_or_else(|| Ok(None), |entry_result| entry_result.map(Some));
     }
 
+    #[allow(clippy::ptr_arg)]
     pub fn change(
         conn: &DbConn,
         id: u32,

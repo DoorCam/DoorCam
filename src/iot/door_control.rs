@@ -15,14 +15,16 @@ const OPENING_TIME_PERIOD: Duration = Duration::from_secs(10);
 pub struct DoorControl {
     #[cfg(not(feature = "iot"))]
     is_open: Arc<Mutex<bool>>,
+
     #[cfg(feature = "iot")]
     dev: Arc<Mutex<OutputDevice>>,
 }
 
 #[cfg(not(feature = "iot"))]
 impl DoorControl {
-    pub fn new(_pin: u8) -> DoorControl {
-        DoorControl {
+    #[allow(clippy::mutex_atomic)]
+    pub fn new(_pin: u8) -> Self {
+        Self {
             is_open: Arc::new(Mutex::new(false)),
         }
     }
@@ -60,8 +62,8 @@ impl DoorControl {
 
 #[cfg(feature = "iot")]
 impl DoorControl {
-    pub fn new(pin: u8) -> DoorControl {
-        return DoorControl {
+    pub fn new(pin: u8) -> Self {
+        return Self {
             dev: Arc::new(Mutex::new(OutputDevice::new(pin))),
         };
     }

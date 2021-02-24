@@ -19,7 +19,7 @@ pub struct BellButton {
 #[cfg(not(feature = "iot"))]
 impl BellButton {
     pub fn new(_flat: &FlatEntry) -> Self {
-        BellButton {}
+        Self {}
     }
 }
 
@@ -52,10 +52,10 @@ impl BellButton {
                 Err(e) => error!("IoT: Can't lock drop: {}", e),
             }
 
-            BellButton::send_bell_signal(&mut mqtt_client, &topic);
+            Self::send_bell_signal(&mut mqtt_client, &topic);
         });
 
-        BellButton { drop_flag }
+        Self { drop_flag }
     }
 
     /// Sends a topic to the broker
