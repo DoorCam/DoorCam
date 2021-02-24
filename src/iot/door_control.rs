@@ -32,6 +32,7 @@ impl DoorControl {
         let mut state = self.is_open.lock()?;
         // Stop if the opener is active
         if *state {
+            info!("IoT: Opener already active");
             return Ok(());
         }
 
@@ -70,6 +71,7 @@ impl DoorControl {
         let mut dev = self.dev.lock()?;
         // Stop if the opener is active
         if dev.is_active() {
+            info!("IoT: Opener already active");
             return Ok(());
         }
 
