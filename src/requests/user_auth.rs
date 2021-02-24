@@ -30,10 +30,8 @@ pub fn post_login_data(
     conn: DbConn,
     cookies: Cookies,
 ) -> Result<Redirect, Flash<Redirect>> {
-    let user = match AuthManager::auth(&conn, cookies, &user_data.name, &user_data.pw) {
-        Err(e) => return Err(Flash::error(Redirect::to(uri!(get_login)), e.to_string())),
-        Ok(user) => user,
-    };
+    let user = AuthManager::auth(&conn, cookies, &user_data.name, &user_data.pw)
+        .map_err(|e| Flash::error(Redirect::to(uri!(get_login)), e.to_string()))?;
 
     // Redirects to the user-type based main-site
     return Ok(Redirect::to(if user.user_type.is_admin() {

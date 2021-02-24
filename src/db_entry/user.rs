@@ -44,7 +44,7 @@ impl UserEntry {
             user_type,
             active,
             flat: match flat_id {
-                Some(flat_id) => Some(FlatEntry::get_by_id(&conn, flat_id)?),
+                Some(flat_id) => FlatEntry::get_by_id(&conn, flat_id)?,
                 None => None,
             },
         })
@@ -63,7 +63,7 @@ impl UserEntry {
             user_type: row.get::<usize, UserType>(5),
             active: row.get::<usize, bool>(6),
             flat: match row.get::<usize, Option<u32>>(7) {
-                Some(flat_id) => Some(FlatEntry::get_by_id(&conn, flat_id)?),
+                Some(flat_id) => FlatEntry::get_by_id(&conn, flat_id)?,
                 None => None,
             },
         })
@@ -81,9 +81,9 @@ impl UserEntry {
             .collect();
     }
 
-    pub fn get_by_id(conn: &DbConn, id: u32) -> Result<UserEntry, rusqlite::Error> {
+    pub fn get_by_id(conn: &DbConn, id: u32) -> Result<Option<UserEntry>, rusqlite::Error> {
         let mut stmt = conn.prepare(
-            "SELECT id, name, pw_hash, pw_salt, pw_config, user_type, active, flat_id FROM client_user WHERE id=?1",
+            "SELECT id, name, pw_hash, pw_salt, pw_config, user_type, active, flat_id FROM client_user WHERE id=?1 LIMIT 1",
         )?;
         return stmt
             .query_map(&[&id], |row| UserEntry::row_2_user(&conn, &row))?
@@ -91,17 +91,16 @@ impl UserEntry {
                 Ok(x) => x,
                 Err(e) => Err(e),
             })
-            .collect::<Result<Vec<UserEntry>, rusqlite::Error>>()?
-            .pop()
-            .ok_or_else(|| rusqlite::Error::QueryReturnedNoRows);
+            .next()
+            .map_or_else(|| Ok(None), |entry_result| entry_result.map(Some));
     }
 
     pub fn get_active_by_name(
         conn: &DbConn,
         name: &String,
-    ) -> Result<Vec<UserEntry>, rusqlite::Error> {
+    ) -> Result<Option<UserEntry>, rusqlite::Error> {
         let mut stmt = conn.prepare(
-            "SELECT id, name, pw_hash, pw_salt, pw_config, user_type, active, flat_id FROM client_user WHERE name = ?1 AND active = 1",
+            "SELECT id, name, pw_hash, pw_salt, pw_config, user_type, active, flat_id FROM client_user WHERE name = ?1 AND active = 1 LIMIT 1",
         )?;
         return stmt
             .query_map(&[name], |row| UserEntry::row_2_user(&conn, &row))?
@@ -109,7 +108,8 @@ impl UserEntry {
                 Ok(x) => x,
                 Err(e) => Err(e),
             })
-            .collect();
+            .next()
+            .map_or_else(|| Ok(None), |entry_result| entry_result.map(Some));
     }
 
     pub fn change(
@@ -123,7 +123,7 @@ impl UserEntry {
     ) -> Result<(), AuthError> {
         if pw.is_empty() {
             conn.execute(
-                "UPDATE client_user SET name = ?1, user_type = ?2, active = ?3, flat_id = ?4 WHERE id = ?5",
+                "UPDATE client_user SET name = ?1, user_type = ?2, active = ?3, flat_id = ?4 WHERE id = ?5 LIMIT 1",
                 &[name, &user_type, &active, &flat_id, &id],
             )?;
         } else {
@@ -131,7 +131,7 @@ impl UserEntry {
             let hash = AuthManager::hash(&pw);
 
             conn.execute(
-                "UPDATE client_user SET name = ?1, pw_hash = ?2, pw_salt = ?3, pw_config = ?4, user_type = ?5, active = ?6, flat_id = ?7 WHERE id = ?8",
+                "UPDATE client_user SET name = ?1, pw_hash = ?2, pw_salt = ?3, pw_config = ?4, user_type = ?5, active = ?6, flat_id = ?7 WHERE id = ?8 LIMIT 1",
                 &[name, &hash.hash, &hash.salt, &hash.config, &user_type, &active, &flat_id, &id]
             )?;
         }
@@ -139,7 +139,7 @@ impl UserEntry {
     }
 
     pub fn delete(conn: &DbConn, id: u32) -> Result<(), rusqlite::Error> {
-        conn.execute("DELETE FROM user WHERE ID=?1", &[&id])?;
+        conn.execute("DELETE FROM user WHERE ID=?1 LIMIT 1", &[&id])?;
         Ok(())
     }
 }

@@ -21,7 +21,32 @@ jobs:
         toolchain: nightly
         override: true
         components: rustc
+    - name: Cache
+      uses: Swatinem/rust-cache@v1.2.0
     - name: Build
       run: cargo build --release --verbose
     - name: Run tests
       run: cargo test --release --verbose
+  lints:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - name: Install latest nightly
+        uses: actions-rs/toolchain@v1
+        with:
+          profile: minimal
+          toolchain: nightly
+          override: true
+          components: 'rustfmt, clippy'
+      - name: Cache
+        uses: Swatinem/rust-cache@v1.2.0
+      - name: Format
+        uses: actions-rs/cargo@v1
+        with:
+          command: fmt
+          args: '-- --check'
+      - name: Clippy
+        uses: actions-rs/cargo@v1
+        with:
+          command: clippy
+          args: '-- -D warnings'

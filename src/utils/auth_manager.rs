@@ -82,14 +82,10 @@ impl AuthManager {
         pw: &str,
     ) -> Result<UserEntry, AuthError> {
         // Get UserEntry
-        let user = UserEntry::get_active_by_name(&conn, &name)?.pop();
-        let user = match user {
-            Some(user) => user,
-            None => {
-                Blake2b::new().finalize();
-                return Err(AuthError::InvalidCredentials);
-            }
-        };
+        let user = UserEntry::get_active_by_name(&conn, &name)?.ok_or_else(|| {
+            Blake2b::new().finalize();
+            AuthError::InvalidCredentials
+        })?;
 
         // Create hash with matching config
         let pw_hash = match user.pw_hash.config.as_str() {
