@@ -10,7 +10,7 @@ The GUI is written in HTML with [Tera](https://tera.netlify.app) as an templatin
 
 ## Framework
 
-The server-side webframework used in this projet is [Rocket](https://rocket.rs/) ([Guide](https://rocket.rs/v0.4/guide/), [Documentation](https://api.rocket.rs/v0.4/rocket/)).
+The server-side webframework used in this project is [Rocket](https://rocket.rs/) ([Guide](https://rocket.rs/v0.4/guide/), [Documentation](https://api.rocket.rs/v0.4/rocket/)).
 
 ## Important Libraries
 

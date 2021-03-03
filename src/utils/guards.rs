@@ -28,13 +28,13 @@ impl<'a, 'r> FromRequest<'a, 'r> for UserGuard {
     type Error = AuthError;
 
     /// Checks for valid user-cookie in a request
-    fn from_request(request: &'a Request<'r>) -> request::Outcome<UserGuard, AuthError> {
+    fn from_request(request: &'a Request<'r>) -> request::Outcome<Self, AuthError> {
         return request
             .cookies()
             .get_private("user")
             .map_or(Outcome::Forward(()), |cookie| {
                 match serde_json::from_str(cookie.value()) {
-                    Ok(user) => Outcome::Success(UserGuard { user }),
+                    Ok(user) => Outcome::Success(Self { user }),
                     Err(e) => Outcome::Failure((Status::BadRequest, AuthError::from(e))),
                 }
             });
@@ -50,11 +50,11 @@ impl<'a, 'r> FromRequest<'a, 'r> for OnlyUserGuard {
     type Error = AuthError;
 
     /// Checks if a valid client is a user
-    fn from_request(request: &'a Request<'r>) -> request::Outcome<OnlyUserGuard, AuthError> {
+    fn from_request(request: &'a Request<'r>) -> request::Outcome<Self, AuthError> {
         let user_guard = request.guard::<UserGuard>()?;
 
         if user_guard.is_user() {
-            Outcome::Success(OnlyUserGuard {
+            Outcome::Success(Self {
                 user: user_guard.user,
             })
         } else {
@@ -72,11 +72,11 @@ impl<'a, 'r> FromRequest<'a, 'r> for AdminGuard {
     type Error = AuthError;
 
     /// Checks if a valid client is an admin
-    fn from_request(request: &'a Request<'r>) -> request::Outcome<AdminGuard, AuthError> {
+    fn from_request(request: &'a Request<'r>) -> request::Outcome<Self, AuthError> {
         let user_guard = request.guard::<UserGuard>()?;
 
         if user_guard.is_admin() {
-            Outcome::Success(AdminGuard {
+            Outcome::Success(Self {
                 user: user_guard.user,
             })
         } else {

@@ -13,7 +13,7 @@ pub struct UserOverviewContext {
 
 impl UserOverviewContext {
     pub fn view(users: Vec<UserEntry>) -> Self {
-        UserOverviewContext {
+        Self {
             message: None,
             nav: AdminNav::new(),
             create_user_url: uri!(get_create).to_string(),
@@ -22,7 +22,7 @@ impl UserOverviewContext {
     }
 
     pub fn error(message: Message) -> Self {
-        UserOverviewContext {
+        Self {
             message: Some(message),
             nav: AdminNav::new(),
             create_user_url: uri!(get_create).to_string(),
@@ -43,7 +43,7 @@ pub struct UserDetailsContext {
 
 impl UserDetailsContext {
     pub fn error(error: Message) -> Self {
-        UserDetailsContext {
+        Self {
             message: Some(error),
             nav: Some(AdminNav::new()),
             title: String::new(),
@@ -55,7 +55,7 @@ impl UserDetailsContext {
     }
 
     pub fn create(error: Option<Message>, flats: Vec<FlatEntry>) -> Self {
-        UserDetailsContext {
+        Self {
             message: error,
             nav: Some(AdminNav::new()),
             title: "Create".to_string(),
@@ -72,7 +72,7 @@ impl UserDetailsContext {
         user: UserEntry,
         flats: Vec<FlatEntry>,
     ) -> Self {
-        UserDetailsContext {
+        Self {
             message: error,
             nav: if is_admin {
                 Some(AdminNav::new())

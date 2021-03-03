@@ -17,25 +17,25 @@ pub enum AuthError {
 }
 
 impl From<rusqlite::Error> for AuthError {
-    fn from(err: rusqlite::Error) -> AuthError {
-        AuthError::DbError(err)
+    fn from(err: rusqlite::Error) -> Self {
+        Self::DbError(err)
     }
 }
 
 impl From<serde_json::error::Error> for AuthError {
-    fn from(err: serde_json::error::Error) -> AuthError {
-        AuthError::SerializationError(err)
+    fn from(err: serde_json::error::Error) -> Self {
+        Self::SerializationError(err)
     }
 }
 
 impl fmt::Display for AuthError {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         match *self {
-            AuthError::DbError(ref err) => err.fmt(f),
-            AuthError::SerializationError(ref err) => err.fmt(f),
-            AuthError::InvalidCredentials => write!(f, "The credentials are invalid"),
-            AuthError::UnknownHashConfig => write!(f, "The hash-config is unknown"),
-            AuthError::WeakPassword => write!(f, "The password is to weak"),
+            Self::DbError(ref err) => err.fmt(f),
+            Self::SerializationError(ref err) => err.fmt(f),
+            Self::InvalidCredentials => write!(f, "The credentials are invalid"),
+            Self::UnknownHashConfig => write!(f, "The hash-config is unknown"),
+            Self::WeakPassword => write!(f, "The password is to weak"),
         }
     }
 }
@@ -75,6 +75,7 @@ impl AuthManager {
     }
 
     /// Checks whether the given credentials are valid and writes the user-cookie
+    #[allow(clippy::ptr_arg)]
     pub fn auth(
         conn: &DbConn,
         cookies: Cookies,
@@ -104,7 +105,7 @@ impl AuthManager {
             return Err(AuthError::InvalidCredentials);
         }
 
-        AuthManager::write_user_cookie(&user, cookies)?;
+        Self::write_user_cookie(&user, cookies)?;
 
         Ok(user)
     }

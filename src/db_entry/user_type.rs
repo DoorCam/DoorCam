@@ -21,24 +21,24 @@ pub enum UserType {
 
 impl UserType {
     pub fn is_user(&self) -> bool {
-        matches!(self, UserType::User)
+        matches!(self, Self::User)
     }
 
     pub fn is_admin(&self) -> bool {
-        matches!(self, UserType::Admin)
+        matches!(self, Self::Admin)
     }
 
     /// get a Vector of touples of the value and string of all types
     pub fn get_list() -> Vec<(u16, String)> {
-        vec![UserType::User.into(), UserType::Admin.into()]
+        vec![Self::User.into(), Self::Admin.into()]
     }
 }
 
 impl fmt::Display for UserType {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         match *self {
-            UserType::User => write!(f, "User"),
-            UserType::Admin => write!(f, "Admin"),
+            Self::User => write!(f, "User"),
+            Self::Admin => write!(f, "Admin"),
         }
     }
 }
@@ -48,32 +48,32 @@ impl TryFrom<u16> for UserType {
 
     fn try_from(num: u16) -> Result<Self, Self::Error> {
         match num {
-            1 => Ok(UserType::User),
-            2 => Ok(UserType::Admin),
+            1 => Ok(Self::User),
+            2 => Ok(Self::Admin),
             _ => Err(format!("Unknown user-type: {}", num)),
         }
     }
 }
 
-impl Into<u16> for UserType {
-    fn into(self) -> u16 {
-        match self {
+impl From<UserType> for u16 {
+    fn from(user_type: UserType) -> Self {
+        match user_type {
             UserType::User => 1,
             UserType::Admin => 2,
         }
     }
 }
 
-impl Into<(u16, String)> for UserType {
-    fn into(self) -> (u16, String) {
-        (self.into(), self.to_string())
+impl From<UserType> for (u16, String) {
+    fn from(user_type: UserType) -> Self {
+        (user_type.into(), user_type.to_string())
     }
 }
 
 /// needed to convert from the raw SQL-value
 impl FromSql for UserType {
     fn column_result(value: ValueRef<'_>) -> FromSqlResult<Self> {
-        match UserType::try_from(u16::column_result(value)?) {
+        match Self::try_from(u16::column_result(value)?) {
             Ok(user_type) => Ok(user_type),
             Err(_) => Err(FromSqlError::OutOfRange(value.as_i64()?)),
         }
@@ -93,7 +93,7 @@ impl<'v> FromFormValue<'v> for UserType {
     type Error = &'v RawStr;
 
     fn from_form_value(form_value: &'v RawStr) -> Result<Self, &'v RawStr> {
-        match UserType::try_from(u16::from_form_value(form_value)?) {
+        match Self::try_from(u16::from_form_value(form_value)?) {
             Ok(user_type) => Ok(user_type),
             Err(_) => Err(form_value),
         }
