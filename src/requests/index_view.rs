@@ -2,22 +2,29 @@ use super::door::*;
 use super::user::*;
 use super::user_auth::*;
 use crate::template_contexts::{AdminNav, AdminViewContext, MainViewContext, Message, NoContext};
+use crate::utils::config::Config;
 use crate::utils::guards::{AdminGuard, OnlyUserGuard, UserGuard};
 use rocket::request::{FlashMessage, FromRequest, Request};
 use rocket::response::Redirect;
 use rocket::Outcome;
+use rocket::State;
 use rocket_contrib::templates::Template;
 
 /// Get the index-view of an user
 #[get("/")]
-pub fn get_user_index_view(user: OnlyUserGuard, flash: Option<FlashMessage>) -> Template {
+pub fn get_user_index_view(
+    user: OnlyUserGuard,
+    flash: Option<FlashMessage>,
+    config: State<'_, Config>,
+) -> Template {
     let context = MainViewContext {
         message: flash.map(Message::from),
         cam_url: format!(
-            "http://{}:8081/",
+            "http://{}:{}/",
             user.user
                 .flat
-                .map_or_else(String::new, |flat| flat.local_address)
+                .map_or_else(String::new, |flat| flat.local_address),
+            config.web.mjpeg_stream_port,
         ),
         activate_door_url: uri!(get_open_door).to_string(),
         change_user_url: uri!(get_change: user.user.id).to_string(),

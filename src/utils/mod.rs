@@ -3,4 +3,6 @@ mod crypto;
 
 pub mod auth_manager;
 
+pub mod config;
+
 pub mod guards;

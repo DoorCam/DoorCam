@@ -1,0 +1,5 @@
+[iot]
+door_opener_pin = 1
+
+[web]
+mjpeg_stream_port = 8081
