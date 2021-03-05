@@ -32,7 +32,15 @@
     <label for="broker_port"><b>Broker Port</b></label><br>
     <input type="number" name="broker_port" id="broker_port"
       value="{% if flat %}{{ flat.broker_port }}{% else %}1883{% endif %}" required />
-    <br><br>
+    <br>
+    <label for="broker_user"><b>Broker User</b></label>
+    <input type="text" placeholder="Enter Broker User" name="broker_user" id="broker_user" {% if flat %}
+      value="{{ flat.broker_user }}" {% endif %} required />
+    <br>
+    <label for="broker_password"><b>Broker Password</b></label>
+    <input type="password" placeholder="Enter Broker Password" name="broker_password" id="broker_password" {% if flat %}
+      value="{{ flat.broker_password }}" {% endif %} required />
+    <br>
     <label for="bell_topic"><b>Bell Topic</b></label>
     <input type="text" placeholder="Enter Bell Topic" name="bell_topic" id="bell_topic" {% if flat %}
       value="{{ flat.bell_topic }}" {% endif %} required />

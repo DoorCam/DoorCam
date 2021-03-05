@@ -8,7 +8,9 @@ CREATE TABLE flat (
    local_address TEXT NOT NULL,
    broker_address TEXT NOT NULL,
    broker_port INTEGER NOT NULL,
-   bell_topic TEXT NOT NULL
+   bell_topic TEXT NOT NULL,
+   broker_user TEXT NOT NULL,
+   broker_pw TEXT NOT NULL
 );
 
 DROP TABLE client_user;

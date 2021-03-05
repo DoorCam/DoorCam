@@ -1,13 +1,10 @@
 use crate::db_entry::FlatEntry;
-#[cfg(feature = "iot")]
 use log::{error, info};
-#[cfg(feature = "iot")]
 use rumqttc::{Client, MqttOptions, QoS};
 #[cfg(feature = "iot")]
 use rust_gpiozero::input_devices::Button;
 #[cfg(feature = "iot")]
 use std::sync::{Arc, Mutex};
-#[cfg(feature = "iot")]
 use std::thread;
 
 /// Checks whether the button is pushed and sends a signal to the MQTT-Broker.
@@ -18,7 +15,20 @@ pub struct BellButton {
 
 #[cfg(not(feature = "iot"))]
 impl BellButton {
-    pub fn new(_flat: &FlatEntry) -> Self {
+    pub fn new(flat: &FlatEntry) -> Self {
+        let mut mqtt_conn_options =
+            MqttOptions::new("doorcam", flat.broker_address.clone(), flat.broker_port);
+        mqtt_conn_options.set_credentials(flat.broker_user.clone(), flat.broker_password.clone());
+        let (mut mqtt_client, mut mqtt_conn) = Client::new(mqtt_conn_options, 5);
+
+        Self::send_bell_signal(&mut mqtt_client, &flat.bell_topic.clone());
+
+        thread::spawn(move || {
+            mqtt_conn.iter().for_each(|notification| {
+                info!("IoT: Received MQTT notification: {:?}", notification)
+            });
+        });
+
         Self {}
     }
 }
@@ -27,9 +37,10 @@ impl BellButton {
 impl BellButton {
     /// Spawns a thread with an event-loop
     pub fn new(flat: &FlatEntry) -> Self {
-        let mqtt_conn_options =
+        let mut mqtt_conn_options =
             MqttOptions::new("doorcam", flat.broker_address.clone(), flat.broker_port);
-        let (mut mqtt_client, _) = Client::new(mqtt_conn_options, 5);
+        mqtt_conn_options.set_credentials(flat.broker_user.clone(), flat.broker_password.clone());
+        let (mut mqtt_client, mut mqtt_conn) = Client::new(mqtt_conn_options, 5);
 
         let topic = flat.bell_topic.clone();
 
@@ -55,9 +66,17 @@ impl BellButton {
             Self::send_bell_signal(&mut mqtt_client, &topic);
         });
 
+        thread::spawn(move || {
+            mqtt_conn.iter().for_each(|notification| {
+                info!("IoT: Received MQTT notification: {:?}", notification)
+            });
+        });
+
         Self { drop_flag }
     }
+}
 
+impl BellButton {
     /// Sends a topic to the broker
     fn send_bell_signal(mqtt_client: &mut Client, topic: &String) {
         if let Err(e) = mqtt_client.publish(topic, QoS::ExactlyOnce, false, b"".to_vec()) {

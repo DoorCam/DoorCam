@@ -126,7 +126,7 @@ impl UserEntry {
     ) -> Result<(), AuthError> {
         if pw.is_empty() {
             conn.execute(
-                "UPDATE client_user SET name = ?1, user_type = ?2, active = ?3, flat_id = ?4 WHERE id = ?5 LIMIT 1",
+                "UPDATE client_user SET name = ?1, user_type = ?2, active = ?3, flat_id = ?4 WHERE id = ?5",
                 &[name, &user_type, &active, &flat_id, &id],
             )?;
         } else {
@@ -134,7 +134,7 @@ impl UserEntry {
             let hash = AuthManager::hash(&pw);
 
             conn.execute(
-                "UPDATE client_user SET name = ?1, pw_hash = ?2, pw_salt = ?3, pw_config = ?4, user_type = ?5, active = ?6, flat_id = ?7 WHERE id = ?8 LIMIT 1",
+                "UPDATE client_user SET name = ?1, pw_hash = ?2, pw_salt = ?3, pw_config = ?4, user_type = ?5, active = ?6, flat_id = ?7 WHERE id = ?8",
                 &[name, &hash.hash, &hash.salt, &hash.config, &user_type, &active, &flat_id, &id]
             )?;
         }

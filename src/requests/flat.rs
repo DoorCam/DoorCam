@@ -20,6 +20,8 @@ pub struct FlatForm {
     broker_address: String,
     broker_port: u16,
     bell_topic: String,
+    broker_user: String,
+    broker_password: String,
 }
 
 impl FormIntoEntry<FlatEntry> for FlatForm {
@@ -33,6 +35,8 @@ impl FormIntoEntry<FlatEntry> for FlatForm {
             broker_address: self.broker_address,
             broker_port: self.broker_port,
             bell_topic: self.bell_topic,
+            broker_user: self.broker_user,
+            broker_password: self.broker_password,
         }
     }
 }
@@ -67,6 +71,8 @@ pub fn post_create_data(
         &flat_data.broker_address,
         flat_data.broker_port,
         &flat_data.bell_topic,
+        &flat_data.broker_user,
+        &flat_data.broker_password,
     ) {
         return Err(Flash::error(
             Redirect::to(uri!(get_create)),
