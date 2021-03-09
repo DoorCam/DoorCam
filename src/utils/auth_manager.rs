@@ -4,40 +4,20 @@ use crate::db_entry::{rusqlite, DbConn, HashEntry, UserEntry};
 use blake2::{Blake2b, Digest};
 use passwords::{analyzer, scorer};
 use rocket::http::{Cookie, Cookies};
-use std::fmt;
 
 /// All errors which could happen during user creation, authentification and authorization.
-#[derive(Debug)]
+#[derive(thiserror::Error, Debug)]
 pub enum AuthError {
-    DbError(rusqlite::Error),
-    SerializationError(serde_json::error::Error),
+    #[error(transparent)]
+    DbError(#[from] rusqlite::Error),
+    #[error(transparent)]
+    SerializationError(#[from] serde_json::error::Error),
+    #[error("The credentials are invalid")]
     InvalidCredentials,
+    #[error("The hash-config is unknown")]
     UnknownHashConfig,
+    #[error("The password is to weak")]
     WeakPassword,
-}
-
-impl From<rusqlite::Error> for AuthError {
-    fn from(err: rusqlite::Error) -> Self {
-        Self::DbError(err)
-    }
-}
-
-impl From<serde_json::error::Error> for AuthError {
-    fn from(err: serde_json::error::Error) -> Self {
-        Self::SerializationError(err)
-    }
-}
-
-impl fmt::Display for AuthError {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        match *self {
-            Self::DbError(ref err) => err.fmt(f),
-            Self::SerializationError(ref err) => err.fmt(f),
-            Self::InvalidCredentials => write!(f, "The credentials are invalid"),
-            Self::UnknownHashConfig => write!(f, "The hash-config is unknown"),
-            Self::WeakPassword => write!(f, "The password is to weak"),
-        }
-    }
 }
 
 /// Used for user creation and authentification

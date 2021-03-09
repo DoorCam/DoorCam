@@ -457,6 +457,7 @@ dependencies = [
  "rust_gpiozero",
  "serde 1.0.123",
  "serde_json",
+ "thiserror",
 ]
 
 [[package]]
