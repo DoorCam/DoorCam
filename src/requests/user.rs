@@ -1,9 +1,11 @@
 use crate::db_entry::{DbConn, FlatEntry, UserEntry, UserType};
 use crate::template_contexts::{Message, UserDetailsContext, UserOverviewContext};
+use crate::utils::config::Config;
 use crate::utils::guards::{AdminGuard, UserGuard};
 use rocket::http::Status;
 use rocket::request::{FlashMessage, Form};
 use rocket::response::{Flash, Redirect};
+use rocket::State;
 use rocket_contrib::templates::Template;
 
 /// Struct with all user-details form data.
@@ -34,6 +36,7 @@ pub fn post_create_data(
     user_data: Form<UserForm>,
     _admin: AdminGuard,
     conn: DbConn,
+    config: State<'_, Config>,
 ) -> Result<Redirect, Flash<Redirect>> {
     if user_data.name.is_empty() {
         return Err(Flash::error(
@@ -60,6 +63,7 @@ pub fn post_create_data(
         user_data.user_type.unwrap_or(UserType::User),
         user_data.active.unwrap_or(false),
         user_data.flat_id,
+        &config.security,
     ) {
         return Err(Flash::error(
             Redirect::to(uri!(get_create)),
@@ -138,6 +142,7 @@ pub fn post_change_data(
     conn: DbConn,
     id: u32,
     user_data: Form<UserForm>,
+    config: State<'_, Config>,
 ) -> Result<Redirect, Flash<Redirect>> {
     // An ordinary user is only allowed to modify himself
     if user_guard.is_user() && user_guard.user.id != id {
@@ -191,6 +196,7 @@ pub fn post_change_data(
         } else {
             user_data.flat_id
         },
+        &config.security,
     ) {
         return Err(Flash::error(
             Redirect::to(uri!(get_change: id)),

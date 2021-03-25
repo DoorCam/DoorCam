@@ -3,3 +3,6 @@ door_opener_pin = 1
 
 [web]
 mjpeg_stream_port = 8081
+
+[security]
+hash_pepper = "UnsecurePwPepper"
