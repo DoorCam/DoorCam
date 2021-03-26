@@ -116,7 +116,7 @@ impl UserEntry {
             .map_or_else(|| Ok(None), |entry_result| entry_result.map(Some));
     }
 
-    #[allow(clippy::ptr_arg)]
+    #[allow(clippy::too_many_arguments, clippy::ptr_arg)]
     pub fn change(
         conn: &DbConn,
         id: u32,
