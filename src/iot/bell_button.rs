@@ -78,7 +78,7 @@ impl BellButton {
 
 impl BellButton {
     /// Sends a topic to the broker
-    fn send_bell_signal(mqtt_client: &mut Client, topic: &String) {
+    fn send_bell_signal(mqtt_client: &mut Client, topic: &str) {
         if let Err(e) = mqtt_client.publish(topic, QoS::ExactlyOnce, false, b"".to_vec()) {
             error!("IoT: Can't send Bell Signal: {}", e);
         }

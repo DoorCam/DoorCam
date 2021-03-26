@@ -1,5 +1,5 @@
 /// Is used for the authentification.
-use super::crypto;
+use super::{config::CONFIG, crypto};
 use crate::db_entry::{rusqlite, DbConn, HashEntry, UserEntry};
 use blake2::{Blake2b, Digest};
 use passwords::{analyzer, scorer};
@@ -12,6 +12,8 @@ pub enum AuthError {
     DbError(#[from] rusqlite::Error),
     #[error(transparent)]
     SerializationError(#[from] serde_json::error::Error),
+    #[error(transparent)]
+    DecodeError(#[from] base64::DecodeError),
     #[error("The credentials are invalid")]
     InvalidCredentials,
     #[error("The hash-config is unknown")]
@@ -37,19 +39,21 @@ impl AuthManager {
         let mut pw_salt: [u8; 16] = [0; 16];
 
         crypto::fill_rand_array(&mut pw_salt);
-        let pw_salt = base64::encode(pw_salt);
 
         let pw_hash = base64::encode(
             Blake2b::new()
                 .chain(pw)
                 .chain(b"$")
-                .chain(pw_salt.clone())
+                .chain(pw_salt)
+                .chain(b"$")
+                .chain(&CONFIG.security.hash_pepper)
                 .finalize(),
         );
+        let encoded_pw_salt = base64::encode(pw_salt);
 
         HashEntry {
             hash: pw_hash,
-            salt: pw_salt,
+            salt: encoded_pw_salt,
             config: "Blake2b".to_string(),
         }
     }
@@ -71,13 +75,18 @@ impl AuthManager {
         // Create hash with matching config
         let pw_hash = match user.pw_hash.config.as_str() {
             "plain" => pw.to_string(),
-            "Blake2b" => base64::encode(
-                Blake2b::new()
-                    .chain(pw)
-                    .chain(b"$")
-                    .chain(user.pw_hash.salt.clone())
-                    .finalize(),
-            ),
+            "Blake2b" => {
+                let decoded_pw_salt = base64::decode(&user.pw_hash.salt)?;
+                base64::encode(
+                    Blake2b::new()
+                        .chain(pw)
+                        .chain(b"$")
+                        .chain(decoded_pw_salt)
+                        .chain(b"$")
+                        .chain(&CONFIG.security.hash_pepper)
+                        .finalize(),
+                )
+            }
             _ => return Err(AuthError::UnknownHashConfig),
         };
 
