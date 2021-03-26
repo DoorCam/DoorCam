@@ -28,6 +28,7 @@ log4rs = "~1.0"
 log = "~0.4"
 rsevents = "~0.2"
 config = "~0.10"
+lazy_static = "~1.4"
 thiserror = "~1.0"
 
 [dependencies.rocket_contrib]

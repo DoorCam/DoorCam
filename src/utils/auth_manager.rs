@@ -1,5 +1,5 @@
 /// Is used for the authentification.
-use super::{config, crypto};
+use super::{config::CONFIG, crypto};
 use crate::db_entry::{rusqlite, DbConn, HashEntry, UserEntry};
 use blake2::{Blake2b, Digest};
 use passwords::{analyzer, scorer};
@@ -35,7 +35,7 @@ impl AuthManager {
     }
 
     /// Creates a HashEntry out of a password with a random salt and the currently most secure Hashing algorithm
-    pub fn hash(pw: &str, security_conf: &config::Security) -> HashEntry {
+    pub fn hash(pw: &str) -> HashEntry {
         let mut pw_salt: [u8; 16] = [0; 16];
 
         crypto::fill_rand_array(&mut pw_salt);
@@ -46,7 +46,7 @@ impl AuthManager {
                 .chain(b"$")
                 .chain(pw_salt)
                 .chain(b"$")
-                .chain(&security_conf.hash_pepper)
+                .chain(&CONFIG.security.hash_pepper)
                 .finalize(),
         );
         let encoded_pw_salt = base64::encode(pw_salt);
@@ -65,7 +65,6 @@ impl AuthManager {
         cookies: Cookies,
         name: &String,
         pw: &str,
-        security_conf: &config::Security,
     ) -> Result<UserEntry, AuthError> {
         // Get UserEntry
         let user = UserEntry::get_active_by_name(&conn, &name)?.ok_or_else(|| {
@@ -84,7 +83,7 @@ impl AuthManager {
                         .chain(b"$")
                         .chain(decoded_pw_salt)
                         .chain(b"$")
-                        .chain(&security_conf.hash_pepper)
+                        .chain(&CONFIG.security.hash_pepper)
                         .finalize(),
                 )
             }

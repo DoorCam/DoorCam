@@ -444,6 +444,7 @@ dependencies = [
  "base64 0.13.0",
  "blake2",
  "config",
+ "lazy_static",
  "log 0.4.14",
  "log4rs",
  "matches",

@@ -1,6 +1,13 @@
 /// Data structures for configuration
 use serde::Deserialize;
 
+lazy_static! {
+    pub static ref CONFIG: Config = match Config::new() {
+        Ok(conf) => conf,
+        Err(error) => panic!("Config Error: {}", error),
+    };
+}
+
 /// All errors which could happen during user creation, authentification and authorization.
 #[derive(thiserror::Error, Debug)]
 pub enum Error {

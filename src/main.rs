@@ -11,6 +11,9 @@ extern crate base64;
 #[macro_use]
 extern crate matches;
 
+#[macro_use]
+extern crate lazy_static;
+
 use rsevents::{AutoResetEvent, State};
 use std::sync::{Arc, Mutex};
 
@@ -26,25 +29,18 @@ mod utils;
 
 mod iot;
 
+use utils::config::CONFIG;
+
 fn main() {
     #[cfg(not(debug_assertions))]
     log4rs::init_file("logger.yaml", Default::default()).unwrap();
-
-    let config = match utils::config::Config::new() {
-        Ok(config) => config,
-        Err(e) => {
-            println!("Error with Config: {}", e);
-            log::error!("Error with Config: {}", e);
-            return;
-        }
-    };
 
     // IoT event_loop
     let flat_sync_event = Arc::new(AutoResetEvent::new(State::Unset));
     let db = match rusqlite::Connection::open("db.sqlite") {
         Ok(conn) => conn,
         Err(e) => {
-            println!("Can't establish db connection: {}", e);
+            eprintln!("Can't establish db connection: {}", e);
             log::error!("Can't establish db connection: {}", e);
             return;
         }
@@ -82,9 +78,8 @@ fn main() {
         .attach(Template::fairing())
         .attach(db_entry::DbConn::fairing())
         .attach(SpaceHelmet::default())
-        .manage(config.clone())
         .manage(Mutex::new(iot::DoorControl::new(
-            config.iot.door_opener_pin,
+            CONFIG.iot.door_opener_pin,
         )))
         .manage(flat_sync_event)
         .launch();
