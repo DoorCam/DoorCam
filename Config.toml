@@ -1,8 +1,10 @@
 [iot]
 door_opener_pin = 1
+door_opening_time = "10s"
 
 [web]
 mjpeg_stream_port = 8081
 
 [security]
 hash_pepper = "UnsecurePwPepper"
+minimal_password_strength = 80

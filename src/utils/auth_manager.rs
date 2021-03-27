@@ -28,7 +28,7 @@ pub struct AuthManager {}
 impl AuthManager {
     /// Checks whether the password is secure or errors if it is weak
     pub fn check_password(pw: &str) -> Result<(), AuthError> {
-        if scorer::score(&analyzer::analyze(pw)) < 80f64 {
+        if scorer::score(&analyzer::analyze(pw)) < CONFIG.security.minimal_password_strength {
             return Err(AuthError::WeakPassword);
         }
         Ok(())
