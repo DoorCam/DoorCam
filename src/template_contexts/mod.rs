@@ -1,4 +1,5 @@
-///Here are all contexts which are needed to generate the HTML from the templates.
+//! Here are all contexts which are needed to generate the HTML from the templates.
+
 use crate::requests::{flat::*, index_view::*, user::*, user_auth::*};
 use rocket::request::FlashMessage;
 use serde::Serialize;
