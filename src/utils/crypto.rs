@@ -1,4 +1,4 @@
-/// Cryptographic helper/wrapper function(s).
+//! Cryptographic helper/wrapper function(s).
 use rand::prelude::*;
 use rand_chacha::ChaCha20Rng;
 

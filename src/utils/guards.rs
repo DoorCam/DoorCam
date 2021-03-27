@@ -1,5 +1,6 @@
-/// Are used for the authorization.
-use super::auth_manager::AuthError;
+//! Are used for the authorization.
+
+use super::auth_manager;
 use crate::db_entry::UserEntry;
 use rocket::http::Status;
 use rocket::request::{self, FromRequest, Request};
@@ -25,17 +26,17 @@ impl UserGuard {
 }
 
 impl<'a, 'r> FromRequest<'a, 'r> for UserGuard {
-    type Error = AuthError;
+    type Error = auth_manager::Error;
 
     /// Checks for valid user-cookie in a request
-    fn from_request(request: &'a Request<'r>) -> request::Outcome<Self, AuthError> {
+    fn from_request(request: &'a Request<'r>) -> request::Outcome<Self, Self::Error> {
         return request
             .cookies()
             .get_private("user")
             .map_or(Outcome::Forward(()), |cookie| {
                 match serde_json::from_str(cookie.value()) {
                     Ok(user) => Outcome::Success(Self { user }),
-                    Err(e) => Outcome::Failure((Status::BadRequest, AuthError::from(e))),
+                    Err(e) => Outcome::Failure((Status::BadRequest, auth_manager::Error::from(e))),
                 }
             });
     }
@@ -47,10 +48,10 @@ pub struct OnlyUserGuard {
 }
 
 impl<'a, 'r> FromRequest<'a, 'r> for OnlyUserGuard {
-    type Error = AuthError;
+    type Error = auth_manager::Error;
 
     /// Checks if a valid client is a user
-    fn from_request(request: &'a Request<'r>) -> request::Outcome<Self, AuthError> {
+    fn from_request(request: &'a Request<'r>) -> request::Outcome<Self, Self::Error> {
         let user_guard = request.guard::<UserGuard>()?;
 
         if user_guard.is_user() {
@@ -69,10 +70,10 @@ pub struct AdminGuard {
 }
 
 impl<'a, 'r> FromRequest<'a, 'r> for AdminGuard {
-    type Error = AuthError;
+    type Error = auth_manager::Error;
 
     /// Checks if a valid client is an admin
-    fn from_request(request: &'a Request<'r>) -> request::Outcome<Self, AuthError> {
+    fn from_request(request: &'a Request<'r>) -> request::Outcome<Self, Self::Error> {
         let user_guard = request.guard::<UserGuard>()?;
 
         if user_guard.is_admin() {

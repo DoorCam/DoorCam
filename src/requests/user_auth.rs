@@ -1,7 +1,7 @@
 use super::index_view::*;
 use crate::db_entry::DbConn;
 use crate::template_contexts::{LoginContext, Message};
-use crate::utils::auth_manager::AuthManager;
+use crate::utils::auth_manager;
 use rocket::http::Cookies;
 use rocket::request::{FlashMessage, Form};
 use rocket::response::{Flash, Redirect};
@@ -30,7 +30,7 @@ pub fn post_login_data(
     conn: DbConn,
     cookies: Cookies,
 ) -> Result<Redirect, Flash<Redirect>> {
-    let user = AuthManager::auth(&conn, cookies, &user_data.name, &user_data.pw)
+    let user = auth_manager::auth(&conn, cookies, &user_data.name, &user_data.pw)
         .map_err(|e| Flash::error(Redirect::to(uri!(get_login)), e.to_string()))?;
 
     // Redirects to the user-type based main-site
@@ -44,7 +44,7 @@ pub fn post_login_data(
 /// Get logout to destroy the user-cookie
 #[get("/logout")]
 pub fn get_logout(cookies: Cookies) -> Flash<Redirect> {
-    AuthManager::destroy_user_cookie(cookies);
+    auth_manager::destroy_user_cookie(cookies);
     return Flash::success(
         Redirect::to(uri!(get_login)),
         "Sie wurden erfolgreich ausgeloggt",

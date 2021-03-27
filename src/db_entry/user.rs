@@ -1,5 +1,5 @@
 use super::{rusqlite, DbConn, FlatEntry, UserType};
-use crate::utils::auth_manager::{AuthError, AuthManager};
+use crate::utils::auth_manager;
 use serde::{Deserialize, Serialize};
 
 /// Logical entry of the hash with its parameters.
@@ -30,9 +30,9 @@ impl UserEntry {
         user_type: UserType,
         active: bool,
         flat_id: Option<u32>,
-    ) -> Result<Self, AuthError> {
-        AuthManager::check_password(pw)?;
-        let hash = AuthManager::hash(&pw);
+    ) -> Result<Self, auth_manager::Error> {
+        auth_manager::check_password(pw)?;
+        let hash = auth_manager::hash(&pw);
 
         conn.execute(
             "INSERT INTO client_user (name, pw_hash, pw_salt, pw_config, user_type, active, flat_id) VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7)",
@@ -123,15 +123,15 @@ impl UserEntry {
         user_type: UserType,
         active: bool,
         flat_id: Option<u32>,
-    ) -> Result<(), AuthError> {
+    ) -> Result<(), auth_manager::Error> {
         if pw.is_empty() {
             conn.execute(
                 "UPDATE client_user SET name = ?1, user_type = ?2, active = ?3, flat_id = ?4 WHERE id = ?5",
                 &[name, &user_type, &active, &flat_id, &id],
             )?;
         } else {
-            AuthManager::check_password(pw)?;
-            let hash = AuthManager::hash(&pw);
+            auth_manager::check_password(pw)?;
+            let hash = auth_manager::hash(&pw);
 
             conn.execute(
                 "UPDATE client_user SET name = ?1, pw_hash = ?2, pw_salt = ?3, pw_config = ?4, user_type = ?5, active = ?6, flat_id = ?7 WHERE id = ?8",

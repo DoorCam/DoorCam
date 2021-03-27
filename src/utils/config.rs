@@ -1,5 +1,6 @@
+//! Data structures for configuration
+
 use duration_str::deserialize_duration;
-/// Data structures for configuration
 use serde::Deserialize;
 use std::time::Duration;
 
