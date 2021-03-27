@@ -1,15 +1,13 @@
+use crate::utils::config::CONFIG;
 use log::{error, info};
 #[cfg(feature = "iot")]
 use rust_gpiozero::output_devices::OutputDevice;
 use std::sync::{Arc, Mutex, MutexGuard, PoisonError};
 use std::thread;
-use std::time::Duration;
 
 #[cfg(test)]
 #[path = "./door_control_test.rs"]
 mod door_control_test;
-
-const OPENING_TIME_PERIOD: Duration = Duration::from_secs(10);
 
 ///Used to activate the door-opener.
 pub struct DoorControl {
@@ -29,7 +27,7 @@ impl DoorControl {
         }
     }
 
-    /// Activates the opener for the OPENING_TIME_PERIOD
+    /// Activates the opener for the `door_opening_time`
     pub fn activate_opener(&mut self) -> Result<(), PoisonError<MutexGuard<bool>>> {
         let mut state = self.is_open.lock()?;
         // Stop if the opener is active
@@ -41,10 +39,10 @@ impl DoorControl {
         info!("IoT: Activating opener");
         *state = true;
 
-        // Spawn thread which waits the OPENING_TIME_PERIOD and stops the opener
+        // Spawn thread which waits the `door_opening_time` and stops the opener
         let is_open = Arc::clone(&self.is_open);
         thread::spawn(move || {
-            thread::sleep(OPENING_TIME_PERIOD);
+            thread::sleep(CONFIG.iot.door_opening_time);
             match is_open.lock() {
                 Ok(mut state) => *state = false,
                 Err(e) => error!("IoT: Can't deactivate opener: {}", e),
@@ -68,7 +66,7 @@ impl DoorControl {
         };
     }
 
-    /// Activates the opener for the OPENING_TIME_PERIOD
+    /// Activates the opener for the `door_opening_time`
     pub fn activate_opener(&mut self) -> Result<(), PoisonError<MutexGuard<OutputDevice>>> {
         let mut dev = self.dev.lock()?;
         // Stop if the opener is active
@@ -80,10 +78,10 @@ impl DoorControl {
         info!("IoT: Activating opener");
         dev.on();
 
-        // Spawn thread which waits the OPENING_TIME_PERIOD and stops the opener
+        // Spawn thread which waits the `door_opening_time` and stops the opener
         let dev = Arc::clone(&self.dev);
         thread::spawn(move || {
-            thread::sleep(OPENING_TIME_PERIOD);
+            thread::sleep(CONFIG.iot.door_opening_time);
             match dev.lock() {
                 Ok(mut dev) => dev.off(),
                 Err(e) => error!("IoT: Can't deactivate opener: {}", e),

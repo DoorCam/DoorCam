@@ -1,5 +1,7 @@
+use duration_str::deserialize_duration;
 /// Data structures for configuration
 use serde::Deserialize;
+use std::time::Duration;
 
 lazy_static! {
     pub static ref CONFIG: Config = match Config::new() {
@@ -23,6 +25,10 @@ pub struct IoT {
     /// The GPIO pin which controls the door-opener.
     /// [Pinout Diagram](https://pinout.xyz)
     pub door_opener_pin: u8,
+    /// The duration how long the door opener is activated.
+    /// The format is documented [here](https://docs.rs/duration-str/latest/duration_str/)
+    #[serde(deserialize_with = "deserialize_duration")]
+    pub door_opening_time: Duration,
 }
 
 /// Configuration options regarding the Web
@@ -38,6 +44,9 @@ pub struct Security {
     /// The pepper is used to hash the passwords. It should be 16 bytes long
     #[serde(with = "serde_bytes")]
     pub hash_pepper: Vec<u8>,
+    /// A minimal score of the user password which has to be exceeded to create/modify a user password.
+    /// The password scoring is documented [here](https://docs.rs/passwords/latest/passwords/#scorer)
+    pub minimal_password_strength: f64,
 }
 
 /// All configuration options
