@@ -18,7 +18,7 @@ fn symetric_encrypt_decrypt_with_random() {
     fill_rand_array(&mut key);
     let mut iv = [0; 16];
     fill_rand_array(&mut iv);
-    let plaintext = "Hello World, 42!";
+    let plaintext = "Hello World; 42; The life, universe and everything!";
 
     let ciphertext = symetric_encrypt(&key, &iv, plaintext.as_bytes());
     let decrypted_cipher = symetric_decrypt(&key, &iv, &ciphertext).unwrap();

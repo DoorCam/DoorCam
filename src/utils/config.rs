@@ -2,6 +2,7 @@
 
 use duration_str::deserialize_duration;
 use serde::Deserialize;
+use serde_with::{serde_as, Bytes};
 use std::time::Duration;
 
 lazy_static! {
@@ -16,8 +17,8 @@ lazy_static! {
 pub enum Error {
     #[error(transparent)]
     ConfigInternal(#[from] config::ConfigError),
-    #[error("The pepper has a length of {0} but should have a length of 16")]
-    PepperWrongLen(usize),
+    #[error("The `minimal_password_strength` has to be between 0 and 100 but is {0}.")]
+    InvalidPasswordStrength(f64),
 }
 
 /// All configuration options regarding the `iot` module
@@ -40,14 +41,18 @@ pub struct Web {
 }
 
 /// Configuration options regarding the Security
+#[serde_as]
 #[derive(Debug, Deserialize, Clone)]
 pub struct Security {
-    /// The pepper is used to hash the passwords. It should be 16 bytes long
-    #[serde(with = "serde_bytes")]
-    pub hash_pepper: Vec<u8>,
+    /// The pepper is used to hash the passwords. It has to be 16 bytes long
+    #[serde_as(as = "Bytes")]
+    pub hash_pepper: [u8; 16],
     /// A minimal score of the user password which has to be exceeded to create/modify a user password.
     /// The password scoring is documented [here](https://docs.rs/passwords/latest/passwords/#scorer)
     pub minimal_password_strength: f64,
+    /// The key is used to encrypt the MQTT passwords. It has to be 16 bytes long
+    #[serde_as(as = "Bytes")]
+    pub encryption_key: [u8; 16],
 }
 
 /// All configuration options
@@ -68,12 +73,16 @@ impl Config {
 
         conf.validate()?;
 
+        println!("pepper: {:?}", conf.security.hash_pepper);
+
         Ok(conf)
     }
 
     fn validate(&self) -> Result<(), Error> {
-        if self.security.hash_pepper.len() != 16 {
-            return Err(Error::PepperWrongLen(self.security.hash_pepper.len()));
+        if !(0.0..=100.0).contains(&self.security.minimal_password_strength) {
+            return Err(Error::InvalidPasswordStrength(
+                self.security.minimal_password_strength,
+            ));
         }
         Ok(())
     }

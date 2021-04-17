@@ -6,6 +6,11 @@ pub use rocket_contrib::databases::rusqlite;
 #[derive(Clone)]
 pub struct DbConn(rusqlite::Connection);
 
+pub trait Identifier {}
+
+impl Identifier for () {}
+impl Identifier for u32 {}
+
 mod user;
 pub use user::{HashEntry, UserEntry};
 mod user_type;

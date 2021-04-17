@@ -2,5 +2,5 @@
 
 pub mod auth_manager;
 pub mod config;
-mod crypto;
+pub mod crypto;
 pub mod guards;
