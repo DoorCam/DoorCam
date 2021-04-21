@@ -83,7 +83,7 @@ impl FromSql for UserType {
 /// needed to convert to the raw SQL-value
 impl ToSql for UserType {
     fn to_sql(&self) -> rusqlite::Result<ToSqlOutput<'_>> {
-        let num: u16 = self.clone().into();
+        let num: u16 = (*self).into();
         Ok(ToSqlOutput::from(num))
     }
 }

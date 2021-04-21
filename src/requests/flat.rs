@@ -1,5 +1,5 @@
 use super::FormIntoEntry;
-use crate::db_entry::{DbConn, FlatEntry};
+use crate::db_entry::{DbConn, Entry, FlatEntry};
 use crate::template_contexts::{FlatDetailsContext, FlatOverviewContext, Message};
 use crate::utils::crypto;
 use crate::utils::guards::AdminGuard;
@@ -25,8 +25,8 @@ pub struct FlatForm {
     broker_password: String,
 }
 
-impl FormIntoEntry<FlatEntry<()>, FlatEntry> for FlatForm {
-    fn into_insertable(self) -> FlatEntry<()> {
+impl FlatForm {
+    fn encrypt(&self) -> (String, String) {
         let mut broker_pw_iv = [0; 16];
         crypto::fill_rand_array(&mut broker_pw_iv);
         let encrypted_broker_password = base64::encode(crypto::symetric_encrypt(
@@ -35,6 +35,13 @@ impl FormIntoEntry<FlatEntry<()>, FlatEntry> for FlatForm {
             &self.broker_password.as_bytes(),
         ));
         let broker_pw_iv = base64::encode(broker_pw_iv);
+        (broker_pw_iv, encrypted_broker_password)
+    }
+}
+
+impl FormIntoEntry<FlatEntry<()>, FlatEntry> for FlatForm {
+    fn into_insertable(self) -> FlatEntry<()> {
+        let (broker_pw_iv, encrypted_broker_password) = self.encrypt();
 
         FlatEntry {
             id: (),
@@ -52,14 +59,7 @@ impl FormIntoEntry<FlatEntry<()>, FlatEntry> for FlatForm {
     }
 
     fn into_entry(self, id: u32) -> FlatEntry {
-        let mut broker_pw_iv = [0; 16];
-        crypto::fill_rand_array(&mut broker_pw_iv);
-        let encrypted_broker_password = base64::encode(crypto::symetric_encrypt(
-            &crate::CONFIG.security.encryption_key,
-            &broker_pw_iv,
-            &self.broker_password.as_bytes(),
-        ));
-        let broker_pw_iv = base64::encode(broker_pw_iv);
+        let (broker_pw_iv, encrypted_broker_password) = self.encrypt();
 
         FlatEntry {
             id,
@@ -130,7 +130,7 @@ pub fn delete(
     flat_sync_event: State<Arc<AutoResetEvent>>,
     id: u32,
 ) -> Flash<()> {
-    if let Err(e) = FlatEntry::delete(&conn, id) {
+    if let Err(e) = FlatEntry::delete_entry(&conn, id) {
         return Flash::error((), e.to_string());
     };
 
@@ -177,7 +177,7 @@ pub fn post_change_data(
     let flat = flat_data.into_inner().into_entry(id);
 
     let update_result = match update_password {
-        true => flat.update_all(&conn),
+        true => flat.update(&conn),
         false => flat.update_without_password(&conn),
     };
 

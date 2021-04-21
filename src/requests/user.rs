@@ -1,5 +1,7 @@
-use crate::db_entry::{DbConn, FlatEntry, UserEntry, UserType};
+use super::FormIntoEntry;
+use crate::db_entry::{DbConn, Entry, FlatEntry, UserEntry, UserType};
 use crate::template_contexts::{Message, UserDetailsContext, UserOverviewContext};
+use crate::utils::auth_manager;
 use crate::utils::guards::{AdminGuard, UserGuard};
 use rocket::http::Status;
 use rocket::request::{FlashMessage, Form};
@@ -16,6 +18,34 @@ pub struct UserForm {
     user_type: Option<UserType>,
     active: Option<bool>,
     flat_id: Option<u32>,
+}
+
+impl FormIntoEntry<UserEntry<(), u32>, UserEntry<u32, u32>> for UserForm {
+    fn into_insertable(self) -> UserEntry<(), u32> {
+        let hash = auth_manager::hash(&self.pw);
+
+        UserEntry {
+            id: (),
+            name: self.name,
+            pw_hash: hash,
+            user_type: self.user_type.unwrap_or(UserType::User),
+            active: self.active.unwrap_or(false),
+            flat: self.flat_id,
+        }
+    }
+
+    fn into_entry(self, id: u32) -> UserEntry<u32, u32> {
+        let hash = auth_manager::hash(&self.pw);
+
+        UserEntry {
+            id,
+            name: self.name,
+            pw_hash: hash,
+            user_type: self.user_type.unwrap_or(UserType::User),
+            active: self.active.unwrap_or(false),
+            flat: self.flat_id,
+        }
+    }
 }
 
 /// Get the form to create an user
@@ -53,14 +83,11 @@ pub fn post_create_data(
             "Passwords are not the same",
         ));
     }
-    if let Err(e) = UserEntry::create(
-        &conn,
-        &user_data.name,
-        &user_data.pw,
-        user_data.user_type.unwrap_or(UserType::User),
-        user_data.active.unwrap_or(false),
-        user_data.flat_id,
-    ) {
+    if let Err(e) = auth_manager::check_password(&user_data.pw) {
+        return Err(Flash::error(Redirect::to(uri!(get_create)), e.to_string()));
+    }
+
+    if let Err(e) = user_data.into_inner().into_insertable().create(&conn) {
         return Err(Flash::error(
             Redirect::to(uri!(get_create)),
             format!("DB Error: {}", e),
@@ -86,7 +113,7 @@ pub fn delete(admin: AdminGuard, conn: DbConn, id: u32) -> Flash<()> {
     if admin.user.id == id {
         return Flash::error((), "Can't delete yourself");
     }
-    if let Err(e) = UserEntry::delete(&conn, id) {
+    if let Err(e) = UserEntry::<_>::delete_entry(&conn, id) {
         return Flash::error((), e.to_string());
     };
 
@@ -147,6 +174,8 @@ pub fn post_change_data(
         ));
     }
 
+    let changed_password = !user_data.pw.is_empty();
+
     // A non-admin isn't allowed to change these fields
     if !user_guard.user.user_type.is_admin()
         && (user_data.user_type.is_some()
@@ -155,7 +184,7 @@ pub fn post_change_data(
     {
         return Err(Flash::error(
             Redirect::to(uri!(get_change: id)),
-            "Don't manipulate the user-type or active-Flag",
+            "Don't manipulate the user-type, active-Flag or flat-ID",
         ));
     }
 
@@ -167,31 +196,32 @@ pub fn post_change_data(
     }
 
     // If the password is updated, the two fields must be the same
-    if !user_data.pw.is_empty() && user_data.pw != user_data.pw_repeat {
+    if changed_password && user_data.pw != user_data.pw_repeat {
         return Err(Flash::error(
             Redirect::to(uri!(get_change: id)),
             "Passwords are not the same",
         ));
     }
-
-    // Unwraps all optional fields with its user-type based default value
-    if let Err(e) = UserEntry::change(
-        &conn,
-        id,
-        &user_data.name,
-        &user_data.pw,
-        user_data.user_type.unwrap_or(user_guard.user.user_type),
-        if user_guard.is_user() {
-            true
-        } else {
-            user_data.active.unwrap_or(false)
-        },
-        if user_guard.is_user() {
-            user_guard.user.flat.map(|flat| flat.id)
-        } else {
-            user_data.flat_id
-        },
+    if let (Err(e), true) = (
+        auth_manager::check_password(&user_data.pw),
+        changed_password,
     ) {
+        return Err(Flash::error(
+            Redirect::to(uri!(get_change: id)),
+            e.to_string(),
+        ));
+    }
+
+    let entry = user_data.into_inner().into_entry(id);
+
+    let update_result = match (user_guard.is_admin(), changed_password) {
+        (false, false) => entry.update_unprivileged_without_password(&conn),
+        (false, true) => entry.update_unprivileged(&conn),
+        (true, false) => entry.update_without_password(&conn),
+        (true, true) => entry.update(&conn),
+    };
+
+    if let Err(e) = update_result {
         return Err(Flash::error(
             Redirect::to(uri!(get_change: id)),
             format!("DB Error: {}", e),

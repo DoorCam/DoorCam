@@ -1,4 +1,4 @@
-use super::{rusqlite, DbConn, Identifier};
+use super::{rusqlite, DbConn, Entry, Identifier};
 use serde::{Deserialize, Serialize};
 
 /// Flat entry of the corresponding "flat" table.
@@ -15,6 +15,37 @@ pub struct FlatEntry<ID: Identifier = u32> {
     pub broker_user: String,
     pub broker_password: String,
     pub broker_password_iv: String,
+}
+
+impl Entry for FlatEntry<u32> {
+    fn get_id(&self) -> u32 {
+        self.id
+    }
+
+    fn update(&self, conn: &DbConn) -> Result<(), rusqlite::Error> {
+        let mut stmt = conn.prepare(
+            "UPDATE flat SET name = ?1, active = ?2, bell_button_pin = ?3, local_address = ?4, broker_address = ?5, broker_port = ?6, bell_topic = ?7, broker_user = ?8, broker_pw = ?9, broker_pw_iv = ?10 WHERE id = ?11",
+        )?;
+        stmt.execute(&[
+            &self.name,
+            &self.active,
+            &self.bell_button_pin,
+            &self.local_address,
+            &self.broker_address,
+            &self.broker_port,
+            &self.bell_topic,
+            &self.broker_user,
+            &self.broker_password,
+            &self.broker_password_iv,
+            &self.id,
+        ])?;
+        Ok(())
+    }
+
+    fn delete_entry(conn: &DbConn, id: u32) -> Result<(), rusqlite::Error> {
+        conn.execute("DELETE FROM flat WHERE id=?1 LIMIT 1", &[&id])?;
+        Ok(())
+    }
 }
 
 impl FlatEntry<()> {
@@ -77,7 +108,7 @@ impl FlatEntry<u32> {
     ///
     /// ## Arguments
     ///
-    /// * `con` - A rusqlite connection and not the rocket wrapper
+    /// * `conn` - A rusqlite connection and not the rocket wrapper
     pub fn get_active(conn: &rusqlite::Connection) -> Result<Vec<Self>, rusqlite::Error> {
         let mut stmt =
             conn.prepare("SELECT id, name, active, bell_button_pin, local_address, broker_address, broker_port, bell_topic, broker_user, broker_pw, broker_pw_iv FROM flat WHERE active = true")?;
@@ -92,26 +123,6 @@ impl FlatEntry<u32> {
             .query_map(&[&id], |row| Self::row_2_flat(&row))?
             .next()
             .map_or_else(|| Ok(None), |entry_result| entry_result.map(Some));
-    }
-
-    pub fn update_all(&self, conn: &DbConn) -> Result<(), rusqlite::Error> {
-        let mut stmt = conn.prepare(
-            "UPDATE flat SET name = ?1, active = ?2, bell_button_pin = ?3, local_address = ?4, broker_address = ?5, broker_port = ?6, bell_topic = ?7, broker_user = ?8, broker_pw = ?9, broker_pw_iv = ?10 WHERE id = ?11",
-        )?;
-        stmt.execute(&[
-            &self.name,
-            &self.active,
-            &self.bell_button_pin,
-            &self.local_address,
-            &self.broker_address,
-            &self.broker_port,
-            &self.bell_topic,
-            &self.broker_user,
-            &self.broker_password,
-            &self.broker_password_iv,
-            &self.id,
-        ])?;
-        Ok(())
     }
 
     pub fn update_without_password(&self, conn: &DbConn) -> Result<(), rusqlite::Error> {
@@ -129,11 +140,6 @@ impl FlatEntry<u32> {
             &self.broker_user,
             &self.id,
         ])?;
-        Ok(())
-    }
-
-    pub fn delete(conn: &DbConn, id: u32) -> Result<(), rusqlite::Error> {
-        conn.execute("DELETE FROM flat WHERE id=?1 LIMIT 1", &[&id])?;
         Ok(())
     }
 }
