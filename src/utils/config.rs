@@ -2,7 +2,7 @@
 
 use duration_str::deserialize_duration;
 use serde::Deserialize;
-use serde_with::{serde_as, Bytes};
+use serde_with::{hex::Hex, serde_as};
 use std::time::Duration;
 
 lazy_static! {
@@ -17,8 +17,11 @@ lazy_static! {
 pub enum Error {
     #[error(transparent)]
     ConfigInternal(#[from] config::ConfigError),
-    #[error("The `minimal_password_strength` has to be between 0 and 100 but is {0}.")]
+    #[error("The `security.minimal_password_strength` entry has to be between 0.0 and 100.0 but is {0}.")]
     InvalidPasswordStrength(f64),
+    #[allow(dead_code)]
+    #[error("The `{0}` entry has to be changed to a secret value.")]
+    SecretDefaultValue(String),
 }
 
 /// All configuration options regarding the `iot` module
@@ -44,14 +47,22 @@ pub struct Web {
 #[serde_as]
 #[derive(Debug, Deserialize, Clone)]
 pub struct Security {
-    /// The pepper is used to hash the passwords. It has to be 16 bytes long
-    #[serde_as(as = "Bytes")]
+    /// The pepper is used to hash the passwords. It has to be 16 bytes long.
+    /// You can generate such a value with OpenSSL.
+    /// ```sh
+    /// $ openssl rand -hex 16
+    /// ```
+    #[serde_as(as = "Hex")]
     pub hash_pepper: [u8; 16],
     /// A minimal score of the user password which has to be exceeded to create/modify a user password.
     /// The password scoring is documented [here](https://docs.rs/passwords/latest/passwords/#scorer)
     pub minimal_password_strength: f64,
     /// The key is used to encrypt the MQTT passwords. It has to be 16 bytes long
-    #[serde_as(as = "Bytes")]
+    /// You can generate such a value with OpenSSL.
+    /// ```sh
+    /// $ openssl rand -hex 16
+    /// ```
+    #[serde_as(as = "Hex")]
     pub encryption_key: [u8; 16],
 }
 
@@ -73,8 +84,6 @@ impl Config {
 
         conf.validate()?;
 
-        println!("pepper: {:?}", conf.security.hash_pepper);
-
         Ok(conf)
     }
 
@@ -83,6 +92,24 @@ impl Config {
             return Err(Error::InvalidPasswordStrength(
                 self.security.minimal_password_strength,
             ));
+        }
+
+        #[cfg(not(debug_assertions))]
+        {
+            let default_secret = [
+                0x01, 0x23, 0x45, 0x67, 0x89, 0xab, 0xcd, 0xef, 0x01, 0x23, 0x45, 0x67, 0x89, 0xab,
+                0xcd, 0xef,
+            ];
+            if self.security.hash_pepper == default_secret {
+                return Err(Error::SecretDefaultValue(
+                    "security.hash_pepper".to_string(),
+                ));
+            }
+            if self.security.encryption_key == default_secret {
+                return Err(Error::SecretDefaultValue(
+                    "security.encryption_key".to_string(),
+                ));
+            }
         }
         Ok(())
     }
