@@ -5,10 +5,35 @@ use serde::Deserialize;
 use serde_with::{hex::Hex, serde_as};
 use std::time::Duration;
 
+#[cfg(not(test))]
 lazy_static! {
     pub static ref CONFIG: Config = match Config::new() {
         Ok(conf) => conf,
         Err(error) => panic!("Config Error: {}", error),
+    };
+}
+
+#[cfg(test)]
+lazy_static! {
+    pub static ref CONFIG: Config = Config {
+        iot: IoT {
+            door_opener_pin: 0,
+            door_opening_time: Duration::from_secs(3),
+        },
+        web: Web {
+            mjpeg_stream_port: 8081,
+        },
+        security: Security {
+            minimal_password_strength: 80.0,
+            hash_pepper: [
+                0x01, 0x23, 0x45, 0x67, 0x89, 0xab, 0xcd, 0xef, 0x01, 0x23, 0x45, 0x67, 0x89, 0xab,
+                0xcd, 0xef,
+            ],
+            encryption_key: [
+                0x01, 0x23, 0x45, 0x67, 0x89, 0xab, 0xcd, 0xef, 0x01, 0x23, 0x45, 0x67, 0x89, 0xab,
+                0xcd, 0xef,
+            ],
+        },
     };
 }
 
@@ -47,6 +72,9 @@ pub struct Web {
 #[serde_as]
 #[derive(Debug, Deserialize, Clone)]
 pub struct Security {
+    /// A minimal score of the user password which has to be exceeded to create/modify a user password.
+    /// The password scoring is documented [here](https://docs.rs/passwords/latest/passwords/#scorer)
+    pub minimal_password_strength: f64,
     /// The pepper is used to hash the passwords. It has to be 16 bytes long.
     /// You can generate such a value with OpenSSL.
     /// ```sh
@@ -54,9 +82,6 @@ pub struct Security {
     /// ```
     #[serde_as(as = "Hex")]
     pub hash_pepper: [u8; 16],
-    /// A minimal score of the user password which has to be exceeded to create/modify a user password.
-    /// The password scoring is documented [here](https://docs.rs/passwords/latest/passwords/#scorer)
-    pub minimal_password_strength: f64,
     /// The key is used to encrypt the MQTT passwords. It has to be 16 bytes long
     /// You can generate such a value with OpenSSL.
     /// ```sh
