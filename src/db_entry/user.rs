@@ -136,7 +136,7 @@ impl<FRef: Entry> UserEntry<u32, FRef> {
 
     pub fn update_unprivileged(&self, conn: &DbConn) -> Result<(), rusqlite::Error> {
         conn.execute(
-                "UPDATE client_user SET name = ?1, pw_hash = ?2, pw_salt = ?3, pw_config = ?4 WHERE id = ?8",
+                "UPDATE client_user SET name = ?1, pw_hash = ?2, pw_salt = ?3, pw_config = ?4 WHERE id = ?5",
                 &[&self.name, &self.pw_hash.hash, &self.pw_hash.salt, &self.pw_hash.config, &self.id]
             )?;
         Ok(())
@@ -147,7 +147,7 @@ impl<FRef: Entry> UserEntry<u32, FRef> {
         conn: &DbConn,
     ) -> Result<(), rusqlite::Error> {
         conn.execute(
-            "UPDATE client_user SET name = ?1 WHERE id = ?5",
+            "UPDATE client_user SET name = ?1 WHERE id = ?2",
             &[&self.name, &self.id],
         )?;
         Ok(())

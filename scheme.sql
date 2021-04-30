@@ -10,8 +10,8 @@ CREATE TABLE flat (
    broker_port INTEGER NOT NULL,
    bell_topic TEXT NOT NULL,
    broker_user TEXT NOT NULL,
-   broker_pw TEXT NOT NULL
-   broker_pw_iv TEXT NOT NULL,
+   broker_pw TEXT NOT NULL,
+   broker_pw_iv TEXT NOT NULL
 );
 
 DROP TABLE client_user;

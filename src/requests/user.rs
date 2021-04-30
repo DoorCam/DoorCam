@@ -1,8 +1,8 @@
-use super::FormIntoEntry;
+use super::{index_view::rocket_uri_macro_get_user_index_view, FormIntoEntry};
 use crate::db_entry::{DbConn, Entry, FlatEntry, UserEntry, UserType};
 use crate::template_contexts::{Message, UserDetailsContext, UserOverviewContext};
 use crate::utils::auth_manager;
-use crate::utils::guards::{AdminGuard, UserGuard};
+use crate::utils::guards::{AdminGuard, OnlyUserGuard, UserGuard};
 use rocket::http::Status;
 use rocket::request::{FlashMessage, Form};
 use rocket::response::{Flash, Redirect};
@@ -159,15 +159,66 @@ pub fn get_change(
 }
 
 /// Post user data to modify the user
+#[post("/admin/user/change/<id>", data = "<user_data>", rank = 2)]
+pub fn admin_post_change_data(
+    _user_guard: AdminGuard,
+    conn: DbConn,
+    id: u32,
+    user_data: Form<UserForm>,
+) -> Result<Redirect, Flash<Redirect>> {
+    let changed_password = !user_data.pw.is_empty();
+
+    if user_data.name.is_empty() {
+        return Err(Flash::error(
+            Redirect::to(uri!(get_change: id)),
+            "Name is empty",
+        ));
+    }
+
+    // If the password is updated, the two fields must be the same
+    if changed_password && user_data.pw != user_data.pw_repeat {
+        return Err(Flash::error(
+            Redirect::to(uri!(get_change: id)),
+            "Passwords are not the same",
+        ));
+    }
+    if let (Err(e), true) = (
+        auth_manager::check_password(&user_data.pw),
+        changed_password,
+    ) {
+        return Err(Flash::error(
+            Redirect::to(uri!(get_change: id)),
+            e.to_string(),
+        ));
+    }
+
+    let entry = user_data.into_inner().into_entry(id);
+
+    let update_result = match changed_password {
+        true => entry.update(&conn),
+        false => entry.update_without_password(&conn),
+    };
+
+    if let Err(e) = update_result {
+        return Err(Flash::error(
+            Redirect::to(uri!(get_change: id)),
+            format!("DB Error: {}", e),
+        ));
+    }
+
+    return Ok(Redirect::to(uri!(get_users)));
+}
+
+/// Post user data to modify the user
 #[post("/admin/user/change/<id>", data = "<user_data>")]
-pub fn post_change_data(
-    user_guard: UserGuard,
+pub fn user_post_change_data(
+    user_guard: OnlyUserGuard,
     conn: DbConn,
     id: u32,
     user_data: Form<UserForm>,
 ) -> Result<Redirect, Flash<Redirect>> {
     // An ordinary user is only allowed to modify himself
-    if user_guard.is_user() && user_guard.user.id != id {
+    if user_guard.user.id != id {
         return Err(Flash::error(
             Redirect::to(uri!(get_change: id)),
             "Forbidden",
@@ -177,11 +228,7 @@ pub fn post_change_data(
     let changed_password = !user_data.pw.is_empty();
 
     // A non-admin isn't allowed to change these fields
-    if !user_guard.user.user_type.is_admin()
-        && (user_data.user_type.is_some()
-            || user_data.active.is_some()
-            || user_data.flat_id.is_some())
-    {
+    if user_data.user_type.is_some() || user_data.active.is_some() || user_data.flat_id.is_some() {
         return Err(Flash::error(
             Redirect::to(uri!(get_change: id)),
             "Don't manipulate the user-type, active-Flag or flat-ID",
@@ -214,11 +261,9 @@ pub fn post_change_data(
 
     let entry = user_data.into_inner().into_entry(id);
 
-    let update_result = match (user_guard.is_admin(), changed_password) {
-        (false, false) => entry.update_unprivileged_without_password(&conn),
-        (false, true) => entry.update_unprivileged(&conn),
-        (true, false) => entry.update_without_password(&conn),
-        (true, true) => entry.update(&conn),
+    let update_result = match changed_password {
+        true => entry.update_unprivileged(&conn),
+        false => entry.update_unprivileged_without_password(&conn),
     };
 
     if let Err(e) = update_result {
@@ -228,5 +273,5 @@ pub fn post_change_data(
         ));
     }
 
-    return Ok(Redirect::to(uri!(get_users)));
+    return Ok(Redirect::to(uri!(get_user_index_view)));
 }

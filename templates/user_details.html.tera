@@ -38,9 +38,9 @@
     <br>
     <label for="flat_id"><b>Flat</b></label>
     <select name="flat_id" id="flat_id">
-      <option value="" {% if user and not user.flat_id %} selected {% endif %}></option>
+      <option value="" {% if user and not user.flat %} selected {% endif %}></option>
       {% for flat in flats -%}
-      <option value="{{ flat.id }}" {% if user and user.flat_id and user.flat_id == flat.id %} selected {% endif %}>
+      <option value="{{ flat.id }}" {% if user and user.flat and user.flat.id and user.flat.id == flat.id %} selected {% endif %}>
         {{ flat.name }}</option>
       {%- endfor %}
     </select>
