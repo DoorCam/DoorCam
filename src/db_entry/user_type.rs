@@ -2,6 +2,7 @@ use super::rusqlite::{
     self,
     types::{FromSql, FromSqlError, FromSqlResult, ToSql, ToSqlOutput, ValueRef},
 };
+use derive_try_from_primitive::TryFromPrimitive;
 use rocket::http::RawStr;
 use rocket::request::FromFormValue;
 use serde::{Deserialize, Serialize};
@@ -13,10 +14,11 @@ use std::fmt;
 mod user_type_test;
 
 /// A logical enum of the user_type database field.
-#[derive(Copy, Clone, Debug, Serialize, Deserialize)]
+#[derive(Copy, Clone, Debug, Serialize, Deserialize, TryFromPrimitive)]
+#[repr(u16)]
 pub enum UserType {
-    User,
-    Admin,
+    User = 1,
+    Admin = 2,
 }
 
 impl UserType {
@@ -43,24 +45,9 @@ impl fmt::Display for UserType {
     }
 }
 
-impl TryFrom<u16> for UserType {
-    type Error = String;
-
-    fn try_from(num: u16) -> Result<Self, Self::Error> {
-        match num {
-            1 => Ok(Self::User),
-            2 => Ok(Self::Admin),
-            _ => Err(format!("Unknown user-type: {}", num)),
-        }
-    }
-}
-
 impl From<UserType> for u16 {
     fn from(user_type: UserType) -> Self {
-        match user_type {
-            UserType::User => 1,
-            UserType::Admin => 2,
-        }
+        user_type as Self
     }
 }
 
@@ -73,10 +60,9 @@ impl From<UserType> for (u16, String) {
 /// needed to convert from the raw SQL-value
 impl FromSql for UserType {
     fn column_result(value: ValueRef<'_>) -> FromSqlResult<Self> {
-        match Self::try_from(u16::column_result(value)?) {
-            Ok(user_type) => Ok(user_type),
-            Err(_) => Err(FromSqlError::OutOfRange(value.as_i64()?)),
-        }
+        let numeric_value = value.as_i64()?;
+        Self::try_from(u16::column_result(value)?)
+            .map_err(|_| FromSqlError::OutOfRange(numeric_value))
     }
 }
 
@@ -93,9 +79,6 @@ impl<'v> FromFormValue<'v> for UserType {
     type Error = &'v RawStr;
 
     fn from_form_value(form_value: &'v RawStr) -> Result<Self, &'v RawStr> {
-        match Self::try_from(u16::from_form_value(form_value)?) {
-            Ok(user_type) => Ok(user_type),
-            Err(_) => Err(form_value),
-        }
+        Self::try_from(u16::from_form_value(form_value)?).map_err(|_| form_value)
     }
 }

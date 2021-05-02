@@ -445,6 +445,17 @@ dependencies = [
 ]
 
 [[package]]
+name = "derive-try-from-primitive"
+version = "1.0.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "302ccf094df1151173bb6f5a2282fcd2f45accd5eae1bdf82dcbfefbc501ad5c"
+dependencies = [
+ "proc-macro2 1.0.26",
+ "quote 1.0.9",
+ "syn 1.0.69",
+]
+
+[[package]]
 name = "deunicode"
 version = "0.4.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -509,6 +520,7 @@ dependencies = [
  "blake2",
  "block-modes",
  "config",
+ "derive-try-from-primitive",
  "duration-str",
  "lazy_static",
  "log 0.4.14",
