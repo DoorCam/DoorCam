@@ -1,6 +1,7 @@
 use super::FormIntoEntry;
-use crate::db_entry::{DbConn, FlatEntry};
+use crate::db_entry::{DbConn, Entry, FlatEntry};
 use crate::template_contexts::{FlatDetailsContext, FlatOverviewContext, Message};
+use crate::utils::crypto;
 use crate::utils::guards::AdminGuard;
 use rocket::http::Status;
 use rocket::request::{FlashMessage, Form};
@@ -24,8 +25,42 @@ pub struct FlatForm {
     broker_password: String,
 }
 
-impl FormIntoEntry<FlatEntry> for FlatForm {
+impl FlatForm {
+    fn encrypt(&self) -> (String, String) {
+        let mut broker_pw_iv = [0; 16];
+        crypto::fill_rand_array(&mut broker_pw_iv);
+        let encrypted_broker_password = base64::encode(crypto::symetric_encrypt(
+            &crate::CONFIG.security.encryption_key,
+            &broker_pw_iv,
+            &self.broker_password.as_bytes(),
+        ));
+        let broker_pw_iv = base64::encode(broker_pw_iv);
+        (broker_pw_iv, encrypted_broker_password)
+    }
+}
+
+impl FormIntoEntry<FlatEntry<()>, FlatEntry> for FlatForm {
+    fn into_insertable(self) -> FlatEntry<()> {
+        let (broker_pw_iv, encrypted_broker_password) = self.encrypt();
+
+        FlatEntry {
+            id: (),
+            name: self.name,
+            active: self.active,
+            bell_button_pin: self.bell_button_pin,
+            local_address: self.local_address,
+            broker_address: self.broker_address,
+            broker_port: self.broker_port,
+            bell_topic: self.bell_topic,
+            broker_user: self.broker_user,
+            broker_password: encrypted_broker_password,
+            broker_password_iv: broker_pw_iv,
+        }
+    }
+
     fn into_entry(self, id: u32) -> FlatEntry {
+        let (broker_pw_iv, encrypted_broker_password) = self.encrypt();
+
         FlatEntry {
             id,
             name: self.name,
@@ -36,7 +71,8 @@ impl FormIntoEntry<FlatEntry> for FlatForm {
             broker_port: self.broker_port,
             bell_topic: self.bell_topic,
             broker_user: self.broker_user,
-            broker_password: self.broker_password,
+            broker_password: encrypted_broker_password,
+            broker_password_iv: broker_pw_iv,
         }
     }
 }
@@ -62,18 +98,8 @@ pub fn post_create_data(
             "Name is empty",
         ));
     }
-    if let Err(e) = FlatEntry::create(
-        &conn,
-        &flat_data.name,
-        flat_data.active,
-        flat_data.bell_button_pin,
-        &flat_data.local_address,
-        &flat_data.broker_address,
-        flat_data.broker_port,
-        &flat_data.bell_topic,
-        &flat_data.broker_user,
-        &flat_data.broker_password,
-    ) {
+
+    if let Err(e) = flat_data.into_inner().into_insertable().create(&conn) {
         return Err(Flash::error(
             Redirect::to(uri!(get_create)),
             format!("DB Error: {}", e),
@@ -104,7 +130,7 @@ pub fn delete(
     flat_sync_event: State<Arc<AutoResetEvent>>,
     id: u32,
 ) -> Flash<()> {
-    if let Err(e) = FlatEntry::delete(&conn, id) {
+    if let Err(e) = FlatEntry::delete_entry(&conn, id) {
         return Flash::error((), e.to_string());
     };
 
@@ -146,7 +172,16 @@ pub fn post_change_data(
             "Name is empty",
         ));
     }
-    if let Err(e) = flat_data.into_inner().into_entry(id).change(&conn) {
+
+    let update_password = !flat_data.broker_password.is_empty();
+    let flat = flat_data.into_inner().into_entry(id);
+
+    let update_result = match update_password {
+        true => flat.update(&conn),
+        false => flat.update_without_password(&conn),
+    };
+
+    if let Err(e) = update_result {
         return Err(Flash::error(
             Redirect::to(uri!(get_change: id)),
             format!("DB Error: {}", e),

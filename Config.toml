@@ -6,5 +6,6 @@ door_opening_time = "10s"
 mjpeg_stream_port = 8081
 
 [security]
-hash_pepper = "UnsecurePwPepper"
+hash_pepper = "0123456789abcdef0123456789abcdef"
 minimal_password_strength = 80
+encryption_key = "0123456789abcdef0123456789abcdef"
