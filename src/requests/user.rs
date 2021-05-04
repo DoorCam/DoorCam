@@ -83,16 +83,14 @@ pub fn post_create_data(
             "Passwords are not the same",
         ));
     }
-    if let Err(e) = auth_manager::check_password(&user_data.pw) {
-        return Err(Flash::error(Redirect::to(uri!(get_create)), e.to_string()));
-    }
+    auth_manager::check_password(&user_data.pw)
+        .map_err(|e| Flash::error(Redirect::to(uri!(get_create)), e.to_string()))?;
 
-    if let Err(e) = user_data.into_inner().into_insertable().create(&conn) {
-        return Err(Flash::error(
-            Redirect::to(uri!(get_create)),
-            format!("DB Error: {}", e),
-        ));
-    }
+    user_data
+        .into_inner()
+        .into_insertable()
+        .create(&conn)
+        .map_err(|e| Flash::error(Redirect::to(uri!(get_create)), format!("DB Error: {}", e)))?;
 
     return Ok(Redirect::to(uri!(get_users)));
 }
@@ -182,14 +180,9 @@ pub fn admin_post_change_data(
             "Passwords are not the same",
         ));
     }
-    if let (Err(e), true) = (
-        auth_manager::check_password(&user_data.pw),
-        changed_password,
-    ) {
-        return Err(Flash::error(
-            Redirect::to(uri!(get_change: id)),
-            e.to_string(),
-        ));
+    if changed_password == true {
+        auth_manager::check_password(&user_data.pw)
+            .map_err(|e| Flash::error(Redirect::to(uri!(get_change: id)), e.to_string()))?;
     }
 
     let entry = user_data.into_inner().into_entry(id);
@@ -199,12 +192,12 @@ pub fn admin_post_change_data(
         false => entry.update_without_password(&conn),
     };
 
-    if let Err(e) = update_result {
-        return Err(Flash::error(
+    update_result.map_err(|e| {
+        Flash::error(
             Redirect::to(uri!(get_change: id)),
             format!("DB Error: {}", e),
-        ));
-    }
+        )
+    })?;
 
     return Ok(Redirect::to(uri!(get_users)));
 }
@@ -249,14 +242,9 @@ pub fn user_post_change_data(
             "Passwords are not the same",
         ));
     }
-    if let (Err(e), true) = (
-        auth_manager::check_password(&user_data.pw),
-        changed_password,
-    ) {
-        return Err(Flash::error(
-            Redirect::to(uri!(get_change: id)),
-            e.to_string(),
-        ));
+    if changed_password == true {
+        auth_manager::check_password(&user_data.pw)
+            .map_err(|e| Flash::error(Redirect::to(uri!(get_change: id)), e.to_string()))?;
     }
 
     let entry = user_data.into_inner().into_entry(id);
@@ -266,12 +254,12 @@ pub fn user_post_change_data(
         false => entry.update_unprivileged_without_password(&conn),
     };
 
-    if let Err(e) = update_result {
-        return Err(Flash::error(
+    update_result.map_err(|e| {
+        Flash::error(
             Redirect::to(uri!(get_change: id)),
             format!("DB Error: {}", e),
-        ));
-    }
+        )
+    })?;
 
     return Ok(Redirect::to(uri!(get_user_index_view)));
 }

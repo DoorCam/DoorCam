@@ -99,12 +99,11 @@ pub fn post_create_data(
         ));
     }
 
-    if let Err(e) = flat_data.into_inner().into_insertable().create(&conn) {
-        return Err(Flash::error(
-            Redirect::to(uri!(get_create)),
-            format!("DB Error: {}", e),
-        ));
-    }
+    flat_data
+        .into_inner()
+        .into_insertable()
+        .create(&conn)
+        .map_err(|e| Flash::error(Redirect::to(uri!(get_create)), format!("DB Error: {}", e)))?;
 
     // sync iot::EventHandler
     flat_sync_event.set();
@@ -181,12 +180,12 @@ pub fn post_change_data(
         false => flat.update_without_password(&conn),
     };
 
-    if let Err(e) = update_result {
-        return Err(Flash::error(
+    update_result.map_err(|e| {
+        Flash::error(
             Redirect::to(uri!(get_change: id)),
             format!("DB Error: {}", e),
-        ));
-    }
+        )
+    })?;
 
     // sync iot::EventHandler
     flat_sync_event.set();
