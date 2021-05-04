@@ -180,7 +180,7 @@ pub fn admin_post_change_data(
             "Passwords are not the same",
         ));
     }
-    if changed_password == true {
+    if changed_password {
         auth_manager::check_password(&user_data.pw)
             .map_err(|e| Flash::error(Redirect::to(uri!(get_change: id)), e.to_string()))?;
     }
@@ -242,7 +242,7 @@ pub fn user_post_change_data(
             "Passwords are not the same",
         ));
     }
-    if changed_password == true {
+    if changed_password {
         auth_manager::check_password(&user_data.pw)
             .map_err(|e| Flash::error(Redirect::to(uri!(get_change: id)), e.to_string()))?;
     }
