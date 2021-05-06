@@ -72,3 +72,6 @@ pub use user_type::UserType;
 
 mod flat;
 pub use flat::FlatEntry;
+
+mod user_session;
+pub use user_session::UserSessionEntry;

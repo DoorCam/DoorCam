@@ -294,6 +294,7 @@ dependencies = [
  "libc",
  "num-integer",
  "num-traits 0.2.14",
+ "serde 1.0.125",
  "time",
  "winapi 0.3.9",
 ]
@@ -519,6 +520,7 @@ dependencies = [
  "base64 0.13.0",
  "blake2",
  "block-modes",
+ "chrono",
  "config",
  "derive-try-from-primitive",
  "duration-str",
@@ -533,6 +535,7 @@ dependencies = [
  "rocket_contrib",
  "rsevents",
  "rumqttc",
+ "rusqlite",
  "rust_gpiozero",
  "serde 1.0.125",
  "serde_json",
@@ -922,9 +925,9 @@ checksum = "9385f66bf6105b241aa65a61cb923ef20efc665cb9f9bb50ac2f0c4b7f378d41"
 
 [[package]]
 name = "libsqlite3-sys"
-version = "0.9.3"
+version = "0.9.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "d3711dfd91a1081d2458ad2d06ea30a8755256e74038be2ad927d94e1c955ca8"
+checksum = "0e9eb7b8e152b6a01be6a4a2917248381875758250dc3df5d46caf9250341dda"
 dependencies = [
  "pkg-config",
  "vcpkg",
@@ -1726,6 +1729,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "c9d9118f1ce84d8d0b67f9779936432fb42bb620cef2122409d786892cce9a3c"
 dependencies = [
  "bitflags",
+ "chrono",
  "libsqlite3-sys",
  "lru-cache",
  "time",
