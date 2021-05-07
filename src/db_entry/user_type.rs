@@ -14,7 +14,7 @@ use std::fmt;
 mod user_type_test;
 
 /// A logical enum of the user_type database field.
-#[derive(Copy, Clone, Debug, Serialize, Deserialize, TryFromPrimitive)]
+#[derive(Copy, Clone, Debug, Serialize, Deserialize, PartialEq, TryFromPrimitive)]
 #[repr(u16)]
 pub enum UserType {
     User = 1,

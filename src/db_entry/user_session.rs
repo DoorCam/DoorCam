@@ -1,9 +1,13 @@
-use super::{rusqlite, DbConn, Entry, Identifier};
+use super::{rusqlite, Connection, Entry, Identifier};
 use chrono::{offset::Utc, DateTime};
 use serde::{Deserialize, Serialize};
 
+#[cfg(test)]
+#[path = "./user_session_test.rs"]
+mod user_session_test;
+
 /// User-Session entry of the corresponding "user_session" table.
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Debug, Serialize, Deserialize, PartialEq)]
 pub struct UserSessionEntry<ID: Identifier = u32, URef: Entry = u32> {
     pub id: ID,
     pub login_datetime: DateTime<Utc>,
@@ -15,14 +19,14 @@ impl<URef: Entry> Entry for UserSessionEntry<u32, URef> {
         self.id
     }
 
-    fn delete_entry(conn: &DbConn, id: u32) -> Result<(), rusqlite::Error> {
+    fn delete_entry(conn: &Connection, id: u32) -> Result<(), rusqlite::Error> {
         conn.execute("DELETE FROM user_session WHERE ID=?1 LIMIT 1", &[&id])?;
         Ok(())
     }
 
-    fn update(&self, conn: &DbConn) -> Result<(), rusqlite::Error> {
+    fn update(&self, conn: &Connection) -> Result<(), rusqlite::Error> {
         conn.execute(
-            "UPDATE user_session SET login_datetime = ?1 user_id = ?2 WHERE id = ?3",
+            "UPDATE user_session SET login_datetime = ?1, user_id = ?2 WHERE id = ?3",
             &[&self.login_datetime, &self.user.get_id(), &self.id],
         )?;
         Ok(())
@@ -30,7 +34,7 @@ impl<URef: Entry> Entry for UserSessionEntry<u32, URef> {
 }
 
 impl<URef: Entry> UserSessionEntry<(), URef> {
-    pub fn create(self, conn: &DbConn) -> Result<UserSessionEntry, rusqlite::Error> {
+    pub fn create(self, conn: &Connection) -> Result<UserSessionEntry, rusqlite::Error> {
         let user_id = self.user.get_id();
         conn.execute(
             "INSERT INTO user_session (login_datetime, user_id) VALUES (?1, ?2)",
@@ -54,7 +58,7 @@ impl UserSessionEntry<u32, u32> {
         })
     }
 
-    pub fn get_all(conn: &DbConn) -> Result<Vec<Self>, rusqlite::Error> {
+    pub fn get_all(conn: &Connection) -> Result<Vec<Self>, rusqlite::Error> {
         let mut stmt = conn.prepare("SELECT id, login_datetime, user_id FROM user_session")?;
         return stmt
             .query_map(&[], |row| Self::row_2_user(&row))?
@@ -65,7 +69,7 @@ impl UserSessionEntry<u32, u32> {
             .collect();
     }
 
-    pub fn get_by_id(conn: &DbConn, id: u32) -> Result<Option<Self>, rusqlite::Error> {
+    pub fn get_by_id(conn: &Connection, id: u32) -> Result<Option<Self>, rusqlite::Error> {
         let mut stmt = conn
             .prepare("SELECT id, login_datetime, user_id FROM user_session WHERE id=?1 LIMIT 1")?;
         return stmt
