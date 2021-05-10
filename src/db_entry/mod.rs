@@ -44,7 +44,7 @@ impl Identifier for u32 {}
 ///     pub fn get() -> Vec<Self> { todo!() }
 /// }
 /// ```
-pub trait Entry {
+pub trait Entry: Clone {
     fn get_id(&self) -> u32;
     fn update(&self, conn: &Connection) -> Result<(), rusqlite::Error>;
     fn delete_entry(conn: &Connection, id: u32) -> Result<(), rusqlite::Error>;

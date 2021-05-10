@@ -6,7 +6,7 @@ use serde::{Deserialize, Serialize};
 mod user_test;
 
 /// Logical entry of the hash with its parameters.
-#[derive(Debug, Serialize, Deserialize, PartialEq)]
+#[derive(Debug, Serialize, Deserialize, PartialEq, Clone)]
 pub struct HashEntry {
     pub hash: String,
     pub salt: String,
@@ -14,7 +14,7 @@ pub struct HashEntry {
 }
 
 /// User entry of the corresponding "client_user" table.
-#[derive(Debug, Serialize, Deserialize, PartialEq)]
+#[derive(Debug, Serialize, Deserialize, PartialEq, Clone)]
 pub struct UserEntry<ID: Identifier = u32, FRef: Entry = FlatEntry> {
     pub id: ID,
     pub name: String,

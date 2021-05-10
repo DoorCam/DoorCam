@@ -7,7 +7,7 @@ use serde::{Deserialize, Serialize};
 mod user_session_test;
 
 /// User-Session entry of the corresponding "user_session" table.
-#[derive(Debug, Serialize, Deserialize, PartialEq)]
+#[derive(Debug, Serialize, Deserialize, PartialEq, Clone)]
 pub struct UserSessionEntry<ID: Identifier = u32, URef: Entry = u32> {
     pub id: ID,
     pub login_datetime: DateTime<Utc>,

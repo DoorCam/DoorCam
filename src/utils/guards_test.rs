@@ -3,6 +3,14 @@ use crate::db_entry::{HashEntry, UserType};
 use rocket::http::Cookie;
 use rocket::local::Client;
 
+fn get_session() -> UserSessionEntry {
+    UserSessionEntry {
+        id: 0,
+        login_datetime: Utc::now(),
+        user: 0,
+    }
+}
+
 fn get_user() -> UserEntry {
     UserEntry {
         user_type: UserType::User,
@@ -19,7 +27,10 @@ fn get_user() -> UserEntry {
 }
 
 fn get_user_guard() -> UserGuard {
-    UserGuard { user: get_user() }
+    UserGuard {
+        user: get_user(),
+        session: get_session(),
+    }
 }
 
 fn get_admin() -> UserEntry {
@@ -38,7 +49,10 @@ fn get_admin() -> UserEntry {
 }
 
 fn get_admin_guard() -> UserGuard {
-    UserGuard { user: get_admin() }
+    UserGuard {
+        user: get_admin(),
+        session: get_session(),
+    }
 }
 
 #[test]
@@ -63,10 +77,12 @@ fn admin_is_admin() {
 
 #[test]
 fn user_on_only_user_guard() {
-    let user = serde_json::to_string(&get_user()).expect("serialization error");
+    let user = serde_json::to_string(&get_user_guard()).expect("serialization error");
 
     let client = Client::new(rocket::ignite()).expect("valid rocket");
-    let req = client.get("/").private_cookie(Cookie::new("user", user));
+    let req = client
+        .get("/")
+        .private_cookie(Cookie::new("user_session_guard", user));
 
     assert_matches!(
         OnlyUserGuard::from_request(&req.inner()),
@@ -76,10 +92,12 @@ fn user_on_only_user_guard() {
 
 #[test]
 fn admin_on_only_user_guard() {
-    let user = serde_json::to_string(&get_admin()).expect("serialization error");
+    let user = serde_json::to_string(&get_admin_guard()).expect("serialization error");
 
     let client = Client::new(rocket::ignite()).expect("valid rocket");
-    let req = client.get("/").private_cookie(Cookie::new("user", user));
+    let req = client
+        .get("/")
+        .private_cookie(Cookie::new("user_session_guard", user));
 
     assert_matches!(
         OnlyUserGuard::from_request(&req.inner()),
@@ -89,20 +107,24 @@ fn admin_on_only_user_guard() {
 
 #[test]
 fn user_on_admin_guard() {
-    let user = serde_json::to_string(&get_user()).expect("serialization error");
+    let user = serde_json::to_string(&get_user_guard()).expect("serialization error");
 
     let client = Client::new(rocket::ignite()).expect("valid rocket");
-    let req = client.get("/").private_cookie(Cookie::new("user", user));
+    let req = client
+        .get("/")
+        .private_cookie(Cookie::new("user_session_guard", user));
 
     assert_matches!(AdminGuard::from_request(&req.inner()), Outcome::Forward(_));
 }
 
 #[test]
 fn admin_on_admin_guard() {
-    let user = serde_json::to_string(&get_admin()).expect("serialization error");
+    let user = serde_json::to_string(&get_admin_guard()).expect("serialization error");
 
     let client = Client::new(rocket::ignite()).expect("valid rocket");
-    let req = client.get("/").private_cookie(Cookie::new("user", user));
+    let req = client
+        .get("/")
+        .private_cookie(Cookie::new("user_session_guard", user));
 
     assert_matches!(AdminGuard::from_request(&req.inner()), Outcome::Success(_));
 }

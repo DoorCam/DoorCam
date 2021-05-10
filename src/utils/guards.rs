@@ -1,13 +1,15 @@
 //! Are used for the authentification and authorization.
 
 use super::{config::CONFIG, crypto};
-use crate::db_entry::{rusqlite, DbConn, UserEntry};
+use crate::db_entry::{rusqlite, DbConn, UserEntry, UserSessionEntry};
 use blake2::{Blake2b, Digest};
+use chrono::offset::Utc;
 use passwords::{analyzer, scorer};
 use rocket::http::Status;
 use rocket::http::{Cookie, Cookies};
 use rocket::request::{self, FromRequest, Request};
 use rocket::Outcome;
+use serde::{Deserialize, Serialize};
 
 #[cfg(test)]
 #[path = "./guards_test.rs"]
@@ -31,8 +33,10 @@ pub enum Error {
 }
 
 /// A guard which allows all authentificated users.
+#[derive(Debug, Serialize, Deserialize)]
 pub struct UserGuard {
     pub user: UserEntry,
+    session: UserSessionEntry,
 }
 
 impl UserGuard {
@@ -89,17 +93,27 @@ impl UserGuard {
             return Err(Error::InvalidCredentials);
         }
 
-        Self::create_user_session(&user, cookies)?;
+        Self::create_user_session(conn, user.clone(), cookies)?;
 
         Ok(user)
     }
     /// Writes an encrypted cookie with the serialized user data.
     fn create_user_session(
-        user: &UserEntry,
+        conn: &DbConn,
+        user: UserEntry,
         mut cookies: Cookies,
-    ) -> Result<(), serde_json::error::Error> {
+    ) -> Result<(), Error> {
+        let session = UserSessionEntry {
+            id: (),
+            login_datetime: Utc::now(),
+            user: user.id,
+        }
+        .create(conn)?;
+
+        let session_guard = Self { user, session };
+
         cookies.add_private(
-            Cookie::build("user", serde_json::to_string(&user)?)
+            Cookie::build("user_session_guard", serde_json::to_string(&session_guard)?)
                 .permanent()
                 .finish(),
         );
@@ -107,7 +121,7 @@ impl UserGuard {
     }
     /// Destroys the private encrypted user cookie.
     pub fn destroy_user_session(mut cookies: Cookies) {
-        cookies.remove_private(Cookie::named("user"));
+        cookies.remove_private(Cookie::named("user_session_guard"));
     }
 }
 
@@ -116,15 +130,13 @@ impl<'a, 'r> FromRequest<'a, 'r> for UserGuard {
 
     /// Checks for valid user-cookie in a request
     fn from_request(request: &'a Request<'r>) -> request::Outcome<Self, Self::Error> {
-        return request
-            .cookies()
-            .get_private("user")
-            .map_or(Outcome::Forward(()), |cookie| {
-                match serde_json::from_str(cookie.value()) {
-                    Ok(user) => Outcome::Success(Self { user }),
-                    Err(e) => Outcome::Failure((Status::BadRequest, Error::from(e))),
-                }
-            });
+        return request.cookies().get_private("user_session_guard").map_or(
+            Outcome::Forward(()),
+            |cookie| match serde_json::from_str(cookie.value()) {
+                Ok(user_guard) => Outcome::Success(user_guard),
+                Err(e) => Outcome::Failure((Status::BadRequest, Error::from(e))),
+            },
+        );
     }
 }
 

@@ -6,7 +6,7 @@ use serde::{Deserialize, Serialize};
 mod flat_test;
 
 /// Flat entry of the corresponding "flat" table.
-#[derive(Debug, Serialize, Deserialize, PartialEq)]
+#[derive(Debug, Serialize, Deserialize, PartialEq, Clone)]
 pub struct FlatEntry<ID: Identifier = u32> {
     pub id: ID,
     pub name: String,
