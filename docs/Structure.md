@@ -52,10 +52,6 @@ Small helper functions and structs which aren't apprppriate in other folders.
 
 Cryptographic helper/wrapper function(s).
 
-#### [Auth Manager](../src/utils/auth_manager.rs)
-
-Is used for the authentification.
-
 #### [Guards](../src/utils/guards.rs)
 
-Are used for the authorization. See [Rocket documentation](https://rocket.rs/v0.4/guide/requests/#request-guards).
+Are used for the authorization and authentification. See [Rocket documentation](https://rocket.rs/v0.4/guide/requests/#request-guards).

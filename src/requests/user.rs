@@ -1,7 +1,7 @@
 use super::{index_view::rocket_uri_macro_get_user_index_view, FormIntoEntry};
 use crate::db_entry::{DbConn, Entry, FlatEntry, UserEntry, UserType};
 use crate::template_contexts::{Message, UserDetailsContext, UserOverviewContext};
-use crate::utils::auth_manager;
+use crate::utils::crypto;
 use crate::utils::guards::{AdminGuard, OnlyUserGuard, UserGuard};
 use rocket::http::Status;
 use rocket::request::{FlashMessage, Form};
@@ -22,7 +22,7 @@ pub struct UserForm {
 
 impl FormIntoEntry<UserEntry<(), u32>, UserEntry<u32, u32>> for UserForm {
     fn into_insertable(self) -> UserEntry<(), u32> {
-        let hash = auth_manager::hash(&self.pw);
+        let hash = crypto::hash(&self.pw);
 
         UserEntry {
             id: (),
@@ -35,7 +35,7 @@ impl FormIntoEntry<UserEntry<(), u32>, UserEntry<u32, u32>> for UserForm {
     }
 
     fn into_entry(self, id: u32) -> UserEntry<u32, u32> {
-        let hash = auth_manager::hash(&self.pw);
+        let hash = crypto::hash(&self.pw);
 
         UserEntry {
             id,
@@ -83,7 +83,7 @@ pub fn post_create_data(
             "Passwords are not the same",
         ));
     }
-    auth_manager::check_password(&user_data.pw)
+    UserGuard::check_password(&user_data.pw)
         .map_err(|e| Flash::error(Redirect::to(uri!(get_create)), e.to_string()))?;
 
     user_data
@@ -181,7 +181,7 @@ pub fn admin_post_change_data(
         ));
     }
     if changed_password {
-        auth_manager::check_password(&user_data.pw)
+        UserGuard::check_password(&user_data.pw)
             .map_err(|e| Flash::error(Redirect::to(uri!(get_change: id)), e.to_string()))?;
     }
 
@@ -243,7 +243,7 @@ pub fn user_post_change_data(
         ));
     }
     if changed_password {
-        auth_manager::check_password(&user_data.pw)
+        UserGuard::check_password(&user_data.pw)
             .map_err(|e| Flash::error(Redirect::to(uri!(get_change: id)), e.to_string()))?;
     }
 
