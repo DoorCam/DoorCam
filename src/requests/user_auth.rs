@@ -30,23 +30,25 @@ pub fn post_login_data(
     conn: DbConn,
     cookies: Cookies,
 ) -> Result<Redirect, Flash<Redirect>> {
-    let user = UserGuard::authenticate(&conn, cookies, &user_data.name, &user_data.pw)
+    UserGuard::authenticate(&conn, cookies, &user_data.name, &user_data.pw)
         .map_err(|e| Flash::error(Redirect::to(uri!(get_login)), e.to_string()))?;
 
-    // Redirects to the user-type based main-site
-    return Ok(Redirect::to(if user.user_type.is_admin() {
-        uri!(get_admin_index_view)
-    } else {
-        uri!(get_user_index_view)
-    }));
+    Ok(Redirect::to(uri!(get_user_index_view)))
 }
 
 /// Get logout to destroy the user-cookie
 #[get("/logout")]
-pub fn get_logout(cookies: Cookies) -> Flash<Redirect> {
-    UserGuard::destroy_user_session(cookies);
-    return Flash::success(
+pub fn get_logout(
+    user_guard: UserGuard,
+    conn: DbConn,
+    cookies: Cookies,
+) -> Result<Flash<Redirect>, Flash<Redirect>> {
+    user_guard
+        .destroy_user_session(&conn, cookies)
+        .map_err(|e| Flash::error(Redirect::to(uri!(get_user_index_view)), e.to_string()))?;
+
+    Ok(Flash::success(
         Redirect::to(uri!(get_login)),
         "Sie wurden erfolgreich ausgeloggt",
-    );
+    ))
 }

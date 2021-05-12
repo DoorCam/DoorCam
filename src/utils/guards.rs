@@ -1,7 +1,7 @@
 //! Are used for the authentification and authorization.
 
 use super::{config::CONFIG, crypto};
-use crate::db_entry::{rusqlite, DbConn, UserEntry, UserSessionEntry};
+use crate::db_entry::{rusqlite, DbConn, Entry, UserEntry, UserSessionEntry};
 use blake2::{Blake2b, Digest};
 use chrono::offset::Utc;
 use passwords::{analyzer, scorer};
@@ -28,8 +28,12 @@ pub enum Error {
     InvalidCredentials,
     #[error("The hash-config is unknown")]
     UnknownHashConfig,
+    #[error("The session is invalid")]
+    InvalidSession,
     #[error("The password is to weak")]
     WeakPassword,
+    #[error("There is no database")]
+    NoDatabase,
 }
 
 /// A guard which allows all authentificated users.
@@ -120,8 +124,26 @@ impl UserGuard {
         Ok(())
     }
     /// Destroys the private encrypted user cookie.
-    pub fn destroy_user_session(mut cookies: Cookies) {
+    pub fn destroy_user_session(
+        self,
+        conn: &DbConn,
+        mut cookies: Cookies,
+    ) -> Result<(), rusqlite::Error> {
+        self.session.delete(conn)?;
+
         cookies.remove_private(Cookie::named("user_session_guard"));
+        Ok(())
+    }
+
+    fn validate(&self, conn: &DbConn) -> Result<bool, rusqlite::Error> {
+        let session = UserSessionEntry::get_by_id(conn, self.session.get_id())?;
+
+        match session {
+            Some(session) => {
+                Ok(session == self.session && session.user.get_id() == self.user.get_id())
+            }
+            None => Ok(false),
+        }
     }
 }
 
@@ -130,10 +152,18 @@ impl<'a, 'r> FromRequest<'a, 'r> for UserGuard {
 
     /// Checks for valid user-cookie in a request
     fn from_request(request: &'a Request<'r>) -> request::Outcome<Self, Self::Error> {
+        let conn = request
+            .guard::<DbConn>()
+            .map_failure(|(status, _)| (status, Error::NoDatabase))?;
+
         return request.cookies().get_private("user_session_guard").map_or(
             Outcome::Forward(()),
-            |cookie| match serde_json::from_str(cookie.value()) {
-                Ok(user_guard) => Outcome::Success(user_guard),
+            |cookie| match serde_json::from_str::<Self>(cookie.value()) {
+                Ok(user_guard) => match user_guard.validate(&conn) {
+                    Ok(true) => Outcome::Success(user_guard),
+                    Ok(false) => Outcome::Failure((Status::BadRequest, Error::InvalidSession)),
+                    Err(e) => Outcome::Failure((Status::BadRequest, Error::from(e))),
+                },
                 Err(e) => Outcome::Failure((Status::BadRequest, Error::from(e))),
             },
         );

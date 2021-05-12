@@ -10,7 +10,7 @@ use rocket::Outcome;
 use rocket_contrib::templates::Template;
 
 /// Get the index-view of an user
-#[get("/")]
+#[get("/", rank = 1)]
 pub fn get_user_index_view(user: OnlyUserGuard, flash: Option<FlashMessage>) -> Template {
     let context = MainViewContext {
         message: flash.map(Message::from),
@@ -26,6 +26,11 @@ pub fn get_user_index_view(user: OnlyUserGuard, flash: Option<FlashMessage>) -> 
         logout_url: uri!(get_logout).to_string(),
     };
     Template::render("main_view", &context)
+}
+
+#[get("/", rank = 2)]
+pub fn redirect_admin_to_index(_admin: AdminGuard) -> Redirect {
+    Redirect::to(uri!(get_admin_index_view))
 }
 
 /// Get the index-view of an admin
