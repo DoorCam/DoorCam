@@ -4,9 +4,7 @@ use super::*;
 fn scenario_1_with_all_methods() {
     let sql_scheme = include_str!("../../scheme.sql");
     let conn = Connection::open_in_memory().unwrap();
-    sql_scheme.split("\n\n").for_each(|statement| {
-        conn.execute(statement, &[]).unwrap();
-    });
+    conn.execute_batch(sql_scheme).unwrap();
 
     let mut session = UserSessionEntry {
         id: (),
