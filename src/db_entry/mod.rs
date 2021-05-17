@@ -3,9 +3,15 @@
 pub use rocket_contrib::databases::rusqlite;
 pub use rusqlite::Connection;
 
+#[cfg(not(test))]
 #[database("sqlite_db")]
 #[derive(Clone)]
 pub struct DbConn(Connection);
+
+#[cfg(test)]
+mod connection_test;
+#[cfg(test)]
+pub use connection_test::DbConn;
 
 /// Used for the `ID` field in `Entries` to statically differentiate between insertable and known
 /// `Entries`.
