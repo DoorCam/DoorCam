@@ -168,3 +168,17 @@ fn admin_on_admin_guard() {
 
     assert_matches!(AdminGuard::from_request(&req.inner()), Outcome::Success(_));
 }
+
+#[test]
+fn unknown_session() {
+    let server = rocket::ignite().attach(DbConn::fairing());
+
+    let user_session = serde_json::to_string(&get_user_guard()).expect("serialization error");
+
+    let client = Client::new(server).expect("valid rocket");
+    let req = client
+        .get("/")
+        .private_cookie(Cookie::new("user_session_guard", user_session));
+
+    assert_matches!(UserGuard::from_request(&req.inner()), Outcome::Forward(_));
+}

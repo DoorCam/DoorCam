@@ -28,8 +28,6 @@ pub enum Error {
     InvalidCredentials,
     #[error("The hash-config is unknown")]
     UnknownHashConfig,
-    #[error("The session is invalid")]
-    InvalidSession,
     #[error("The password is to weak")]
     WeakPassword,
     #[error("There is no database")]
@@ -44,10 +42,12 @@ pub struct UserGuard {
 }
 
 impl UserGuard {
+    #[inline(always)]
     pub fn is_user(&self) -> bool {
         self.user.user_type.is_user()
     }
 
+    #[inline(always)]
     pub fn is_admin(&self) -> bool {
         self.user.user_type.is_admin()
     }
@@ -55,6 +55,7 @@ impl UserGuard {
 
 impl UserGuard {
     /// Checks whether the password is secure or errors if it is weak
+    #[inline]
     pub fn check_password(pw: &str) -> Result<(), Error> {
         if scorer::score(&analyzer::analyze(pw)) < CONFIG.security.minimal_password_strength {
             return Err(Error::WeakPassword);
@@ -161,7 +162,7 @@ impl<'a, 'r> FromRequest<'a, 'r> for UserGuard {
             |cookie| match serde_json::from_str::<Self>(cookie.value()) {
                 Ok(user_guard) => match user_guard.validate(&conn) {
                     Ok(true) => Outcome::Success(user_guard),
-                    Ok(false) => Outcome::Failure((Status::BadRequest, Error::InvalidSession)),
+                    Ok(false) => Outcome::Forward(()),
                     Err(e) => Outcome::Failure((Status::BadRequest, Error::from(e))),
                 },
                 Err(e) => Outcome::Failure((Status::BadRequest, Error::from(e))),

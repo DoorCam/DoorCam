@@ -1,5 +1,5 @@
 use super::{index_view::rocket_uri_macro_get_user_index_view, FormIntoEntry};
-use crate::db_entry::{DbConn, Entry, FlatEntry, UserEntry, UserType};
+use crate::db_entry::{DbConn, Entry, FlatEntry, UserEntry, UserSessionEntry, UserType};
 use crate::template_contexts::{Message, UserDetailsContext, UserOverviewContext};
 use crate::utils::crypto;
 use crate::utils::guards::{AdminGuard, OnlyUserGuard, UserGuard};
@@ -111,7 +111,10 @@ pub fn delete(admin: AdminGuard, conn: DbConn, id: u32) -> Flash<()> {
     if admin.user.id == id {
         return Flash::error((), "Can't delete yourself");
     }
-    if let Err(e) = UserEntry::<_>::delete_entry(&conn, id) {
+    let res = UserSessionEntry::delete_by_user(&conn, id)
+        .and_then(|_| UserEntry::<_>::delete_entry(&conn, id));
+
+    if let Err(e) = res {
         return Flash::error((), e.to_string());
     };
 
@@ -159,7 +162,7 @@ pub fn get_change(
 /// Post user data to modify the user
 #[post("/admin/user/change/<id>", data = "<user_data>", rank = 2)]
 pub fn admin_post_change_data(
-    _user_guard: AdminGuard,
+    _admin_guard: AdminGuard,
     conn: DbConn,
     id: u32,
     user_data: Form<UserForm>,
@@ -190,7 +193,8 @@ pub fn admin_post_change_data(
     let update_result = match changed_password {
         true => entry.update(&conn),
         false => entry.update_without_password(&conn),
-    };
+    }
+    .and_then(|_| UserSessionEntry::delete_by_user(&conn, entry.get_id()));
 
     update_result.map_err(|e| {
         Flash::error(
@@ -211,7 +215,7 @@ pub fn user_post_change_data(
     user_data: Form<UserForm>,
 ) -> Result<Redirect, Flash<Redirect>> {
     // An ordinary user is only allowed to modify himself
-    if user_guard.user.id != id {
+    if user_guard.user.get_id() != id {
         return Err(Flash::error(
             Redirect::to(uri!(get_change: id)),
             "Forbidden",
@@ -252,7 +256,8 @@ pub fn user_post_change_data(
     let update_result = match changed_password {
         true => entry.update_unprivileged(&conn),
         false => entry.update_unprivileged_without_password(&conn),
-    };
+    }
+    .and_then(|_| UserSessionEntry::delete_by_user(&conn, user_guard.user.get_id()));
 
     update_result.map_err(|e| {
         Flash::error(

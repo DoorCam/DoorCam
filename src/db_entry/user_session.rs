@@ -15,6 +15,7 @@ pub struct UserSessionEntry<ID: Identifier = u32, URef: Entry = u32> {
 }
 
 impl<URef: Entry> Entry for UserSessionEntry<u32, URef> {
+    #[inline(always)]
     fn get_id(&self) -> u32 {
         self.id
     }
@@ -58,6 +59,7 @@ impl UserSessionEntry<u32, u32> {
         })
     }
 
+    #[allow(dead_code)]
     pub fn get_all(conn: &Connection) -> Result<Vec<Self>, rusqlite::Error> {
         let mut stmt = conn.prepare("SELECT id, login_datetime, user_id FROM user_session")?;
         return stmt
@@ -80,5 +82,10 @@ impl UserSessionEntry<u32, u32> {
             })
             .next()
             .map_or_else(|| Ok(None), |entry_result| entry_result.map(Some));
+    }
+
+    pub fn delete_by_user(conn: &Connection, user: u32) -> Result<(), rusqlite::Error> {
+        conn.execute("DELETE FROM user_session WHERE user_id=?1", &[&user])?;
+        Ok(())
     }
 }

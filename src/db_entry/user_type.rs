@@ -22,10 +22,12 @@ pub enum UserType {
 }
 
 impl UserType {
+    #[inline(always)]
     pub fn is_user(&self) -> bool {
         matches!(self, Self::User)
     }
 
+    #[inline(always)]
     pub fn is_admin(&self) -> bool {
         matches!(self, Self::Admin)
     }
@@ -46,6 +48,7 @@ impl fmt::Display for UserType {
 }
 
 impl From<UserType> for u16 {
+    #[inline(always)]
     fn from(user_type: UserType) -> Self {
         user_type as Self
     }

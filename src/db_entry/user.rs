@@ -25,6 +25,7 @@ pub struct UserEntry<ID: Identifier = u32, FRef: Entry = FlatEntry> {
 }
 
 impl<FRef: Entry> Entry for UserEntry<u32, FRef> {
+    #[inline(always)]
     fn get_id(&self) -> u32 {
         self.id
     }
