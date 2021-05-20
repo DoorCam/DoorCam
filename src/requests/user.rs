@@ -1,4 +1,4 @@
-use super::{index_view::rocket_uri_macro_get_user_index_view, FormIntoEntry};
+use super::{user_auth::rocket_uri_macro_get_login, FormIntoEntry};
 use crate::db_entry::{DbConn, Entry, FlatEntry, UserEntry, UserSessionEntry, UserType};
 use crate::template_contexts::{Message, UserDetailsContext, UserOverviewContext};
 use crate::utils::crypto;
@@ -213,7 +213,7 @@ pub fn user_post_change_data(
     conn: DbConn,
     id: u32,
     user_data: Form<UserForm>,
-) -> Result<Redirect, Flash<Redirect>> {
+) -> Result<Flash<Redirect>, Flash<Redirect>> {
     // An ordinary user is only allowed to modify himself
     if user_guard.user.get_id() != id {
         return Err(Flash::error(
@@ -266,5 +266,8 @@ pub fn user_post_change_data(
         )
     })?;
 
-    return Ok(Redirect::to(uri!(get_user_index_view)));
+    return Ok(Flash::success(
+        Redirect::to(uri!(get_login)),
+        "Your account has been successfully updated. Please log in again.".to_string(),
+    ));
 }
