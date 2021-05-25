@@ -3,6 +3,7 @@
 use duration_str::deserialize_duration;
 use serde::Deserialize;
 use serde_with::{hex::Hex, serde_as};
+use std::collections::HashSet;
 use std::time::Duration;
 
 #[cfg(not(test))]
@@ -33,6 +34,7 @@ lazy_static! {
                 0x01, 0x23, 0x45, 0x67, 0x89, 0xab, 0xcd, 0xef, 0x01, 0x23, 0x45, 0x67, 0x89, 0xab,
                 0xcd, 0xef,
             ],
+            allowed_hash_configs: hashset!["Blake2b".to_string()],
         },
     };
 }
@@ -89,6 +91,9 @@ pub struct Security {
     /// ```
     #[serde_as(as = "Hex")]
     pub encryption_key: [u8; 16],
+    /// A set of the hash configurations, which are allowed for authentication.
+    /// "plain" should be removed after the first setup.
+    pub allowed_hash_configs: HashSet<String>,
 }
 
 /// All configuration options

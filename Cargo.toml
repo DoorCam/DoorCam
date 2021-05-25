@@ -44,3 +44,4 @@ features = ["serve", "tera_templates", "sqlite_pool", "helmet"]
 
 [dev-dependencies]
 matches = "~0.1"
+maplit = "~1.0"

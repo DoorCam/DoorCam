@@ -28,6 +28,8 @@ pub enum Error {
     InvalidCredentials,
     #[error("The hash-config is unknown")]
     UnknownHashConfig,
+    #[error("The hash-config is blocked")]
+    BlockedHashConfig,
     #[error("The password is to weak")]
     WeakPassword,
     #[error("There is no database")]
@@ -75,6 +77,13 @@ impl UserGuard {
             crypto::pseudo_hash();
             Error::InvalidCredentials
         })?;
+
+        CONFIG
+            .security
+            .allowed_hash_configs
+            .contains(&user.pw_hash.config)
+            .then(|| ())
+            .ok_or(Error::BlockedHashConfig)?;
 
         // Create hash with matching config
         let pw_hash = match user.pw_hash.config.as_str() {

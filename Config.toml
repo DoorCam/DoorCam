@@ -9,3 +9,4 @@ mjpeg_stream_port = 8081
 hash_pepper = "0123456789abcdef0123456789abcdef"
 minimal_password_strength = 80
 encryption_key = "0123456789abcdef0123456789abcdef"
+allowed_hash_configs = ["Blake2b", "plain"]

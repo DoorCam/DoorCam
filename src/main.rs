@@ -11,6 +11,10 @@ extern crate base64;
 #[macro_use]
 extern crate matches;
 
+#[cfg(test)]
+#[macro_use]
+extern crate maplit;
+
 #[macro_use]
 extern crate lazy_static;
 
