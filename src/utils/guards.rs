@@ -3,6 +3,7 @@
 use super::{config::CONFIG, crypto};
 use crate::db_entry::{rusqlite, DbConn, Entry, UserEntry, UserSessionEntry};
 use blake2::{Blake2b, Digest};
+use bool_ext::BoolExt;
 use chrono::offset::Utc;
 use passwords::{analyzer, scorer};
 use rocket::http::Status;
@@ -59,9 +60,9 @@ impl UserGuard {
     /// Checks whether the password is secure or errors if it is weak
     #[inline]
     pub fn check_password(pw: &str) -> Result<(), Error> {
-        if scorer::score(&analyzer::analyze(pw)) < CONFIG.security.minimal_password_strength {
-            return Err(Error::WeakPassword);
-        }
+        (scorer::score(&analyzer::analyze(pw)) >= CONFIG.security.minimal_password_strength)
+            .err(Error::WeakPassword)?;
+
         Ok(())
     }
     /// Checks whether the given credentials are valid and writes the user-cookie
@@ -82,8 +83,7 @@ impl UserGuard {
             .security
             .allowed_hash_configs
             .contains(&user.pw_hash.config)
-            .then(|| ())
-            .ok_or(Error::BlockedHashConfig)?;
+            .err(Error::BlockedHashConfig)?;
 
         // Create hash with matching config
         let pw_hash = match user.pw_hash.config.as_str() {
@@ -103,9 +103,7 @@ impl UserGuard {
             _ => return Err(Error::UnknownHashConfig),
         };
 
-        if user.pw_hash.hash != pw_hash {
-            return Err(Error::InvalidCredentials);
-        }
+        (user.pw_hash.hash == pw_hash).err(Error::InvalidCredentials)?;
 
         Self::create_user_session(conn, user.clone(), cookies)?;
 
@@ -148,12 +146,9 @@ impl UserGuard {
     fn validate(&self, conn: &DbConn) -> Result<bool, rusqlite::Error> {
         let session = UserSessionEntry::get_by_id(conn, self.session.get_id())?;
 
-        match session {
-            Some(session) => {
-                Ok(session == self.session && session.user.get_id() == self.user.get_id())
-            }
-            None => Ok(false),
-        }
+        Ok(session.map_or(false, |session| {
+            session == self.session && session.user.get_id() == self.user.get_id()
+        }))
     }
 }
 

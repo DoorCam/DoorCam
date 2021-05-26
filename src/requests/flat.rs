@@ -3,12 +3,14 @@ use crate::db_entry::{DbConn, Entry, FlatEntry};
 use crate::template_contexts::{FlatDetailsContext, FlatOverviewContext, Message};
 use crate::utils::crypto;
 use crate::utils::guards::AdminGuard;
+use bool_ext::BoolExt;
 use rocket::http::Status;
 use rocket::request::{FlashMessage, Form};
 use rocket::response::{Flash, Redirect};
 use rocket::State;
 use rocket_contrib::templates::Template;
 use rsevents::AutoResetEvent;
+use std::ops::Not;
 use std::sync::Arc;
 
 /// Struct which retrieves all form data from the flat details.
@@ -92,12 +94,11 @@ pub fn post_create_data(
     conn: DbConn,
     flat_sync_event: State<Arc<AutoResetEvent>>,
 ) -> Result<Redirect, Flash<Redirect>> {
-    if flat_data.name.is_empty() {
-        return Err(Flash::error(
-            Redirect::to(uri!(get_create)),
-            "Name is empty",
-        ));
-    }
+    flat_data
+        .name
+        .is_empty()
+        .not()
+        .err_with(|| Flash::error(Redirect::to(uri!(get_create)), "Name is empty"))?;
 
     flat_data
         .into_inner()
@@ -165,12 +166,11 @@ pub fn post_change_data(
     id: u32,
     flat_data: Form<FlatForm>,
 ) -> Result<Redirect, Flash<Redirect>> {
-    if flat_data.name.is_empty() {
-        return Err(Flash::error(
-            Redirect::to(uri!(get_change: id)),
-            "Name is empty",
-        ));
-    }
+    flat_data
+        .name
+        .is_empty()
+        .not()
+        .err_with(|| Flash::error(Redirect::to(uri!(get_change: id)), "Name is empty"))?;
 
     let update_password = !flat_data.broker_password.is_empty();
     let flat = flat_data.into_inner().into_entry(id);

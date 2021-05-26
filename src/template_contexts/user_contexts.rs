@@ -74,11 +74,7 @@ impl UserDetailsContext {
     ) -> Self {
         Self {
             message: error,
-            nav: if is_admin {
-                Some(AdminNav::new())
-            } else {
-                None
-            },
+            nav: is_admin.then(AdminNav::new),
             title: "Change".to_string(),
             is_admin,
             user: Some(user),

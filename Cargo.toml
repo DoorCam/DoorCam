@@ -34,6 +34,7 @@ config = "~0.11"
 lazy_static = "~1.4"
 thiserror = "~1.0"
 derive-try-from-primitive = "~1.0"
+bool_ext = "~0.5"
 chrono = { version = "~0.4", features = ["serde"] }
 rusqlite = { version = "~0.14", features = ["chrono"] }
 
