@@ -12,9 +12,9 @@ pub struct FlatOverviewContext {
 }
 
 impl FlatOverviewContext {
-    pub fn view(flats: Vec<FlatEntry>) -> Self {
+    pub fn view(flats: Vec<FlatEntry>, message: Option<Message>) -> Self {
         Self {
-            message: None,
+            message,
             nav: AdminNav::new(),
             create_flat_url: uri!(get_create).to_string(),
             flats: Some(flats),

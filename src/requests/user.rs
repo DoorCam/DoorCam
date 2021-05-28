@@ -97,9 +97,9 @@ pub fn post_create_data(
 
 /// Shows all users
 #[get("/admin/user")]
-pub fn get_users(_admin: AdminGuard, conn: DbConn) -> Template {
+pub fn get_users(_admin: AdminGuard, flash: Option<FlashMessage>, conn: DbConn) -> Template {
     let context = match UserEntry::get_all(&conn) {
-        Ok(users) => UserOverviewContext::view(users),
+        Ok(users) => UserOverviewContext::view(users, flash.map(Message::from)),
         Err(e) => UserOverviewContext::error(Message::error(format!("DB Error: {}", e))),
     };
     Template::render("user_overview", &context)

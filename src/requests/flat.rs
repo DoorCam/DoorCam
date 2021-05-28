@@ -114,9 +114,9 @@ pub fn post_create_data(
 
 /// get all flats
 #[get("/admin/flat")]
-pub fn get_flats(_admin: AdminGuard, conn: DbConn) -> Template {
+pub fn get_flats(_admin: AdminGuard, flash: Option<FlashMessage>, conn: DbConn) -> Template {
     let context = match FlatEntry::get_all(&conn) {
-        Ok(flats) => FlatOverviewContext::view(flats),
+        Ok(flats) => FlatOverviewContext::view(flats, flash.map(Message::from)),
         Err(e) => FlatOverviewContext::error(Message::error(format!("DB Error: {}", e))),
     };
     Template::render("flat_overview", &context)

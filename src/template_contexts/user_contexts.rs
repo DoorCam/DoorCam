@@ -12,9 +12,9 @@ pub struct UserOverviewContext {
 }
 
 impl UserOverviewContext {
-    pub fn view(users: Vec<UserEntry>) -> Self {
+    pub fn view(users: Vec<UserEntry>, message: Option<Message>) -> Self {
         Self {
-            message: None,
+            message,
             nav: AdminNav::new(),
             create_user_url: uri!(get_create).to_string(),
             users: Some(users),
