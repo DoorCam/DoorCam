@@ -24,11 +24,11 @@ fn scenario_1_with_all_methods() {
 
     let other_user = UserEntry::<(), u32> {
         id: (),
-        name: String::new(),
+        name: "Alice".to_string(),
         pw_hash: HashEntry {
-            hash: String::new(),
-            salt: String::new(),
-            config: String::new(),
+            hash: "unsecure".to_string(),
+            salt: "salt".to_string(),
+            config: "plain".to_string(),
         },
         user_type: UserType::User,
         active: true,

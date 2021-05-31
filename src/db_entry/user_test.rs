@@ -11,7 +11,7 @@ fn scenario_1_with_all_methods() {
         name: "Alice".to_string(),
         pw_hash: HashEntry {
             hash: "unsecure".to_string(),
-            salt: String::new(),
+            salt: "salt".to_string(),
             config: "plain".to_string(),
         },
         user_type: UserType::User,
