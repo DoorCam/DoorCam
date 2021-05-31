@@ -27,9 +27,6 @@ jobs:
       run: cargo build --release --verbose
     - name: Run tests
       run: cargo test --release --verbose
-    - name: Setup tmate session
-      if: ${{ failure() }}
-      uses: mxschmitt/action-tmate@v3
   lints:
     runs-on: ubuntu-latest
     steps:
