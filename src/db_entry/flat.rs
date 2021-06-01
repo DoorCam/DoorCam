@@ -48,7 +48,7 @@ impl Entry for FlatEntry<u32> {
     }
 
     fn delete_entry(conn: &Connection, id: u32) -> Result<(), rusqlite::Error> {
-        conn.execute("DELETE FROM flat WHERE id=?1 LIMIT 1", &[&id])?;
+        conn.execute("DELETE FROM flat WHERE id=?1", &[&id])?;
         Ok(())
     }
 }

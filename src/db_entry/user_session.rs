@@ -21,7 +21,7 @@ impl<URef: Entry> Entry for UserSessionEntry<u32, URef> {
     }
 
     fn delete_entry(conn: &Connection, id: u32) -> Result<(), rusqlite::Error> {
-        conn.execute("DELETE FROM user_session WHERE ID=?1 LIMIT 1", &[&id])?;
+        conn.execute("DELETE FROM user_session WHERE ID=?1", &[&id])?;
         Ok(())
     }
 

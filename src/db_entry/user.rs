@@ -31,7 +31,7 @@ impl<FRef: Entry> Entry for UserEntry<u32, FRef> {
     }
 
     fn delete_entry(conn: &Connection, id: u32) -> Result<(), rusqlite::Error> {
-        conn.execute("DELETE FROM client_user WHERE ID=?1 LIMIT 1", &[&id])?;
+        conn.execute("DELETE FROM client_user WHERE ID=?1", &[&id])?;
         Ok(())
     }
 
