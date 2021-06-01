@@ -94,11 +94,14 @@ pub fn post_create_data(
     conn: DbConn,
     flat_sync_event: State<Arc<AutoResetEvent>>,
 ) -> Result<Redirect, Flash<Redirect>> {
-    flat_data
-        .name
-        .is_empty()
-        .not()
-        .err_with(|| Flash::error(Redirect::to(uri!(get_create)), "Name is empty"))?;
+    (flat_data.name.is_empty()
+        || flat_data.local_address.is_empty()
+        || flat_data.broker_address.is_empty()
+        || flat_data.bell_topic.is_empty()
+        || flat_data.broker_user.is_empty()
+        || flat_data.broker_password.is_empty())
+    .not()
+    .err_with(|| Flash::error(Redirect::to(uri!(get_create)), "Mandatory field is empty"))?;
 
     flat_data
         .into_inner()
@@ -166,11 +169,13 @@ pub fn post_change_data(
     id: u32,
     flat_data: Form<FlatForm>,
 ) -> Result<Redirect, Flash<Redirect>> {
-    flat_data
-        .name
-        .is_empty()
-        .not()
-        .err_with(|| Flash::error(Redirect::to(uri!(get_change: id)), "Name is empty"))?;
+    (flat_data.name.is_empty()
+        || flat_data.local_address.is_empty()
+        || flat_data.broker_address.is_empty()
+        || flat_data.bell_topic.is_empty()
+        || flat_data.broker_user.is_empty())
+    .not()
+    .err_with(|| Flash::error(Redirect::to(uri!(get_create)), "Mandatory field is empty"))?;
 
     let update_password = !flat_data.broker_password.is_empty();
     let flat = flat_data.into_inner().into_entry(id);
