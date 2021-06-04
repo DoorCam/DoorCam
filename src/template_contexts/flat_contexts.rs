@@ -3,6 +3,10 @@ use crate::db_entry::FlatEntry;
 use crate::requests::flat::*;
 use serde::Serialize;
 
+#[cfg(test)]
+#[path = "./flat_contexts_test.rs"]
+mod flat_contexts_test;
+
 #[derive(Serialize)]
 pub struct FlatOverviewContext {
     pub message: Option<Message>,

@@ -4,6 +4,10 @@ use crate::requests::{flat::*, index_view::*, user::*, user_auth::*};
 use rocket::request::FlashMessage;
 use serde::Serialize;
 
+#[cfg(test)]
+#[path = "./template_test.rs"]
+mod template_test;
+
 /// Struct which is used to show the user a message
 #[derive(Serialize)]
 pub struct Message {
@@ -43,9 +47,6 @@ pub struct AdminViewContext {
     pub message: Option<Message>,
     pub nav: AdminNav,
 }
-
-#[derive(Serialize)]
-pub struct NoContext {}
 
 #[derive(Serialize)]
 pub struct LoginContext {

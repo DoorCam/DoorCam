@@ -1,26 +1,48 @@
 use super::*;
 
+impl Default for FlatEntry<()> {
+    fn default() -> Self {
+        Self {
+            id: (),
+            name: "Home".to_string(),
+            active: false,
+            bell_button_pin: 0,
+            local_address: "doorcam.local".to_string(),
+            broker_address: "mqtt.local".to_string(),
+            broker_port: 1883,
+            bell_topic: "/door/bell".to_string(),
+            broker_user: "doorbell".to_string(),
+            broker_password: "123cdef".to_string(),
+            broker_password_iv: "123456789abcdef123456789abcdef".to_string(),
+        }
+    }
+}
+
+impl Default for FlatEntry {
+    fn default() -> Self {
+        Self {
+            id: 1,
+            name: "Home".to_string(),
+            active: false,
+            bell_button_pin: 0,
+            local_address: "doorcam.local".to_string(),
+            broker_address: "mqtt.local".to_string(),
+            broker_port: 1883,
+            bell_topic: "/door/bell".to_string(),
+            broker_user: "doorbell".to_string(),
+            broker_password: "123cdef".to_string(),
+            broker_password_iv: "123456789abcdef123456789abcdef".to_string(),
+        }
+    }
+}
+
 #[test]
 fn scenario_1_with_all_methods() {
     let sql_scheme = include_str!("../../scheme.sql");
     let conn = Connection::open_in_memory().unwrap();
     conn.execute_batch(sql_scheme).unwrap();
 
-    let mut flat = FlatEntry {
-        id: (),
-        name: "Home".to_string(),
-        active: false,
-        bell_button_pin: 0,
-        local_address: "doorcam.local".to_string(),
-        broker_address: "mqtt.local".to_string(),
-        broker_port: 1883,
-        bell_topic: "/door/bell".to_string(),
-        broker_user: "doorbell".to_string(),
-        broker_password: "123cdef".to_string(),
-        broker_password_iv: "123456789abcdef123456789abcdef".to_string(),
-    }
-    .create(&conn)
-    .unwrap();
+    let mut flat = FlatEntry::default().create(&conn).unwrap();
 
     let flats = FlatEntry::get_all(&conn).unwrap();
     assert_eq!(flats.len(), 1);

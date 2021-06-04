@@ -3,6 +3,10 @@ use crate::db_entry::{FlatEntry, UserEntry, UserType};
 use crate::requests::user::*;
 use serde::Serialize;
 
+#[cfg(test)]
+#[path = "./user_contexts_test.rs"]
+mod user_contexts_test;
+
 #[derive(Serialize)]
 pub struct UserOverviewContext {
     pub message: Option<Message>,

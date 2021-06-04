@@ -1,13 +1,13 @@
 use super::door::*;
 use super::user::*;
 use super::user_auth::*;
-use crate::template_contexts::{AdminNav, AdminViewContext, MainViewContext, Message, NoContext};
+use crate::template_contexts::{AdminNav, AdminViewContext, MainViewContext, Message};
 use crate::utils::config::CONFIG;
 use crate::utils::guards::{AdminGuard, OnlyUserGuard, UserGuard};
 use rocket::request::{FlashMessage, FromRequest, Request};
 use rocket::response::Redirect;
 use rocket::Outcome;
-use rocket_contrib::templates::Template;
+use rocket_contrib::templates::{tera::Context, Template};
 
 /// Get the index-view of an user
 #[get("/", rank = 1)]
@@ -45,8 +45,7 @@ pub fn get_admin_index_view(_admin: AdminGuard, flash: Option<FlashMessage>) -> 
 
 #[get("/404")]
 pub fn get_not_found(_user: UserGuard) -> Template {
-    let context = NoContext {};
-    Template::render("404", &context)
+    Template::render("404", &Context::new())
 }
 
 #[catch(404)]

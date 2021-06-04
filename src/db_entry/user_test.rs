@@ -1,25 +1,46 @@
 use super::*;
 
+impl Default for UserEntry<(), u32> {
+    fn default() -> Self {
+        Self {
+            id: (),
+            name: "Alice".to_string(),
+            pw_hash: HashEntry {
+                hash: "unsecure".to_string(),
+                salt: "salt".to_string(),
+                config: "plain".to_string(),
+            },
+            user_type: UserType::User,
+            active: true,
+            flat: None,
+        }
+    }
+}
+
+impl Default for UserEntry {
+    fn default() -> Self {
+        Self {
+            id: 42,
+            name: "Alice".to_string(),
+            pw_hash: HashEntry {
+                hash: "unsecure".to_string(),
+                salt: "salt".to_string(),
+                config: "plain".to_string(),
+            },
+            user_type: UserType::User,
+            active: true,
+            flat: None,
+        }
+    }
+}
+
 #[test]
 fn scenario_1_with_all_methods() {
     let sql_scheme = include_str!("../../scheme.sql");
     let conn = Connection::open_in_memory().unwrap();
     conn.execute_batch(sql_scheme).unwrap();
 
-    let mut user = UserEntry::<(), u32> {
-        id: (),
-        name: "Alice".to_string(),
-        pw_hash: HashEntry {
-            hash: "unsecure".to_string(),
-            salt: "salt".to_string(),
-            config: "plain".to_string(),
-        },
-        user_type: UserType::User,
-        active: true,
-        flat: None,
-    }
-    .create(&conn)
-    .unwrap();
+    let mut user = UserEntry::<(), u32>::default().create(&conn).unwrap();
 
     let users = UserEntry::get_all(&conn).unwrap();
     assert_eq!(users.len(), 2);
