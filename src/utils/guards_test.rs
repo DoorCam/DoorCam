@@ -1,21 +1,20 @@
 use super::*;
-use crate::db_entry::{HashEntry, UserType};
+use crate::db_entry::UserType;
 use rocket::http::Cookie;
 use rocket::local::Client;
 
 fn get_session() -> UserSessionEntry {
     UserSessionEntry {
         id: 0,
-        login_datetime: Utc::now(),
         user: 0,
+        ..Default::default()
     }
 }
 
 fn create_session(conn: &DbConn) -> UserSessionEntry {
     UserSessionEntry {
-        id: (),
-        login_datetime: Utc::now(),
         user: 0,
+        ..Default::default()
     }
     .create(&conn)
     .unwrap()
@@ -23,16 +22,9 @@ fn create_session(conn: &DbConn) -> UserSessionEntry {
 
 fn get_user() -> UserEntry {
     UserEntry {
-        user_type: UserType::User,
         id: 0,
-        name: String::new(),
-        active: true,
-        flat: None,
-        pw_hash: HashEntry {
-            hash: String::new(),
-            salt: String::new(),
-            config: String::new(),
-        },
+        user_type: UserType::User,
+        ..Default::default()
     }
 }
 
@@ -52,16 +44,9 @@ fn create_user_guard(conn: &DbConn) -> UserGuard {
 
 fn get_admin() -> UserEntry {
     UserEntry {
-        user_type: UserType::Admin,
         id: 0,
-        name: String::new(),
-        active: true,
-        flat: None,
-        pw_hash: HashEntry {
-            hash: String::new(),
-            salt: String::new(),
-            config: String::new(),
-        },
+        user_type: UserType::Admin,
+        ..Default::default()
     }
 }
 

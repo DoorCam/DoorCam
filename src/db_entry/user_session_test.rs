@@ -1,5 +1,25 @@
 use super::*;
-use crate::db_entry::{HashEntry, UserEntry, UserType};
+use crate::db_entry::UserEntry;
+
+impl Default for UserSessionEntry<(), u32> {
+    fn default() -> Self {
+        Self {
+            id: (),
+            login_datetime: Utc::now(),
+            user: 0,
+        }
+    }
+}
+
+impl Default for UserSessionEntry {
+    fn default() -> Self {
+        Self {
+            id: 1,
+            login_datetime: Utc::now(),
+            user: 0,
+        }
+    }
+}
 
 #[test]
 fn scenario_1_with_all_methods() {
@@ -7,13 +27,7 @@ fn scenario_1_with_all_methods() {
     let conn = Connection::open_in_memory().unwrap();
     conn.execute_batch(sql_scheme).unwrap();
 
-    let mut session = UserSessionEntry {
-        id: (),
-        login_datetime: Utc::now(),
-        user: 0,
-    }
-    .create(&conn)
-    .unwrap();
+    let mut session = UserSessionEntry::default().create(&conn).unwrap();
 
     let sessions = UserSessionEntry::get_all(&conn).unwrap();
     assert_eq!(sessions.len(), 1);
@@ -22,32 +36,17 @@ fn scenario_1_with_all_methods() {
     session.login_datetime = Utc::now();
     session.update(&conn).unwrap();
 
-    let other_user = UserEntry::<(), u32> {
-        id: (),
-        name: "Alice".to_string(),
-        pw_hash: HashEntry {
-            hash: "unsecure".to_string(),
-            salt: "salt".to_string(),
-            config: "plain".to_string(),
-        },
-        user_type: UserType::User,
-        active: true,
-        flat: None,
-    }
-    .create(&conn)
-    .unwrap();
+    let other_user = UserEntry::default().create(&conn).unwrap();
 
     UserSessionEntry {
-        id: (),
-        login_datetime: Utc::now(),
         user: other_user.get_id(),
+        ..Default::default()
     }
     .create(&conn)
     .unwrap();
     UserSessionEntry {
-        id: (),
-        login_datetime: Utc::now(),
         user: other_user.get_id(),
+        ..Default::default()
     }
     .create(&conn)
     .unwrap();

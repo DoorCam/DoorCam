@@ -40,7 +40,7 @@ fn scenario_1_with_all_methods() {
     let conn = Connection::open_in_memory().unwrap();
     conn.execute_batch(sql_scheme).unwrap();
 
-    let mut user = UserEntry::<(), u32>::default().create(&conn).unwrap();
+    let mut user = UserEntry::default().create(&conn).unwrap();
 
     let users = UserEntry::get_all(&conn).unwrap();
     assert_eq!(users.len(), 2);
