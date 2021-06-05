@@ -3,6 +3,10 @@ use crate::db_entry::{FlatEntry, UserEntry, UserType};
 use crate::requests::user::*;
 use serde::Serialize;
 
+#[cfg(test)]
+#[path = "./user_contexts_test.rs"]
+mod user_contexts_test;
+
 #[derive(Serialize)]
 pub struct UserOverviewContext {
     pub message: Option<Message>,
@@ -12,9 +16,9 @@ pub struct UserOverviewContext {
 }
 
 impl UserOverviewContext {
-    pub fn view(users: Vec<UserEntry>) -> Self {
+    pub fn view(users: Vec<UserEntry>, message: Option<Message>) -> Self {
         Self {
-            message: None,
+            message,
             nav: AdminNav::new(),
             create_user_url: uri!(get_create).to_string(),
             users: Some(users),
@@ -74,11 +78,7 @@ impl UserDetailsContext {
     ) -> Self {
         Self {
             message: error,
-            nav: if is_admin {
-                Some(AdminNav::new())
-            } else {
-                None
-            },
+            nav: is_admin.then(AdminNav::new),
             title: "Change".to_string(),
             is_admin,
             user: Some(user),

@@ -1,10 +1,17 @@
 //! All structs and functions used to communicate with the database and represent the data.
 
 pub use rocket_contrib::databases::rusqlite;
+pub use rusqlite::Connection;
 
+#[cfg(not(test))]
 #[database("sqlite_db")]
 #[derive(Clone)]
-pub struct DbConn(rusqlite::Connection);
+pub struct DbConn(Connection);
+
+#[cfg(test)]
+mod connection_test;
+#[cfg(test)]
+pub use connection_test::DbConn;
 
 /// Used for the `ID` field in `Entries` to statically differentiate between insertable and known
 /// `Entries`.
@@ -43,11 +50,11 @@ impl Identifier for u32 {}
 ///     pub fn get() -> Vec<Self> { todo!() }
 /// }
 /// ```
-pub trait Entry {
+pub trait Entry: Clone {
     fn get_id(&self) -> u32;
-    fn update(&self, conn: &DbConn) -> Result<(), rusqlite::Error>;
-    fn delete_entry(conn: &DbConn, id: u32) -> Result<(), rusqlite::Error>;
-    fn delete(&self, conn: &DbConn) -> Result<(), rusqlite::Error> {
+    fn update(&self, conn: &Connection) -> Result<(), rusqlite::Error>;
+    fn delete_entry(conn: &Connection, id: u32) -> Result<(), rusqlite::Error>;
+    fn delete(&self, conn: &Connection) -> Result<(), rusqlite::Error> {
         Self::delete_entry(conn, self.get_id())
     }
 }
@@ -57,10 +64,10 @@ impl Entry for u32 {
     fn get_id(&self) -> u32 {
         *self
     }
-    fn update(&self, _conn: &DbConn) -> Result<(), rusqlite::Error> {
+    fn update(&self, _conn: &Connection) -> Result<(), rusqlite::Error> {
         unreachable!();
     }
-    fn delete_entry(_conn: &DbConn, _id: u32) -> Result<(), rusqlite::Error> {
+    fn delete_entry(_conn: &Connection, _id: u32) -> Result<(), rusqlite::Error> {
         unreachable!();
     }
 }
@@ -72,3 +79,6 @@ pub use user_type::UserType;
 
 mod flat;
 pub use flat::FlatEntry;
+
+mod user_session;
+pub use user_session::UserSessionEntry;

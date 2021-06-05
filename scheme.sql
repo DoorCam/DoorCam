@@ -1,5 +1,3 @@
-DROP TABLE flat;
-
 CREATE TABLE flat (
    id INTEGER PRIMARY KEY AUTOINCREMENT,
    name TEXT NOT NULL,
@@ -14,8 +12,6 @@ CREATE TABLE flat (
    broker_pw_iv TEXT NOT NULL
 );
 
-DROP TABLE client_user;
-
 CREATE TABLE client_user (
    id INTEGER PRIMARY KEY AUTOINCREMENT,
    name TEXT NOT NULL UNIQUE,
@@ -27,5 +23,13 @@ CREATE TABLE client_user (
    flat_id INTEGER,
    FOREIGN KEY(flat_id) REFERENCES flat(id)
 );
+
+CREATE TABLE user_session (
+   id INTEGER PRIMARY KEY AUTOINCREMENT,
+   login_datetime TEXT NOT NULL,
+   user_id INTEGER NOT NULL,
+   FOREIGN KEY(user_id) REFERENCES client_user(id)
+);
+
 
 INSERT INTO client_user (name, pw_hash, pw_salt, pw_config, user_type, active) VALUES ("admin", "admin", "", "plain", 2, 1);

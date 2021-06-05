@@ -3,12 +3,14 @@ use crate::db_entry::{DbConn, Entry, FlatEntry};
 use crate::template_contexts::{FlatDetailsContext, FlatOverviewContext, Message};
 use crate::utils::crypto;
 use crate::utils::guards::AdminGuard;
+use bool_ext::BoolExt;
 use rocket::http::Status;
 use rocket::request::{FlashMessage, Form};
 use rocket::response::{Flash, Redirect};
 use rocket::State;
 use rocket_contrib::templates::Template;
 use rsevents::AutoResetEvent;
+use std::ops::Not;
 use std::sync::Arc;
 
 /// Struct which retrieves all form data from the flat details.
@@ -32,7 +34,7 @@ impl FlatForm {
         let encrypted_broker_password = base64::encode(crypto::symetric_encrypt(
             &crate::CONFIG.security.encryption_key,
             &broker_pw_iv,
-            &self.broker_password.as_bytes(),
+            self.broker_password.as_bytes(),
         ));
         let broker_pw_iv = base64::encode(broker_pw_iv);
         (broker_pw_iv, encrypted_broker_password)
@@ -92,19 +94,20 @@ pub fn post_create_data(
     conn: DbConn,
     flat_sync_event: State<Arc<AutoResetEvent>>,
 ) -> Result<Redirect, Flash<Redirect>> {
-    if flat_data.name.is_empty() {
-        return Err(Flash::error(
-            Redirect::to(uri!(get_create)),
-            "Name is empty",
-        ));
-    }
+    (flat_data.name.is_empty()
+        || flat_data.local_address.is_empty()
+        || flat_data.broker_address.is_empty()
+        || flat_data.bell_topic.is_empty()
+        || flat_data.broker_user.is_empty()
+        || flat_data.broker_password.is_empty())
+    .not()
+    .err_with(|| Flash::error(Redirect::to(uri!(get_create)), "Mandatory field is empty"))?;
 
-    if let Err(e) = flat_data.into_inner().into_insertable().create(&conn) {
-        return Err(Flash::error(
-            Redirect::to(uri!(get_create)),
-            format!("DB Error: {}", e),
-        ));
-    }
+    flat_data
+        .into_inner()
+        .into_insertable()
+        .create(&conn)
+        .map_err(|e| Flash::error(Redirect::to(uri!(get_create)), format!("DB Error: {}", e)))?;
 
     // sync iot::EventHandler
     flat_sync_event.set();
@@ -114,9 +117,9 @@ pub fn post_create_data(
 
 /// get all flats
 #[get("/admin/flat")]
-pub fn get_flats(_admin: AdminGuard, conn: DbConn) -> Template {
+pub fn get_flats(_admin: AdminGuard, flash: Option<FlashMessage>, conn: DbConn) -> Template {
     let context = match FlatEntry::get_all(&conn) {
-        Ok(flats) => FlatOverviewContext::view(flats),
+        Ok(flats) => FlatOverviewContext::view(flats, flash.map(Message::from)),
         Err(e) => FlatOverviewContext::error(Message::error(format!("DB Error: {}", e))),
     };
     Template::render("flat_overview", &context)
@@ -166,12 +169,13 @@ pub fn post_change_data(
     id: u32,
     flat_data: Form<FlatForm>,
 ) -> Result<Redirect, Flash<Redirect>> {
-    if flat_data.name.is_empty() {
-        return Err(Flash::error(
-            Redirect::to(uri!(get_change: id)),
-            "Name is empty",
-        ));
-    }
+    (flat_data.name.is_empty()
+        || flat_data.local_address.is_empty()
+        || flat_data.broker_address.is_empty()
+        || flat_data.bell_topic.is_empty()
+        || flat_data.broker_user.is_empty())
+    .not()
+    .err_with(|| Flash::error(Redirect::to(uri!(get_create)), "Mandatory field is empty"))?;
 
     let update_password = !flat_data.broker_password.is_empty();
     let flat = flat_data.into_inner().into_entry(id);
@@ -181,12 +185,12 @@ pub fn post_change_data(
         false => flat.update_without_password(&conn),
     };
 
-    if let Err(e) = update_result {
-        return Err(Flash::error(
+    update_result.map_err(|e| {
+        Flash::error(
             Redirect::to(uri!(get_change: id)),
             format!("DB Error: {}", e),
-        ));
-    }
+        )
+    })?;
 
     // sync iot::EventHandler
     flat_sync_event.set();

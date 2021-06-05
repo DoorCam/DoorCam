@@ -3,6 +3,10 @@ use crate::db_entry::FlatEntry;
 use crate::requests::flat::*;
 use serde::Serialize;
 
+#[cfg(test)]
+#[path = "./flat_contexts_test.rs"]
+mod flat_contexts_test;
+
 #[derive(Serialize)]
 pub struct FlatOverviewContext {
     pub message: Option<Message>,
@@ -12,9 +16,9 @@ pub struct FlatOverviewContext {
 }
 
 impl FlatOverviewContext {
-    pub fn view(flats: Vec<FlatEntry>) -> Self {
+    pub fn view(flats: Vec<FlatEntry>, message: Option<Message>) -> Self {
         Self {
-            message: None,
+            message,
             nav: AdminNav::new(),
             create_flat_url: uri!(get_create).to_string(),
             flats: Some(flats),

@@ -1,44 +1,67 @@
 use super::*;
-use crate::db_entry::{HashEntry, UserType};
+use crate::db_entry::UserType;
 use rocket::http::Cookie;
 use rocket::local::Client;
 
+fn get_session() -> UserSessionEntry {
+    UserSessionEntry {
+        id: 0,
+        user: 0,
+        ..Default::default()
+    }
+}
+
+fn create_session(conn: &DbConn) -> UserSessionEntry {
+    UserSessionEntry {
+        user: 0,
+        ..Default::default()
+    }
+    .create(conn)
+    .unwrap()
+}
+
 fn get_user() -> UserEntry {
     UserEntry {
-        user_type: UserType::User,
         id: 0,
-        name: String::new(),
-        active: true,
-        flat: None,
-        pw_hash: HashEntry {
-            hash: String::new(),
-            salt: String::new(),
-            config: String::new(),
-        },
+        user_type: UserType::User,
+        ..Default::default()
     }
 }
 
 fn get_user_guard() -> UserGuard {
-    UserGuard { user: get_user() }
+    UserGuard {
+        user: get_user(),
+        session: get_session(),
+    }
+}
+
+fn create_user_guard(conn: &DbConn) -> UserGuard {
+    UserGuard {
+        user: get_user(),
+        session: create_session(conn),
+    }
 }
 
 fn get_admin() -> UserEntry {
     UserEntry {
-        user_type: UserType::Admin,
         id: 0,
-        name: String::new(),
-        active: true,
-        flat: None,
-        pw_hash: HashEntry {
-            hash: String::new(),
-            salt: String::new(),
-            config: String::new(),
-        },
+        user_type: UserType::Admin,
+        ..Default::default()
     }
 }
 
 fn get_admin_guard() -> UserGuard {
-    UserGuard { user: get_admin() }
+    UserGuard {
+        user: get_admin(),
+        session: get_session(),
+    }
+}
+
+fn create_admin_guard(conn: &DbConn) -> UserGuard {
+    UserGuard {
+        user: get_admin(),
+        session: create_session(conn),
+    }
 }
 
 #[test]
@@ -63,46 +86,84 @@ fn admin_is_admin() {
 
 #[test]
 fn user_on_only_user_guard() {
-    let user = serde_json::to_string(&get_user()).expect("serialization error");
+    let server = rocket::ignite().attach(DbConn::fairing());
+    let conn = DbConn::get_one(&server).unwrap();
 
-    let client = Client::new(rocket::ignite()).expect("valid rocket");
-    let req = client.get("/").private_cookie(Cookie::new("user", user));
+    let user_session =
+        serde_json::to_string(&create_user_guard(&conn)).expect("serialization error");
+
+    let client = Client::new(server).expect("valid rocket");
+    let req = client
+        .get("/")
+        .private_cookie(Cookie::new("user_session_guard", user_session));
 
     assert_matches!(
-        OnlyUserGuard::from_request(&req.inner()),
+        OnlyUserGuard::from_request(req.inner()),
         Outcome::Success(_)
     );
 }
 
 #[test]
 fn admin_on_only_user_guard() {
-    let user = serde_json::to_string(&get_admin()).expect("serialization error");
+    let server = rocket::ignite().attach(DbConn::fairing());
+    let conn = DbConn::get_one(&server).unwrap();
 
-    let client = Client::new(rocket::ignite()).expect("valid rocket");
-    let req = client.get("/").private_cookie(Cookie::new("user", user));
+    let user_session =
+        serde_json::to_string(&create_admin_guard(&conn)).expect("serialization error");
+
+    let client = Client::new(server).expect("valid rocket");
+    let req = client
+        .get("/")
+        .private_cookie(Cookie::new("user_session_guard", user_session));
 
     assert_matches!(
-        OnlyUserGuard::from_request(&req.inner()),
+        OnlyUserGuard::from_request(req.inner()),
         Outcome::Forward(_)
     );
 }
 
 #[test]
 fn user_on_admin_guard() {
-    let user = serde_json::to_string(&get_user()).expect("serialization error");
+    let server = rocket::ignite().attach(DbConn::fairing());
+    let conn = DbConn::get_one(&server).unwrap();
 
-    let client = Client::new(rocket::ignite()).expect("valid rocket");
-    let req = client.get("/").private_cookie(Cookie::new("user", user));
+    let user_session =
+        serde_json::to_string(&create_user_guard(&conn)).expect("serialization error");
 
-    assert_matches!(AdminGuard::from_request(&req.inner()), Outcome::Forward(_));
+    let client = Client::new(server).expect("valid rocket");
+    let req = client
+        .get("/")
+        .private_cookie(Cookie::new("user_session_guard", user_session));
+
+    assert_matches!(AdminGuard::from_request(req.inner()), Outcome::Forward(_));
 }
 
 #[test]
 fn admin_on_admin_guard() {
-    let user = serde_json::to_string(&get_admin()).expect("serialization error");
+    let server = rocket::ignite().attach(DbConn::fairing());
+    let conn = DbConn::get_one(&server).unwrap();
 
-    let client = Client::new(rocket::ignite()).expect("valid rocket");
-    let req = client.get("/").private_cookie(Cookie::new("user", user));
+    let user_session =
+        serde_json::to_string(&create_admin_guard(&conn)).expect("serialization error");
 
-    assert_matches!(AdminGuard::from_request(&req.inner()), Outcome::Success(_));
+    let client = Client::new(server).expect("valid rocket");
+    let req = client
+        .get("/")
+        .private_cookie(Cookie::new("user_session_guard", user_session));
+
+    assert_matches!(AdminGuard::from_request(req.inner()), Outcome::Success(_));
+}
+
+#[test]
+fn unknown_session() {
+    let server = rocket::ignite().attach(DbConn::fairing());
+
+    let user_session = serde_json::to_string(&get_user_guard()).expect("serialization error");
+
+    let client = Client::new(server).expect("valid rocket");
+    let req = client
+        .get("/")
+        .private_cookie(Cookie::new("user_session_guard", user_session));
+
+    assert_matches!(UserGuard::from_request(req.inner()), Outcome::Forward(_));
 }

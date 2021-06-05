@@ -1,8 +1,12 @@
-use super::{rusqlite, DbConn, Entry, Identifier};
+use super::{rusqlite, Connection, Entry, Identifier};
 use serde::{Deserialize, Serialize};
 
+#[cfg(test)]
+#[path = "./flat_test.rs"]
+mod flat_test;
+
 /// Flat entry of the corresponding "flat" table.
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Debug, Serialize, Deserialize, PartialEq, Clone)]
 pub struct FlatEntry<ID: Identifier = u32> {
     pub id: ID,
     pub name: String,
@@ -18,11 +22,12 @@ pub struct FlatEntry<ID: Identifier = u32> {
 }
 
 impl Entry for FlatEntry<u32> {
+    #[inline(always)]
     fn get_id(&self) -> u32 {
         self.id
     }
 
-    fn update(&self, conn: &DbConn) -> Result<(), rusqlite::Error> {
+    fn update(&self, conn: &Connection) -> Result<(), rusqlite::Error> {
         let mut stmt = conn.prepare(
             "UPDATE flat SET name = ?1, active = ?2, bell_button_pin = ?3, local_address = ?4, broker_address = ?5, broker_port = ?6, bell_topic = ?7, broker_user = ?8, broker_pw = ?9, broker_pw_iv = ?10 WHERE id = ?11",
         )?;
@@ -42,14 +47,14 @@ impl Entry for FlatEntry<u32> {
         Ok(())
     }
 
-    fn delete_entry(conn: &DbConn, id: u32) -> Result<(), rusqlite::Error> {
-        conn.execute("DELETE FROM flat WHERE id=?1 LIMIT 1", &[&id])?;
+    fn delete_entry(conn: &Connection, id: u32) -> Result<(), rusqlite::Error> {
+        conn.execute("DELETE FROM flat WHERE id=?1", &[&id])?;
         Ok(())
     }
 }
 
 impl FlatEntry<()> {
-    pub fn create(self, conn: &DbConn) -> Result<FlatEntry, rusqlite::Error> {
+    pub fn create(self, conn: &Connection) -> Result<FlatEntry, rusqlite::Error> {
         conn.execute(
             "INSERT INTO flat (name, active, bell_button_pin, local_address, broker_address, broker_port, bell_topic, broker_user, broker_pw, broker_pw_iv) VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?10)",
             &[
@@ -98,34 +103,30 @@ impl FlatEntry<u32> {
         }
     }
 
-    pub fn get_all(conn: &DbConn) -> Result<Vec<Self>, rusqlite::Error> {
+    pub fn get_all(conn: &Connection) -> Result<Vec<Self>, rusqlite::Error> {
         let mut stmt =
             conn.prepare("SELECT id, name, active, bell_button_pin, local_address, broker_address, broker_port, bell_topic, broker_user, broker_pw, broker_pw_iv FROM flat")?;
-        return stmt.query_map(&[], |row| Self::row_2_flat(&row))?.collect();
+        return stmt.query_map(&[], |row| Self::row_2_flat(row))?.collect();
     }
 
-    /// # Get all active flats
-    ///
-    /// ## Arguments
-    ///
-    /// * `conn` - A rusqlite connection and not the rocket wrapper
-    pub fn get_active(conn: &rusqlite::Connection) -> Result<Vec<Self>, rusqlite::Error> {
+    /// Get all active flats
+    pub fn get_active(conn: &Connection) -> Result<Vec<Self>, rusqlite::Error> {
         let mut stmt =
             conn.prepare("SELECT id, name, active, bell_button_pin, local_address, broker_address, broker_port, bell_topic, broker_user, broker_pw, broker_pw_iv FROM flat WHERE active = true")?;
-        return stmt.query_map(&[], |row| Self::row_2_flat(&row))?.collect();
+        return stmt.query_map(&[], |row| Self::row_2_flat(row))?.collect();
     }
 
-    pub fn get_by_id(conn: &DbConn, id: u32) -> Result<Option<Self>, rusqlite::Error> {
+    pub fn get_by_id(conn: &Connection, id: u32) -> Result<Option<Self>, rusqlite::Error> {
         let mut stmt = conn.prepare(
             "SELECT id, name, active, bell_button_pin, local_address, broker_address, broker_port, bell_topic, broker_user, broker_pw, broker_pw_iv FROM flat WHERE ID=?1 LIMIT 1",
         )?;
         return stmt
-            .query_map(&[&id], |row| Self::row_2_flat(&row))?
+            .query_map(&[&id], |row| Self::row_2_flat(row))?
             .next()
             .map_or_else(|| Ok(None), |entry_result| entry_result.map(Some));
     }
 
-    pub fn update_without_password(&self, conn: &DbConn) -> Result<(), rusqlite::Error> {
+    pub fn update_without_password(&self, conn: &Connection) -> Result<(), rusqlite::Error> {
         let mut stmt = conn.prepare(
             "UPDATE flat SET name = ?1, active = ?2, bell_button_pin = ?3, local_address = ?4, broker_address = ?5, broker_port = ?6, bell_topic = ?7, broker_user = ?8 WHERE id = ?9",
         )?;

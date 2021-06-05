@@ -38,8 +38,8 @@
       value="{{ flat.broker_user }}" {% endif %} required />
     <br>
     <label for="broker_password"><b>Broker Password</b></label>
-    <input type="password" placeholder="Enter Broker Password" name="broker_password" id="broker_password" {% if flat %}
-      value="{{ flat.broker_password }}" {% endif %} required />
+    <input type="password" placeholder="Enter Broker Password" name="broker_password" id="broker_password" {% if not flat %}
+      required {% endif %} />
     <br>
     <label for="bell_topic"><b>Bell Topic</b></label>
     <input type="text" placeholder="Enter Bell Topic" name="bell_topic" id="bell_topic" {% if flat %}
