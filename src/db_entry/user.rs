@@ -58,7 +58,7 @@ impl<FRef: Entry> UserEntry<(), FRef> {
             user_type: self.user_type,
             active: self.active,
             flat: match flat_id {
-                Some(flat_id) => FlatEntry::get_by_id(&conn, flat_id)?,
+                Some(flat_id) => FlatEntry::get_by_id(conn, flat_id)?,
                 None => None,
             },
         })
@@ -79,7 +79,7 @@ impl UserEntry<u32, FlatEntry> {
             user_type: row.get::<usize, UserType>(5),
             active: row.get::<usize, bool>(6),
             flat: match row.get::<usize, Option<u32>>(7) {
-                Some(flat_id) => FlatEntry::get_by_id(&conn, flat_id)?,
+                Some(flat_id) => FlatEntry::get_by_id(conn, flat_id)?,
                 None => None,
             },
         })
@@ -89,7 +89,7 @@ impl UserEntry<u32, FlatEntry> {
         let mut stmt =
             conn.prepare("SELECT id, name, pw_hash, pw_salt, pw_config, user_type, active, flat_id FROM client_user")?;
         return stmt
-            .query_map(&[], |row| Self::row_2_user(&conn, &row))?
+            .query_map(&[], |row| Self::row_2_user(conn, row))?
             .map(|r| match r {
                 Ok(x) => x,
                 Err(e) => Err(e),
@@ -102,7 +102,7 @@ impl UserEntry<u32, FlatEntry> {
             "SELECT id, name, pw_hash, pw_salt, pw_config, user_type, active, flat_id FROM client_user WHERE id=?1 LIMIT 1",
         )?;
         return stmt
-            .query_map(&[&id], |row| Self::row_2_user(&conn, &row))?
+            .query_map(&[&id], |row| Self::row_2_user(conn, row))?
             .map(|r| match r {
                 Ok(x) => x,
                 Err(e) => Err(e),
@@ -120,7 +120,7 @@ impl UserEntry<u32, FlatEntry> {
             "SELECT id, name, pw_hash, pw_salt, pw_config, user_type, active, flat_id FROM client_user WHERE name = ?1 AND active = 1 LIMIT 1",
         )?;
         return stmt
-            .query_map(&[name], |row| Self::row_2_user(&conn, &row))?
+            .query_map(&[name], |row| Self::row_2_user(conn, row))?
             .map(|r| match r {
                 Ok(x) => x,
                 Err(e) => Err(e),

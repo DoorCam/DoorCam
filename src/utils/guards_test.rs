@@ -16,7 +16,7 @@ fn create_session(conn: &DbConn) -> UserSessionEntry {
         user: 0,
         ..Default::default()
     }
-    .create(&conn)
+    .create(conn)
     .unwrap()
 }
 
@@ -98,7 +98,7 @@ fn user_on_only_user_guard() {
         .private_cookie(Cookie::new("user_session_guard", user_session));
 
     assert_matches!(
-        OnlyUserGuard::from_request(&req.inner()),
+        OnlyUserGuard::from_request(req.inner()),
         Outcome::Success(_)
     );
 }
@@ -117,7 +117,7 @@ fn admin_on_only_user_guard() {
         .private_cookie(Cookie::new("user_session_guard", user_session));
 
     assert_matches!(
-        OnlyUserGuard::from_request(&req.inner()),
+        OnlyUserGuard::from_request(req.inner()),
         Outcome::Forward(_)
     );
 }
@@ -135,7 +135,7 @@ fn user_on_admin_guard() {
         .get("/")
         .private_cookie(Cookie::new("user_session_guard", user_session));
 
-    assert_matches!(AdminGuard::from_request(&req.inner()), Outcome::Forward(_));
+    assert_matches!(AdminGuard::from_request(req.inner()), Outcome::Forward(_));
 }
 
 #[test]
@@ -151,7 +151,7 @@ fn admin_on_admin_guard() {
         .get("/")
         .private_cookie(Cookie::new("user_session_guard", user_session));
 
-    assert_matches!(AdminGuard::from_request(&req.inner()), Outcome::Success(_));
+    assert_matches!(AdminGuard::from_request(req.inner()), Outcome::Success(_));
 }
 
 #[test]
@@ -165,5 +165,5 @@ fn unknown_session() {
         .get("/")
         .private_cookie(Cookie::new("user_session_guard", user_session));
 
-    assert_matches!(UserGuard::from_request(&req.inner()), Outcome::Forward(_));
+    assert_matches!(UserGuard::from_request(req.inner()), Outcome::Forward(_));
 }

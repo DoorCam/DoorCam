@@ -34,7 +34,7 @@ impl FlatForm {
         let encrypted_broker_password = base64::encode(crypto::symetric_encrypt(
             &crate::CONFIG.security.encryption_key,
             &broker_pw_iv,
-            &self.broker_password.as_bytes(),
+            self.broker_password.as_bytes(),
         ));
         let broker_pw_iv = base64::encode(broker_pw_iv);
         (broker_pw_iv, encrypted_broker_password)

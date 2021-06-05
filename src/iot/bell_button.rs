@@ -18,7 +18,7 @@ pub struct BellButton {
 #[cfg(not(feature = "iot"))]
 impl BellButton {
     pub fn new(flat: &FlatEntry) -> Self {
-        let broker_password = match Self::decrypt_broker_password(&flat) {
+        let broker_password = match Self::decrypt_broker_password(flat) {
             Ok(broker_password) => broker_password,
             Err(e) => {
                 error!("Error decrypting broker password: {}", e);

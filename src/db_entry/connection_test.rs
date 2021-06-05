@@ -16,7 +16,7 @@ impl DbConn {
         })
     }
     pub fn get_one(rocket: &rocket::Rocket) -> Option<Self> {
-        rocket.state::<Self>().map(|conn| conn.clone())
+        rocket.state::<Self>().cloned()
     }
 }
 
@@ -36,7 +36,7 @@ impl<'a, 'r> rocket::request::FromRequest<'a, 'r> for DbConn {
         request: &'a rocket::request::Request<'r>,
     ) -> rocket::request::Outcome<Self, ()> {
         request
-            .guard::<::rocket::State<DbConn>>()
+            .guard::<::rocket::State<Self>>()
             .map(|conn| conn.clone())
     }
 }

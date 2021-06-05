@@ -20,11 +20,11 @@ mod guards_test;
 #[derive(thiserror::Error, Debug)]
 pub enum Error {
     #[error(transparent)]
-    DbError(#[from] rusqlite::Error),
+    Db(#[from] rusqlite::Error),
     #[error(transparent)]
-    SerializationError(#[from] serde_json::error::Error),
+    Serialization(#[from] serde_json::error::Error),
     #[error(transparent)]
-    DecodeError(#[from] base64::DecodeError),
+    Decode(#[from] base64::DecodeError),
     #[error("The credentials are invalid")]
     InvalidCredentials,
     #[error("The hash-config is unknown")]
@@ -74,7 +74,7 @@ impl UserGuard {
         pw: &str,
     ) -> Result<UserEntry, Error> {
         // Get UserEntry
-        let user = UserEntry::get_active_by_name(&conn, &name)?.ok_or_else(|| {
+        let user = UserEntry::get_active_by_name(conn, name)?.ok_or_else(|| {
             crypto::pseudo_hash();
             Error::InvalidCredentials
         })?;

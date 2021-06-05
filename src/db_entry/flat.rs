@@ -106,14 +106,14 @@ impl FlatEntry<u32> {
     pub fn get_all(conn: &Connection) -> Result<Vec<Self>, rusqlite::Error> {
         let mut stmt =
             conn.prepare("SELECT id, name, active, bell_button_pin, local_address, broker_address, broker_port, bell_topic, broker_user, broker_pw, broker_pw_iv FROM flat")?;
-        return stmt.query_map(&[], |row| Self::row_2_flat(&row))?.collect();
+        return stmt.query_map(&[], |row| Self::row_2_flat(row))?.collect();
     }
 
     /// Get all active flats
     pub fn get_active(conn: &Connection) -> Result<Vec<Self>, rusqlite::Error> {
         let mut stmt =
             conn.prepare("SELECT id, name, active, bell_button_pin, local_address, broker_address, broker_port, bell_topic, broker_user, broker_pw, broker_pw_iv FROM flat WHERE active = true")?;
-        return stmt.query_map(&[], |row| Self::row_2_flat(&row))?.collect();
+        return stmt.query_map(&[], |row| Self::row_2_flat(row))?.collect();
     }
 
     pub fn get_by_id(conn: &Connection, id: u32) -> Result<Option<Self>, rusqlite::Error> {
@@ -121,7 +121,7 @@ impl FlatEntry<u32> {
             "SELECT id, name, active, bell_button_pin, local_address, broker_address, broker_port, bell_topic, broker_user, broker_pw, broker_pw_iv FROM flat WHERE ID=?1 LIMIT 1",
         )?;
         return stmt
-            .query_map(&[&id], |row| Self::row_2_flat(&row))?
+            .query_map(&[&id], |row| Self::row_2_flat(row))?
             .next()
             .map_or_else(|| Ok(None), |entry_result| entry_result.map(Some));
     }
