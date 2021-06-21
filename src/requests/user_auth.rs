@@ -1,4 +1,5 @@
 use super::index_view::*;
+use super::{ErrorIntoFlash, ResultFlash};
 use crate::db_entry::DbConn;
 use crate::template_contexts::{LoginContext, Message};
 use crate::utils::guards::UserGuard;
@@ -31,21 +32,17 @@ pub fn post_login_data(
     cookies: Cookies,
 ) -> Result<Redirect, Flash<Redirect>> {
     UserGuard::authenticate(&conn, cookies, &user_data.name, &user_data.pw)
-        .map_err(|e| Flash::error(Redirect::to(uri!(get_login)), e.to_string()))?;
+        .map_err(|e| e.into_redirect_flash(uri!(get_login)))?;
 
     Ok(Redirect::to(uri!(get_user_index_view)))
 }
 
 /// Get logout to destroy the user-cookie
 #[get("/logout")]
-pub fn get_logout(
-    user_guard: UserGuard,
-    conn: DbConn,
-    cookies: Cookies,
-) -> Result<Flash<Redirect>, Flash<Redirect>> {
+pub fn get_logout(user_guard: UserGuard, conn: DbConn, cookies: Cookies) -> ResultFlash<Redirect> {
     user_guard
         .destroy_user_session(&conn, cookies)
-        .map_err(|e| Flash::error(Redirect::to(uri!(get_user_index_view)), e.to_string()))?;
+        .map_err(|e| e.into_redirect_flash(uri!(get_user_index_view)))?;
 
     Ok(Flash::success(
         Redirect::to(uri!(get_login)),

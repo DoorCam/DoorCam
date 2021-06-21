@@ -1,4 +1,4 @@
-use super::FormIntoEntry;
+use super::{ErrorIntoFlash, FormIntoEntry, ResultFlash};
 use crate::db_entry::{DbConn, Entry, FlatEntry};
 use crate::template_contexts::{FlatDetailsContext, FlatOverviewContext, Message};
 use crate::utils::crypto;
@@ -101,13 +101,13 @@ pub fn post_create_data(
         || flat_data.broker_user.is_empty()
         || flat_data.broker_password.is_empty())
     .not()
-    .err_with(|| Flash::error(Redirect::to(uri!(get_create)), "Mandatory field is empty"))?;
+    .err_with(|| "Mandatory field is empty".into_redirect_flash(uri!(get_create)))?;
 
     flat_data
         .into_inner()
         .into_insertable()
         .create(&conn)
-        .map_err(|e| Flash::error(Redirect::to(uri!(get_create)), format!("DB Error: {}", e)))?;
+        .map_err(|e| e.into_redirect_flash(uri!(get_create)))?;
 
     // sync iot::EventHandler
     flat_sync_event.set();
@@ -132,15 +132,13 @@ pub fn delete(
     conn: DbConn,
     flat_sync_event: State<Arc<AutoResetEvent>>,
     id: u32,
-) -> Flash<()> {
-    if let Err(e) = FlatEntry::delete_entry(&conn, id) {
-        return Flash::error((), e.to_string());
-    };
+) -> ResultFlash<()> {
+    FlatEntry::delete_entry(&conn, id).map_err(|e| e.into_flash())?;
 
     // sync iot::EventHandler
     flat_sync_event.set();
 
-    Flash::success((), "Flat deleted")
+    Ok(Flash::success((), "Flat deleted"))
 }
 
 /// get the form for modifying a flat
@@ -175,7 +173,7 @@ pub fn post_change_data(
         || flat_data.bell_topic.is_empty()
         || flat_data.broker_user.is_empty())
     .not()
-    .err_with(|| Flash::error(Redirect::to(uri!(get_create)), "Mandatory field is empty"))?;
+    .err_with(|| "Mandatory field is empty".into_redirect_flash(uri!(get_create)))?;
 
     let update_password = !flat_data.broker_password.is_empty();
     let flat = flat_data.into_inner().into_entry(id);
@@ -185,12 +183,7 @@ pub fn post_change_data(
         false => flat.update_without_password(&conn),
     };
 
-    update_result.map_err(|e| {
-        Flash::error(
-            Redirect::to(uri!(get_change: id)),
-            format!("DB Error: {}", e),
-        )
-    })?;
+    update_result.map_err(|e| e.into_redirect_flash(uri!(get_change: id)))?;
 
     // sync iot::EventHandler
     flat_sync_event.set();
