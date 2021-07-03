@@ -1,4 +1,6 @@
 #![warn(clippy::use_self)]
+#![warn(clippy::clone_on_ref_ptr)]
+#![warn(clippy::cognitive_complexity)]
 #![feature(proc_macro_hygiene, decl_macro)]
 
 #[macro_use]

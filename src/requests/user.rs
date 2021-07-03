@@ -229,13 +229,12 @@ pub fn user_post_change_data(
 
     let entry = user_data.into_inner().into_entry(id);
 
-    let update_result = match changed_password {
+    match changed_password {
         true => entry.update_unprivileged(&conn),
         false => entry.update_unprivileged_without_password(&conn),
     }
-    .and_then(|_| UserSessionEntry::delete_by_user(&conn, user_guard.user.get_id()));
-
-    update_result.map_err(|e| e.into_redirect_flash(uri!(get_change: id)))?;
+    .and_then(|_| UserSessionEntry::delete_by_user(&conn, user_guard.user.get_id()))
+    .map_err(|e| e.into_redirect_flash(uri!(get_change: id)))?;
 
     Ok(Flash::success(
         Redirect::to(uri!(get_login)),
