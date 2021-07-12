@@ -23,6 +23,7 @@ pub struct FlatForm {
     broker_address: String,
     broker_port: u16,
     bell_topic: String,
+    tamper_alarm_topic: String,
     broker_user: String,
     broker_password: String,
 }
@@ -54,7 +55,11 @@ impl FormIntoEntry<FlatEntry<()>, FlatEntry> for FlatForm {
             broker_address: self.broker_address,
             broker_port: self.broker_port,
             bell_topic: self.bell_topic,
-            tamper_alarm_topic: None,
+            tamper_alarm_topic: self
+                .tamper_alarm_topic
+                .is_empty()
+                .not()
+                .some(self.tamper_alarm_topic),
             broker_user: self.broker_user,
             broker_password: encrypted_broker_password,
             broker_password_iv: broker_pw_iv,
@@ -73,7 +78,11 @@ impl FormIntoEntry<FlatEntry<()>, FlatEntry> for FlatForm {
             broker_address: self.broker_address,
             broker_port: self.broker_port,
             bell_topic: self.bell_topic,
-            tamper_alarm_topic: None,
+            tamper_alarm_topic: self
+                .tamper_alarm_topic
+                .is_empty()
+                .not()
+                .some(self.tamper_alarm_topic),
             broker_user: self.broker_user,
             broker_password: encrypted_broker_password,
             broker_password_iv: broker_pw_iv,
