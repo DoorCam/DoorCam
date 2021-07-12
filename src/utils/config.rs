@@ -86,9 +86,9 @@ impl IoT {
 
 impl ConfigValidator for IoT {
     fn validate(&self) -> Result<(), Error> {
-        IoT::validate_gpio(self.door_opener_pin, "iot.door_opener_pin".to_string())?;
+        Self::validate_gpio(self.door_opener_pin, "iot.door_opener_pin".to_string())?;
         if let Some(tamper_sensor_pin) = self.tamper_sensor_pin {
-            IoT::validate_gpio(tamper_sensor_pin, "iot.tamper_sensor_pin".to_string())?;
+            Self::validate_gpio(tamper_sensor_pin, "iot.tamper_sensor_pin".to_string())?;
         }
         Ok(())
     }
@@ -152,8 +152,8 @@ impl ConfigValidator for Security {
                 self.minimal_password_strength_score,
             ))?;
 
-        Security::validate_secret(self.hash_pepper, "security.hash_pepper".to_string())?;
-        Security::validate_secret(self.hash_pepper, "security.hash_pepper".to_string())?;
+        Self::validate_secret(self.hash_pepper, "security.hash_pepper".to_string())?;
+        Self::validate_secret(self.hash_pepper, "security.hash_pepper".to_string())?;
 
         self.allowed_hash_configs
             .is_empty()
