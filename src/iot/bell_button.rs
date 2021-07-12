@@ -13,24 +13,24 @@ use std::thread;
 pub struct BellButton {
     #[cfg(feature = "iot")]
     drop_flag: Arc<Mutex<bool>>,
+    mqtt_client: Client,
+    flat: FlatEntry,
 }
 
 #[cfg(not(feature = "iot"))]
 impl BellButton {
-    pub fn new(flat: &FlatEntry) -> Self {
-        let broker_password = match Self::decrypt_broker_password(flat) {
-            Ok(broker_password) => broker_password,
-            Err(e) => {
-                error!("Error decrypting broker password: {}", e);
-                return Self {};
-            }
-        };
+    pub fn new(flat: FlatEntry) -> Result<Self, DecryptionError> {
+        let broker_password = Self::decrypt_broker_password(&flat)?;
+
         let mut mqtt_conn_options =
             MqttOptions::new("doorcam", flat.broker_address.clone(), flat.broker_port);
         mqtt_conn_options.set_credentials(flat.broker_user.clone(), broker_password);
-        let (mut mqtt_client, mut mqtt_conn) = Client::new(mqtt_conn_options, 5);
+        let (mqtt_client, mut mqtt_conn) = Client::new(mqtt_conn_options, 5);
 
-        Self::send_bell_signal(&mut mqtt_client, &flat.bell_topic.clone());
+        let mut mqtt_bell = Self { mqtt_client, flat };
+
+        mqtt_bell.send_bell_signal();
+        mqtt_bell.send_tamper_alarm();
 
         thread::spawn(move || {
             mqtt_conn.iter().for_each(|notification| {
@@ -38,34 +38,30 @@ impl BellButton {
             });
         });
 
-        Self {}
+        Ok(mqtt_bell)
     }
 }
 
 #[cfg(feature = "iot")]
 impl BellButton {
     /// Spawns a thread with an event-loop
-    pub fn new(flat: &FlatEntry) -> Self {
-        let broker_password = match Self::decrypt_broker_password(&flat) {
-            Ok(broker_password) => broker_password,
-            Err(e) => {
-                error!("Error decrypting broker password: {}", e);
-                return Self {
-                    drop_flag: Arc::new(Mutex::new(false)),
-                };
-            }
-        };
+    pub fn new(flat: &FlatEntry) -> Result<Self, DecryptionError> {
+        let broker_password = Self::decrypt_broker_password(&flat)?;
         let mut mqtt_conn_options =
             MqttOptions::new("doorcam", flat.broker_address.clone(), flat.broker_port);
         mqtt_conn_options.set_credentials(flat.broker_user.clone(), broker_password);
-        let (mut mqtt_client, mut mqtt_conn) = Client::new(mqtt_conn_options, 5);
-
-        let topic = flat.bell_topic.clone();
-
-        let mut dev = Button::new(flat.bell_button_pin);
+        let (mqtt_client, mut mqtt_conn) = Client::new(mqtt_conn_options, 5);
 
         let drop_flag = Arc::new(Mutex::new(false));
         let drop = drop_flag.clone();
+
+        let mut mqtt_bell = Self {
+            drop_flag,
+            mqtt_client,
+            flat,
+        };
+
+        let mut dev = Button::new(flat.bell_button_pin);
 
         thread::spawn(move || loop {
             dev.wait_for_press(None);
@@ -75,13 +71,14 @@ impl BellButton {
             match drop.lock() {
                 Ok(state) => {
                     if *state {
+                        mqtt_bell.mqtt_conn.cancel();
                         break;
                     }
                 }
                 Err(e) => error!("IoT: Can't lock drop: {}", e),
             }
 
-            Self::send_bell_signal(&mut mqtt_client, &topic);
+            mqtt_bell.send_bell_signal();
         });
 
         thread::spawn(move || {
@@ -90,7 +87,7 @@ impl BellButton {
             });
         });
 
-        Self { drop_flag }
+        Ok(mqtt_bell)
     }
 }
 
@@ -107,9 +104,25 @@ pub enum DecryptionError {
 }
 
 impl BellButton {
-    /// Sends a topic to the broker
-    fn send_bell_signal(mqtt_client: &mut Client, topic: &str) {
-        if let Err(e) = mqtt_client.publish(topic, QoS::ExactlyOnce, false, b"".to_vec()) {
+    fn send_bell_signal(&mut self) {
+        if let Err(e) = self.mqtt_client.publish(
+            self.flat.bell_topic.clone(),
+            QoS::ExactlyOnce,
+            false,
+            b"".to_vec(),
+        ) {
+            error!("IoT: Can't send Bell Signal: {}", e);
+        }
+    }
+    fn send_tamper_alarm(&mut self) {
+        let tamper_alarm_topic = match &self.flat.tamper_alarm_topic {
+            Some(tamper_alarm_topic) => tamper_alarm_topic.clone(),
+            None => return,
+        };
+        if let Err(e) =
+            self.mqtt_client
+                .publish(tamper_alarm_topic, QoS::ExactlyOnce, false, b"".to_vec())
+        {
             error!("IoT: Can't send Bell Signal: {}", e);
         }
     }

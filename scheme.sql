@@ -7,6 +7,7 @@ CREATE TABLE flat (
    broker_address TEXT NOT NULL,
    broker_port INTEGER NOT NULL,
    bell_topic TEXT NOT NULL,
+   tamper_alarm_topic TEXT,
    broker_user TEXT NOT NULL,
    broker_pw TEXT NOT NULL,
    broker_pw_iv TEXT NOT NULL
