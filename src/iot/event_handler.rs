@@ -1,9 +1,11 @@
+/// Syncs the flats between web and IoT and manages the BellButtons.
 use super::BellButton;
 use crate::db_entry::FlatEntry;
+#[cfg(feature = "iot")]
+use crate::CONFIG;
 use log::{error, info};
 use rocket_contrib::databases::rusqlite::Connection;
 use rsevents::{AutoResetEvent, Awaitable};
-///Syncs the flats between web and IoT and manages the BellButtons.
 #[cfg(feature = "iot")]
 use rust_gpiozero::input_devices::DigitalInputDevice;
 use std::sync::{Arc, Mutex};
@@ -59,7 +61,7 @@ fn tamper_sensor_loop(connections: Arc<Mutex<Vec<BellButton>>>) {
         // Stops the thread if the drop-flag is set
         match connections.lock() {
             Ok(connections) => connections
-                .mut_iter()
+                .iter_mut()
                 .for_each(BellButton::send_tamper_alarm),
             Err(e) => error!("IoT: Can't lock connections: {}", e),
         }

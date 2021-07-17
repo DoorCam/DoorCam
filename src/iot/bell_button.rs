@@ -45,7 +45,7 @@ impl BellButton {
 #[cfg(feature = "iot")]
 impl BellButton {
     /// Spawns a thread with an event-loop
-    pub fn new(flat: &FlatEntry) -> Result<Self, DecryptionError> {
+    pub fn new(flat: FlatEntry) -> Result<Self, DecryptionError> {
         let broker_password = Self::decrypt_broker_password(&flat)?;
         let mut mqtt_conn_options =
             MqttOptions::new("doorcam", flat.broker_address.clone(), flat.broker_port);
@@ -71,7 +71,7 @@ impl BellButton {
             match drop.lock() {
                 Ok(state) => {
                     if *state {
-                        mqtt_bell.mqtt_conn.cancel();
+                        mqtt_bell.mqtt_client.cancel();
                         break;
                     }
                 }
