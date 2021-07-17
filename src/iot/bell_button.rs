@@ -10,6 +10,7 @@ use std::sync::{Arc, Mutex};
 use std::thread;
 
 /// Checks whether the button is pushed and sends a signal to the MQTT-Broker.
+#[derive(Clone)]
 pub struct BellButton {
     #[cfg(feature = "iot")]
     drop_flag: Arc<Mutex<bool>>,
@@ -52,6 +53,8 @@ impl BellButton {
         mqtt_conn_options.set_credentials(flat.broker_user.clone(), broker_password);
         let (mqtt_client, mut mqtt_conn) = Client::new(mqtt_conn_options, 5);
 
+        let mut dev = Button::new(flat.bell_button_pin);
+
         let drop_flag = Arc::new(Mutex::new(false));
         let drop = drop_flag.clone();
 
@@ -60,8 +63,7 @@ impl BellButton {
             mqtt_client,
             flat,
         };
-
-        let mut dev = Button::new(flat.bell_button_pin);
+        let this = mqtt_bell.clone();
 
         thread::spawn(move || loop {
             dev.wait_for_press(None);
@@ -71,7 +73,9 @@ impl BellButton {
             match drop.lock() {
                 Ok(state) => {
                     if *state {
-                        mqtt_bell.mqtt_client.cancel();
+                        if let Err(e) = mqtt_bell.mqtt_client.cancel() {
+                            error!("Stop MQTT failed: {}", e);
+                        }
                         break;
                     }
                 }
@@ -87,7 +91,7 @@ impl BellButton {
             });
         });
 
-        Ok(mqtt_bell)
+        Ok(this)
     }
 }
 
@@ -114,7 +118,7 @@ impl BellButton {
             error!("IoT: Can't send Bell Signal: {}", e);
         }
     }
-    fn send_tamper_alarm(&mut self) {
+    pub fn send_tamper_alarm(&mut self) {
         let tamper_alarm_topic = match &self.flat.tamper_alarm_topic {
             Some(tamper_alarm_topic) => tamper_alarm_topic.clone(),
             None => return,

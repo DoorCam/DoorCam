@@ -55,15 +55,21 @@ fn tamper_sensor_loop(connections: Arc<Mutex<Vec<BellButton>>>) {
     };
     let mut dev = DigitalInputDevice::new(tamper_sensor_pin);
     thread::spawn(move || loop {
+        info!("IoT: tamper sensor start");
+        if !dev.is_active() {
+            dev.wait_for_active(None);
+        }
+        info!("IoT: tamper sensor armed");
         dev.wait_for_inactive(None);
-        info!("IoT: tamper sensor sent alarm");
+        info!("IoT: tamper sensor recieved alarm");
 
         // Stops the thread if the drop-flag is set
         match connections.lock() {
-            Ok(connections) => connections
+            Ok(mut connections) => connections
                 .iter_mut()
                 .for_each(BellButton::send_tamper_alarm),
             Err(e) => error!("IoT: Can't lock connections: {}", e),
         }
+        info!("IoT: tamper sensor sent alarm(s)");
     });
 }
