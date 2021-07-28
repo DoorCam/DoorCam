@@ -1,7 +1,9 @@
+#[cfg(feature = "iot")]
+use super::GPIO;
 use crate::utils::config::CONFIG;
 use log::{error, info};
 #[cfg(feature = "iot")]
-use rust_gpiozero::output_devices::OutputDevice;
+use rppal::gpio::OutputPin;
 use std::sync::{Arc, Mutex, MutexGuard, PoisonError};
 use std::thread;
 
@@ -15,16 +17,16 @@ pub struct DoorControl {
     is_open: Arc<Mutex<bool>>,
 
     #[cfg(feature = "iot")]
-    dev: Arc<Mutex<OutputDevice>>,
+    dev: Arc<Mutex<OutputPin>>,
 }
 
 #[cfg(not(feature = "iot"))]
 impl DoorControl {
     #[allow(clippy::mutex_atomic)]
-    pub fn new(_pin: u8) -> Self {
-        Self {
+    pub fn new(_pin: u8) -> Result<Self, ()> {
+        Ok(Self {
             is_open: Arc::new(Mutex::new(false)),
-        }
+        })
     }
 
     /// Activates the opener for the `door_opening_time`
@@ -60,30 +62,31 @@ impl DoorControl {
 
 #[cfg(feature = "iot")]
 impl DoorControl {
-    pub fn new(pin: u8) -> Self {
-        return Self {
-            dev: Arc::new(Mutex::new(OutputDevice::new(pin))),
-        };
+    pub fn new(pin: u8) -> Result<Self, rppal::gpio::Error> {
+        Ok(Self {
+            dev: Arc::new(Mutex::new(GPIO.get(pin)?.into_output())),
+        })
     }
 
     /// Activates the opener for the `door_opening_time`
-    pub fn activate_opener(&mut self) -> Result<(), PoisonError<MutexGuard<OutputDevice>>> {
+    pub fn activate_opener(&mut self) -> Result<(), PoisonError<MutexGuard<OutputPin>>> {
         let mut dev = self.dev.lock()?;
         // Stop if the opener is active
-        if dev.is_active() {
+        if dev.is_set_high() {
             info!("IoT: Opener already active");
             return Ok(());
         }
 
         info!("IoT: Activating opener");
-        dev.on();
+        dev.set_high();
+
+        let dev = Arc::clone(&self.dev);
 
         // Spawn thread which waits the `door_opening_time` and stops the opener
-        let dev = Arc::clone(&self.dev);
         thread::spawn(move || {
             thread::sleep(CONFIG.iot.door_opening_time);
             match dev.lock() {
-                Ok(mut dev) => dev.off(),
+                Ok(mut dev) => dev.set_low(),
                 Err(e) => error!("IoT: Can't deactivate opener: {}", e),
             }
         });
@@ -91,8 +94,7 @@ impl DoorControl {
     }
 
     #[cfg(test)]
-    pub fn is_opener_active(&mut self) -> Result<bool, PoisonError<MutexGuard<OutputDevice>>> {
-        let dev = self.dev.lock()?;
-        return Ok(dev.is_active());
+    pub fn is_opener_active(&self) -> Result<bool, PoisonError<MutexGuard<OutputPin>>> {
+        Ok(self.dev.lock()?.is_set_high())
     }
 }

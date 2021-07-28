@@ -1,19 +1,34 @@
+#[cfg(feature = "iot")]
+use super::{GPIO, MINIMAL_DEBOUNCED_ACTION_INTERVAL};
 use crate::db_entry::FlatEntry;
+#[cfg(feature = "iot")]
+use crate::debounce_callback;
 use crate::utils::crypto;
 use log::{error, info};
-use rumqttc::{Client, MqttOptions, QoS};
 #[cfg(feature = "iot")]
-use rust_gpiozero::input_devices::Button;
+use rppal::gpio::{InputPin, Trigger};
+use rumqttc::{Client, MqttOptions, QoS};
 use std::convert::TryInto;
 #[cfg(feature = "iot")]
-use std::sync::{Arc, Mutex};
+use std::sync::Arc;
 use std::thread;
+#[cfg(feature = "iot")]
+use std::time::Instant;
+
+#[cfg(feature = "iot")]
+#[derive(thiserror::Error, Debug)]
+pub enum BellError {
+    #[error(transparent)]
+    Decryption(#[from] DecryptionError),
+    #[error(transparent)]
+    Gpio(#[from] rppal::gpio::Error),
+}
 
 /// Checks whether the button is pushed and sends a signal to the MQTT-Broker.
 #[derive(Clone)]
 pub struct BellButton {
     #[cfg(feature = "iot")]
-    drop_flag: Arc<Mutex<bool>>,
+    dev: Option<Arc<InputPin>>,
     mqtt_client: Client,
     flat: FlatEntry,
 }
@@ -46,44 +61,33 @@ impl BellButton {
 #[cfg(feature = "iot")]
 impl BellButton {
     /// Spawns a thread with an event-loop
-    pub fn new(flat: FlatEntry) -> Result<Self, DecryptionError> {
+    pub fn new(flat: FlatEntry) -> Result<Self, BellError> {
         let broker_password = Self::decrypt_broker_password(&flat)?;
         let mut mqtt_conn_options =
             MqttOptions::new("doorcam", flat.broker_address.clone(), flat.broker_port);
         mqtt_conn_options.set_credentials(flat.broker_user.clone(), broker_password);
         let (mqtt_client, mut mqtt_conn) = Client::new(mqtt_conn_options, 5);
 
-        let mut dev = Button::new(flat.bell_button_pin);
-
-        let drop_flag = Arc::new(Mutex::new(false));
-        let drop = drop_flag.clone();
+        let mut dev = GPIO.get(flat.bell_button_pin)?.into_input_pulldown();
 
         let mut mqtt_bell = Self {
-            drop_flag,
             mqtt_client,
+            dev: None,
             flat,
         };
-        let this = mqtt_bell.clone();
 
-        thread::spawn(move || loop {
-            dev.wait_for_press(None);
-            info!("IoT: Button pressed");
+        let mut this = mqtt_bell.clone();
 
-            // Stops the thread if the drop-flag is set
-            match drop.lock() {
-                Ok(state) => {
-                    if *state {
-                        if let Err(e) = mqtt_bell.mqtt_client.cancel() {
-                            error!("Stop MQTT failed: {}", e);
-                        }
-                        break;
-                    }
-                }
-                Err(e) => error!("IoT: Can't lock drop: {}", e),
-            }
+        let mut last_action = Instant::now()
+            .checked_sub(*MINIMAL_DEBOUNCED_ACTION_INTERVAL)
+            .unwrap();
 
-            mqtt_bell.send_bell_signal();
-        });
+        dev.set_async_interrupt(Trigger::RisingEdge, move |_level| {
+            debounce_callback!(last_action);
+            this.send_bell_signal();
+        })?;
+
+        mqtt_bell.dev = Some(Arc::new(dev));
 
         thread::spawn(move || {
             mqtt_conn.iter().for_each(|notification| {
@@ -91,7 +95,7 @@ impl BellButton {
             });
         });
 
-        Ok(this)
+        Ok(mqtt_bell)
     }
 }
 
@@ -127,7 +131,7 @@ impl BellButton {
             self.mqtt_client
                 .publish(tamper_alarm_topic, QoS::ExactlyOnce, false, b"".to_vec())
         {
-            error!("IoT: Can't send Bell Signal: {}", e);
+            error!("IoT: Can't send Alarm Signal: {}", e);
         }
     }
 
@@ -142,16 +146,5 @@ impl BellButton {
             &broker_password_iv,
             &encrypted_broker_password,
         )?)?)
-    }
-}
-
-#[cfg(feature = "iot")]
-impl Drop for BellButton {
-    /// Sets the drop-flag
-    fn drop(&mut self) {
-        match self.drop_flag.lock() {
-            Ok(mut state) => *state = true,
-            Err(e) => error!("IoT: Can't lock drop: {}", e),
-        }
     }
 }
