@@ -2,8 +2,8 @@
 door_opener_pin = 0
 tamper_sensor_pin = 1
 door_opening_time = "10s"
-bell_debounce_interval = "42s"
-# tamper_sensor_debounce_interval = "42s"
+bell_debounce_interval = "42ms"
+tamper_sensor_debounce_interval = "42ms"
 
 [web]
 mjpeg_stream_port = 8081
