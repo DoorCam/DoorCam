@@ -1,5 +1,6 @@
 //! Data structures for configuration
 
+use super::serde::deserialize_optional_duration;
 use bool_ext::BoolExt;
 use duration_str::deserialize_duration;
 use serde::Deserialize;
@@ -23,6 +24,8 @@ lazy_static! {
             door_opener_pin: 0,
             tamper_sensor_pin: None,
             door_opening_time: Duration::from_secs(3),
+            bell_debounce_interval: Duration::from_millis(42),
+            tamper_sensor_debounce_interval: None,
         },
         web: Web {
             mjpeg_stream_port: 8081,
@@ -58,6 +61,7 @@ pub enum Error {
     EmptyHashConfigs,
 }
 
+/// A trait for validating the configuration recursively.
 trait ConfigValidator {
     fn validate(&self) -> Result<(), Error>;
 }
@@ -66,14 +70,28 @@ trait ConfigValidator {
 #[derive(Debug, Deserialize, Clone)]
 pub struct IoT {
     /// The GPIO pin which controls the door-opener.
-    /// [Pinout Diagram](https://pinout.xyz)
+    /// [Pinout Diagram](https://pinout.xyz).
     pub door_opener_pin: u8,
+
     /// The optional GPIO pin for a tamper sensor which sets an alarm off when there is no connection.
     pub tamper_sensor_pin: Option<u8>,
+
     /// The duration how long the door opener is activated.
-    /// The format is documented [here](https://docs.rs/duration-str/latest/duration_str/)
+    /// The format is documented [here](https://docs.rs/duration-str/latest/duration_str/).
     #[serde(deserialize_with = "deserialize_duration")]
     pub door_opening_time: Duration,
+
+    /// The minimal duration between two signals.
+    /// The timer of the last signal is resetted on every signal.
+    /// The format is documented [here](https://docs.rs/duration-str/latest/duration_str/).
+    #[serde(deserialize_with = "deserialize_duration")]
+    pub bell_debounce_interval: Duration,
+
+    /// The minimal duration between two signals.
+    /// The timer of the last signal is resetted on every signal.
+    /// The format is documented [here](https://docs.rs/duration-str/latest/duration_str/).
+    #[serde(default, deserialize_with = "deserialize_optional_duration")]
+    pub tamper_sensor_debounce_interval: Option<Duration>,
 }
 
 impl IoT {
@@ -101,6 +119,10 @@ pub struct Web {
     pub mjpeg_stream_port: u16,
 }
 
+/// You can generate such a value in hexadecimal representation with OpenSSL.
+/// ```sh
+/// $ openssl rand -hex 16
+/// ```
 type Secret128Bit = [u8; 16];
 
 /// Configuration options regarding the Security
