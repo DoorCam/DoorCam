@@ -21,7 +21,7 @@ extern crate maplit;
 extern crate lazy_static;
 
 use rsevents::{AutoResetEvent, State};
-use std::sync::{Arc, Mutex};
+use std::sync::Arc;
 
 use rocket_contrib::databases::rusqlite;
 use rocket_contrib::helmet::SpaceHelmet;
@@ -86,9 +86,10 @@ fn main() {
         .attach(Template::fairing())
         .attach(db_entry::DbConn::fairing())
         .attach(SpaceHelmet::default())
-        .manage(Mutex::new(iot::DoorControl::new(
-            CONFIG.iot.door_opener_pin,
-        )))
+        .manage(
+            iot::DoorControl::new(CONFIG.iot.door_opener_pin)
+                .expect("IoT: Couldn't create the Door Opener!"),
+        )
         .manage(flat_sync_event)
         .launch();
 }

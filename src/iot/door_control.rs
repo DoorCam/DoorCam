@@ -30,7 +30,7 @@ impl DoorControl {
     }
 
     /// Activates the opener for the `door_opening_time`
-    pub fn activate_opener(&mut self) -> Result<(), PoisonError<MutexGuard<bool>>> {
+    pub fn activate_opener(&self) -> Result<(), PoisonError<MutexGuard<bool>>> {
         let mut state = self.is_open.lock()?;
         // Stop if the opener is active
         if *state {
@@ -69,7 +69,7 @@ impl DoorControl {
     }
 
     /// Activates the opener for the `door_opening_time`
-    pub fn activate_opener(&mut self) -> Result<(), PoisonError<MutexGuard<OutputPin>>> {
+    pub fn activate_opener(&self) -> Result<(), PoisonError<MutexGuard<OutputPin>>> {
         let mut dev = self.dev.lock()?;
         // Stop if the opener is active
         if dev.is_set_high() {
@@ -85,6 +85,7 @@ impl DoorControl {
         // Spawn thread which waits the `door_opening_time` and stops the opener
         thread::spawn(move || {
             thread::sleep(CONFIG.iot.door_opening_time);
+            info!("IoT: Deactivating opener");
             match dev.lock() {
                 Ok(mut dev) => dev.set_low(),
                 Err(e) => error!("IoT: Can't deactivate opener: {}", e),
