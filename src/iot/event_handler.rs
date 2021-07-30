@@ -2,13 +2,13 @@
 
 use super::BellButton;
 #[cfg(feature = "iot")]
-use super::{GPIO, MINIMAL_DEBOUNCED_ACTION_INTERVAL};
+use super::GPIO;
 use crate::db_entry::FlatEntry;
-#[cfg(feature = "iot")]
-use crate::debounce_callback;
 use crate::utils::no_operation;
 #[cfg(feature = "iot")]
 use crate::CONFIG;
+#[cfg(feature = "iot")]
+use crate::{debounce_callback, setup_debounce};
 use log::{error, info};
 use rocket_contrib::databases::rusqlite::Connection;
 #[cfg(feature = "iot")]
@@ -65,17 +65,16 @@ fn setup_tamper_sensor(_connections: Arc<Mutex<Vec<BellButton>>>) {}
 #[cfg(feature = "iot")]
 fn setup_tamper_sensor(connections: Arc<Mutex<Vec<BellButton>>>) -> Option<InputPin> {
     let tamper_sensor_pin = CONFIG.iot.tamper_sensor_pin?;
+    let tamper_sensor_debounce_interval = CONFIG.iot.tamper_sensor_debounce_interval?;
     let mut dev = GPIO
         .get(tamper_sensor_pin)
         .expect("Can't use the tamper sensor pin")
         .into_input_pulldown();
 
-    let mut last_action = Instant::now()
-        .checked_sub(*MINIMAL_DEBOUNCED_ACTION_INTERVAL)
-        .unwrap();
+    let mut last_action = setup_debounce!(tamper_sensor_debounce_interval);
 
     dev.set_async_interrupt(Trigger::RisingEdge, move |_level| {
-        debounce_callback!(last_action);
+        debounce_callback!(last_action, tamper_sensor_debounce_interval);
 
         info!("IoT: tamper sensor recieved alarm");
 

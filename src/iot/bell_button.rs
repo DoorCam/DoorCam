@@ -1,9 +1,9 @@
 #[cfg(feature = "iot")]
-use super::{GPIO, MINIMAL_DEBOUNCED_ACTION_INTERVAL};
+use super::GPIO;
 use crate::db_entry::FlatEntry;
-#[cfg(feature = "iot")]
-use crate::debounce_callback;
 use crate::utils::crypto;
+#[cfg(feature = "iot")]
+use crate::{debounce_callback, setup_debounce, CONFIG};
 use log::{error, info};
 #[cfg(feature = "iot")]
 use rppal::gpio::{InputPin, Trigger};
@@ -78,12 +78,10 @@ impl BellButton {
 
         let mut this = mqtt_bell.clone();
 
-        let mut last_action = Instant::now()
-            .checked_sub(*MINIMAL_DEBOUNCED_ACTION_INTERVAL)
-            .unwrap();
+        let mut last_action = setup_debounce!(CONFIG.iot.bell_debounce_interval);
 
         dev.set_async_interrupt(Trigger::RisingEdge, move |_level| {
-            debounce_callback!(last_action);
+            debounce_callback!(last_action, CONFIG.iot.bell_debounce_interval);
             this.send_bell_signal();
         })?;
 
