@@ -44,6 +44,10 @@
     <label for="bell_topic"><b>Bell Topic</b></label>
     <input type="text" placeholder="Enter Bell Topic" name="bell_topic" id="bell_topic" {% if flat %}
       value="{{ flat.bell_topic }}" {% endif %} required />
+    <br>
+    <label for="tamper_alarm_topic"><b>Tamper Alarm Topic</b></label>
+    <input type="text" placeholder="Enter Tamper Alarm Topic" name="tamper_alarm_topic" id="tamper_alarm_topic" {% if flat and flat.tamper_alarm_topic %}
+      value="{{ flat.tamper_alarm_topic }}" {% endif %} />
 
     <label for="active"><b>Active</b></label>
     <input type="checkbox" name="active" id="active" {% if flat and flat.active or not flat %} checked {% endif %} />

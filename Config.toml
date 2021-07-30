@@ -1,12 +1,15 @@
 [iot]
-door_opener_pin = 1
+door_opener_pin = 0
+tamper_sensor_pin = 1
 door_opening_time = "10s"
+bell_debounce_interval = "42ms"
+tamper_sensor_debounce_interval = "42ms"
 
 [web]
 mjpeg_stream_port = 8081
 
 [security]
 hash_pepper = "0123456789abcdef0123456789abcdef"
-minimal_password_strength = 80
+minimal_password_strength_score = 80
 encryption_key = "0123456789abcdef0123456789abcdef"
 allowed_hash_configs = ["Blake2b", "plain"]

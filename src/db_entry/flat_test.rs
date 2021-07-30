@@ -11,6 +11,7 @@ impl Default for FlatEntry<()> {
             broker_address: "mqtt.local".to_string(),
             broker_port: 1883,
             bell_topic: "/door/bell".to_string(),
+            tamper_alarm_topic: None,
             broker_user: "doorbell".to_string(),
             broker_password: "123cdef".to_string(),
             broker_password_iv: "123456789abcdef123456789abcdef".to_string(),
@@ -29,6 +30,7 @@ impl Default for FlatEntry {
             broker_address: "mqtt.local".to_string(),
             broker_port: 1883,
             bell_topic: "/door/bell".to_string(),
+            tamper_alarm_topic: None,
             broker_user: "doorbell".to_string(),
             broker_password: "123cdef".to_string(),
             broker_password_iv: "123456789abcdef123456789abcdef".to_string(),
@@ -59,6 +61,7 @@ fn scenario_1_with_all_methods() {
     assert!(FlatEntry::get_active(&conn).unwrap().is_empty());
 
     flat.active = true;
+    flat.tamper_alarm_topic = Some("/door/alarm".to_string());
     flat.update_without_password(&conn).unwrap();
 
     let active_flats = FlatEntry::get_active(&conn).unwrap();

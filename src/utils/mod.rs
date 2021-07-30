@@ -3,3 +3,7 @@
 pub mod config;
 pub mod crypto;
 pub mod guards;
+pub mod serde;
+
+/// This function is used to prevent optimization attempts from the compiler to drop the variable.
+pub fn no_operation<T>(_var: &T) {}

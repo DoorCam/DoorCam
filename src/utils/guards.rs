@@ -60,7 +60,7 @@ impl UserGuard {
     /// Checks whether the password is secure or errors if it is weak
     #[inline]
     pub fn check_password(pw: &str) -> Result<(), Error> {
-        (scorer::score(&analyzer::analyze(pw)) >= CONFIG.security.minimal_password_strength)
+        (scorer::score(&analyzer::analyze(pw)) >= CONFIG.security.minimal_password_strength_score)
             .err(Error::WeakPassword)?;
 
         Ok(())
