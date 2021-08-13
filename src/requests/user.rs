@@ -29,7 +29,7 @@ impl FormIntoEntry<UserEntry<(), u32>, UserEntry<u32, u32>> for UserForm {
         UserEntry {
             id: (),
             name: self.name,
-            pw_hash: hash,
+            password_hash: hash,
             user_type: self.user_type.unwrap_or(UserType::User),
             active: self.active.unwrap_or(false),
             flat: self.flat_id,
@@ -42,7 +42,7 @@ impl FormIntoEntry<UserEntry<(), u32>, UserEntry<u32, u32>> for UserForm {
         UserEntry {
             id,
             name: self.name,
-            pw_hash: hash,
+            password_hash: hash,
             user_type: self.user_type.unwrap_or(UserType::User),
             active: self.active.unwrap_or(false),
             flat: self.flat_id,

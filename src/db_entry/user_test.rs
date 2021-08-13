@@ -5,11 +5,7 @@ impl Default for UserEntry<(), u32> {
         Self {
             id: (),
             name: "Alice".to_string(),
-            pw_hash: HashEntry {
-                hash: "unsecure".to_string(),
-                salt: "salt".to_string(),
-                config: "plain".to_string(),
-            },
+            password_hash: "$plain$salt$unsecure".to_string(),
             user_type: UserType::User,
             active: true,
             flat: None,
@@ -22,11 +18,7 @@ impl Default for UserEntry {
         Self {
             id: 42,
             name: "Alice".to_string(),
-            pw_hash: HashEntry {
-                hash: "unsecure".to_string(),
-                salt: "salt".to_string(),
-                config: "plain".to_string(),
-            },
+            password_hash: "$plain$salt$unsecure".to_string(),
             user_type: UserType::User,
             active: true,
             flat: None,
@@ -46,7 +38,7 @@ fn scenario_1_with_all_methods() {
     assert_eq!(users.len(), 2);
     assert!(users.contains(&user));
 
-    user.pw_hash.hash = "superSecure42".to_string();
+    user.password_hash = "$plain$salt$superSecure42".to_string();
     user.update(&conn).unwrap();
 
     assert_eq!(
@@ -64,7 +56,7 @@ fn scenario_1_with_all_methods() {
         user
     );
 
-    user.pw_hash.salt = "random".to_string();
+    user.password_hash = "$plain$salt$random".to_string();
     user.update_unprivileged(&conn).unwrap();
 
     assert_eq!(
