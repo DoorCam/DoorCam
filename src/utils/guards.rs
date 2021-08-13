@@ -2,7 +2,6 @@
 
 use super::{config::CONFIG, crypto};
 use crate::db_entry::{rusqlite, DbConn, Entry, UserEntry, UserSessionEntry};
-use blake2::{Blake2b, Digest};
 use bool_ext::BoolExt;
 use chrono::offset::Utc;
 use passwords::{analyzer, scorer};
@@ -79,31 +78,7 @@ impl UserGuard {
             Error::InvalidCredentials
         })?;
 
-        CONFIG
-            .security
-            .allowed_hash_configs
-            .contains(&user.pw_hash.config)
-            .err(Error::BlockedHashConfig)?;
-
-        // Create hash with matching config
-        let pw_hash = match user.pw_hash.config.as_str() {
-            "plain" => pw.to_string(),
-            "Blake2b" => {
-                let decoded_pw_salt = base64::decode(&user.pw_hash.salt)?;
-                base64::encode(
-                    Blake2b::new()
-                        .chain(pw)
-                        .chain(b"$")
-                        .chain(decoded_pw_salt)
-                        .chain(b"$")
-                        .chain(&CONFIG.security.hash_pepper)
-                        .finalize(),
-                )
-            }
-            _ => return Err(Error::UnknownHashConfig),
-        };
-
-        (user.pw_hash.hash == pw_hash).err(Error::InvalidCredentials)?;
+        todo!();
 
         Self::create_user_session(conn, user.clone(), cookies)?;
 
