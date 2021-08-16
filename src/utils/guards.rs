@@ -1,9 +1,11 @@
 //! Are used for the authentification and authorization.
 
-use super::{config::CONFIG, crypto};
+use super::{config::CONFIG, crypto, crypto::Plaintext};
 use crate::db_entry::{rusqlite, DbConn, Entry, UserEntry, UserSessionEntry};
+use argon2::{password_hash, Argon2};
 use bool_ext::BoolExt;
 use chrono::offset::Utc;
+use password_hash::{PasswordHash, PasswordVerifier};
 use passwords::{analyzer, scorer};
 use rocket::http::Status;
 use rocket::http::{Cookie, Cookies};
@@ -22,14 +24,10 @@ pub enum Error {
     Db(#[from] rusqlite::Error),
     #[error(transparent)]
     Serialization(#[from] serde_json::error::Error),
-    #[error(transparent)]
-    Decode(#[from] base64::DecodeError),
+    #[error("{0}")]
+    Hashing(password_hash::Error),
     #[error("The credentials are invalid")]
     InvalidCredentials,
-    #[error("The hash-config is unknown")]
-    UnknownHashConfig,
-    #[error("The hash-config is blocked")]
-    BlockedHashConfig,
     #[error("The password is to weak")]
     WeakPassword,
     #[error("There is no database")]
@@ -78,7 +76,23 @@ impl UserGuard {
             Error::InvalidCredentials
         })?;
 
-        todo!();
+        let hash = PasswordHash::new(&user.password_hash).map_err(Error::Hashing)?;
+
+        let hash_algorithms: Vec<Box<dyn PasswordVerifier>> =
+            vec![Box::new(Argon2::default()), Box::new(Plaintext)];
+
+        hash.verify_password(
+            hash_algorithms
+                .iter()
+                .map(Box::as_ref)
+                .collect::<Vec<_>>()
+                .as_slice(),
+            pw,
+        )
+        .map_err(|e| match e {
+            password_hash::Error::Password => Error::InvalidCredentials,
+            e => Error::Hashing(e),
+        })?;
 
         Self::create_user_session(conn, user.clone(), cookies)?;
 

@@ -15,29 +15,54 @@ use std::convert::{TryFrom, TryInto};
 #[path = "./crypto_test.rs"]
 mod crypto_test;
 
-pub struct Plaintext;
+#[derive(Clone, Debug)]
+pub struct PlaintextParams {
+    pub padding_character: u8,
+}
 
-#[derive(Clone, Debug, Default)]
-pub struct PlaintextParams;
+impl PlaintextParams {
+    pub const DEFAULT_PADDING_CHARACTER: u8 = b'\0';
+}
+
+impl Default for PlaintextParams {
+    fn default() -> Self {
+        Self {
+            padding_character: Self::DEFAULT_PADDING_CHARACTER,
+        }
+    }
+}
 
 impl<'a> TryFrom<&'a PasswordHash<'a>> for PlaintextParams {
     type Error = Error;
 
-    fn try_from(_value: &'a PasswordHash<'a>) -> Result<Self, Self::Error> {
-        Ok(Self)
+    fn try_from(value: &'a PasswordHash<'a>) -> Result<Self, Self::Error> {
+        let mut params = Self::default();
+
+        if let Some(character) = value.params.get_str("pad") {
+            if let Some(character) = character.chars().next() {
+                params.padding_character = character as u8;
+            }
+        }
+        Ok(params)
     }
 }
 
 impl TryFrom<PlaintextParams> for ParamsString {
     type Error = Error;
 
-    fn try_from(_value: PlaintextParams) -> Result<Self, Self::Error> {
-        Ok(ParamsString::new())
+    fn try_from(params: PlaintextParams) -> Result<Self, Self::Error> {
+        let mut output = Self::new();
+        output.add_str("pad", params.padding_character.to_string().as_str())?;
+        Ok(output)
     }
 }
 
-pub const PLAINTEXT_IDENT: Ident<'_> = Ident::new("plain");
-const DEFAULT_PLAINTEXT_SALT: &str = "salt";
+pub struct Plaintext;
+
+impl Plaintext {
+    pub const IDENT: Ident<'static> = Ident::new("plain");
+    pub const DEFAULT_SALT: &'static str = "salt";
+}
 
 impl PasswordHasher for Plaintext {
     type Params = PlaintextParams;
@@ -48,12 +73,17 @@ impl PasswordHasher for Plaintext {
         params: Self::Params,
         _salt: impl Into<Salt<'a>>,
     ) -> Result<PasswordHash<'a>, Error> {
+        let mut hash: Vec<_> = std::iter::repeat(params.padding_character)
+            .take(10_usize.saturating_sub(password.len()))
+            .collect();
+        hash.extend_from_slice(password);
+
         Ok(PasswordHash {
-            algorithm: PLAINTEXT_IDENT,
+            algorithm: Self::IDENT,
             version: None,
             params: params.try_into()?,
-            salt: Some(Salt::new(DEFAULT_PLAINTEXT_SALT)?),
-            hash: Some(Output::new(password)?),
+            salt: Some(Salt::new(Self::DEFAULT_SALT)?),
+            hash: Some(Output::new(hash.as_slice())?),
         })
     }
 }
