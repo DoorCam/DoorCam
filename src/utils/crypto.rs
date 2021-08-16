@@ -7,6 +7,7 @@ use argon2::password_hash::{
 use argon2::{Argon2, Version};
 use block_modes::block_padding::Iso7816;
 use block_modes::{BlockMode, BlockModeError, Pcbc};
+use easy_ext::ext;
 use rand::prelude::*;
 use rand_chacha::ChaCha20Rng;
 use std::convert::{TryFrom, TryInto};
@@ -85,6 +86,22 @@ impl PasswordHasher for Plaintext {
             salt: Some(Salt::new(Self::DEFAULT_SALT)?),
             hash: Some(Output::new(hash.as_slice())?),
         })
+    }
+}
+
+#[ext(DefaultWithSecret)]
+pub impl<'key> Argon2<'key> {
+    fn default_with_secret(secret: &'key [u8]) -> Self {
+        let params = argon2::Params::default();
+
+        Self::new(
+            Some(secret),
+            params.t_cost,
+            params.m_cost,
+            params.p_cost,
+            params.version,
+        )
+        .expect("invalid default Argon2 params")
     }
 }
 
