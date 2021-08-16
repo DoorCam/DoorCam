@@ -31,4 +31,4 @@ CREATE TABLE user_session (
 );
 
 
-INSERT INTO client_user (name, password_hash, user_type, active) VALUES ("admin", "$plain$salt$admin", 2, 1);
+INSERT INTO client_user (name, password_hash, user_type, active) VALUES ("admin", "$plain$salt$AAAAAABhZG1pbg", 2, 1);
