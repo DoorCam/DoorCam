@@ -1,6 +1,7 @@
 //! All user-facing logic.
 
 use crate::db_entry::Entry;
+use easy_ext::ext;
 use rocket::http::uri::Origin;
 use rocket::response::{Flash, Redirect};
 
@@ -12,12 +13,8 @@ pub mod user_auth;
 
 type ResultFlash<T> = Result<Flash<T>, Flash<T>>;
 
-trait ErrorIntoFlash {
-    fn into_redirect_flash(self, uri: Origin<'static>) -> Flash<Redirect>;
-    fn into_flash(self) -> Flash<()>;
-}
-
-impl<T: ToString> ErrorIntoFlash for T {
+#[ext(ErrorIntoFlash)]
+impl<T: ToString> T {
     fn into_redirect_flash(self, uri: Origin<'static>) -> Flash<Redirect> {
         Flash::error(Redirect::to(uri), self.to_string())
     }

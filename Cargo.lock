@@ -545,6 +545,7 @@ dependencies = [
  "config",
  "derive-try-from-primitive",
  "duration-str",
+ "easy-ext",
  "lazy_static",
  "log 0.4.14",
  "log4rs",
@@ -584,6 +585,12 @@ dependencies = [
  "serde 1.0.126",
  "serde_json",
 ]
+
+[[package]]
+name = "easy-ext"
+version = "0.2.9"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "53aff6fdc1b181225acdcb5b14c47106726fd8e486707315b1b138baed68ee31"
 
 [[package]]
 name = "error-chain"
