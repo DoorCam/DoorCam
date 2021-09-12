@@ -1,13 +1,15 @@
 //! Cryptographic helper/wrapper function(s).
-use super::config::CONFIG;
+use super::config::{PasswordHashConfig, CONFIG};
 use aes::Aes128;
-use argon2::password_hash::{PasswordHasher, SaltString};
-use argon2::{Argon2, Version};
+use argon2::{password_hash, Argon2};
 use block_modes::block_padding::Iso7816;
 use block_modes::{BlockMode, BlockModeError, Pcbc};
 use easy_ext::ext;
+use either::Either;
+use password_hash::{PasswordHasher, SaltString};
 use rand::prelude::*;
 use rand_chacha::ChaCha20Rng;
+use std::convert::TryInto;
 
 mod plaintext;
 
@@ -19,14 +21,11 @@ mod mod_test;
 #[ext(DefaultWithSecret)]
 pub impl<'key> Argon2<'key> {
     fn default_with_secret(secret: &'key [u8]) -> Self {
-        let params = argon2::Params::default();
-
-        Self::new(
-            Some(secret),
-            params.t_cost,
-            params.m_cost,
-            params.p_cost,
-            params.version,
+        Self::new_with_secret(
+            secret,
+            argon2::Algorithm::default(),
+            argon2::Version::default(),
+            argon2::Params::default(),
         )
         .expect("invalid default Argon2 params")
     }
@@ -44,20 +43,28 @@ where
 }
 
 /// Creates a HashEntry out of a password with a random salt and the currently most secure Hashing algorithm
-pub fn hash(password: &str) -> String {
+pub fn hash(password: &str) -> Result<String, Either<argon2::Error, password_hash::Error>> {
     let salt = SaltString::generate(&mut ChaCha20Rng::from_entropy());
-    let argon2 = Argon2::new(
-        Some(&CONFIG.security.hash_pepper),
-        2,
-        15_360,
-        1,
-        Version::default(),
-    )
-    .unwrap();
-    argon2
-        .hash_password_simple(password.as_bytes(), &salt)
-        .unwrap()
-        .to_string()
+    let hasher = default_hasher().map_err(Either::Left)?;
+
+    hasher
+        .hash_password(password.as_bytes(), &salt)
+        .map(|hash| hash.to_string())
+        .map_err(Either::Right)
+}
+
+fn default_hasher() -> Result<Argon2<'static>, argon2::Error> {
+    match &CONFIG.security.used_password_hash {
+        PasswordHashConfig::Argon2(argon2) => {
+            let (algorithm, params) = argon2.try_into()?;
+            Argon2::new_with_secret(
+                &CONFIG.security.hash_pepper,
+                algorithm,
+                argon2::Version::default(),
+                params,
+            )
+        }
+    }
 }
 
 pub fn pseudo_hash() {}

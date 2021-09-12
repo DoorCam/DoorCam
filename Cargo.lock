@@ -94,10 +94,11 @@ checksum = "dabe5a181f83789739c194cbe5a897dde195078fac08568d09221fd6137a7ba8"
 
 [[package]]
 name = "argon2"
-version = "0.2.2"
+version = "0.3.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "2ab8b02347b6f46e0287e74f75c611c7e3a350a1e7df449b7fc8c16f1e8d238e"
+checksum = "34f8cda1a0ecf6f19d2bf64b9349d86900fa9bf98c979e655347a9e9dbe588c1"
 dependencies = [
+ "base64ct",
  "blake2",
  "password-hash",
 ]
@@ -546,6 +547,7 @@ dependencies = [
  "derive-try-from-primitive",
  "duration-str",
  "easy-ext",
+ "either",
  "lazy_static",
  "log 0.4.14",
  "log4rs",
@@ -591,6 +593,12 @@ name = "easy-ext"
 version = "0.2.9"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "53aff6fdc1b181225acdcb5b14c47106726fd8e486707315b1b138baed68ee31"
+
+[[package]]
+name = "either"
+version = "1.6.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "e78d4f1cc4ae33bbfc157ed5d5a5ef3bc29227303d595861deb238fcec4e9457"
 
 [[package]]
 name = "error-chain"
@@ -1324,9 +1332,9 @@ dependencies = [
 
 [[package]]
 name = "password-hash"
-version = "0.2.2"
+version = "0.3.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "fd482dfb8cfba5a93ec0f91e1c0f66967cb2fdc1a8dba646c4f9202c5d05d785"
+checksum = "7ad7268ef9bc463fddde8361d358fbfae1aeeb1fb62eca111cd8c763bf1c5891"
 dependencies = [
  "base64ct",
  "rand_core",

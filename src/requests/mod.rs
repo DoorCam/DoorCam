@@ -25,6 +25,7 @@ impl<T: ToString> T {
 
 /// Trait which transforms form-data to entry-data using an additional id-field
 trait FormIntoEntry<I, E: Entry> {
-    fn into_insertable(self) -> I;
-    fn into_entry(self, id: u32) -> E;
+    type Error;
+    fn into_insertable(self) -> Result<I, Self::Error>;
+    fn into_entry(self, id: u32) -> Result<E, Self::Error>;
 }

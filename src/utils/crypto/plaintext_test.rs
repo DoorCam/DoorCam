@@ -3,9 +3,7 @@ use super::*;
 #[test]
 fn hash_admin() {
     assert_eq!(
-        Plaintext
-            .hash_password_simple("admin".as_bytes(), "salt")
-            .unwrap(),
+        Plaintext.hash_password("admin".as_bytes(), "salt").unwrap(),
         PasswordHash::new("$plain$salt$AAAAAABhZG1pbg").unwrap()
     );
 }
@@ -22,8 +20,9 @@ fn verify_admin() {
 fn hash_test_with_pad() {
     assert_eq!(
         Plaintext
-            .hash_password(
+            .hash_password_customized(
                 "test".as_bytes(),
+                None,
                 None,
                 PlaintextParams::new(b'*'),
                 Salt::new("salt").unwrap()

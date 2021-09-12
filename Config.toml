@@ -12,4 +12,11 @@ mjpeg_stream_port = 8081
 hash_pepper = "0123456789abcdef0123456789abcdef"
 minimal_password_strength_score = 80
 encryption_key = "0123456789abcdef0123456789abcdef"
-allowed_hash_configs = ["argon2id", "plain"]
+allowed_hash_configs = ["argon2d", "plain"]
+
+[security.used_password_hash]
+algorithm = "argon2d"
+memory_cost = 15360
+time_cost = 2
+parallelism = 1
+

@@ -2,7 +2,7 @@
 //! during onboarding and not in a production environment.
 
 use argon2::password_hash::{
-    Error, Ident, Output, ParamsString, PasswordHash, PasswordHasher, Salt,
+    Decimal, Error, Ident, Output, ParamsString, PasswordHash, PasswordHasher, Salt,
 };
 use std::convert::{TryFrom, TryInto};
 
@@ -78,10 +78,11 @@ impl Plaintext {
 
 impl PasswordHasher for Plaintext {
     type Params = PlaintextParams;
-    fn hash_password<'a>(
+    fn hash_password_customized<'a>(
         &self,
         password: &[u8],
         _algorithm: Option<Ident<'a>>,
+        _version: Option<Decimal>,
         params: Self::Params,
         _salt: impl Into<Salt<'a>>,
     ) -> Result<PasswordHash<'a>, Error> {

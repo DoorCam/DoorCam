@@ -23,30 +23,31 @@ pub struct UserForm {
 }
 
 impl FormIntoEntry<UserEntry<(), u32>, UserEntry<u32, u32>> for UserForm {
-    fn into_insertable(self) -> UserEntry<(), u32> {
-        let hash = crypto::hash(&self.pw);
+    type Error = either::Either<argon2::Error, argon2::password_hash::Error>;
+    fn into_insertable(self) -> Result<UserEntry<(), u32>, Self::Error> {
+        let hash = crypto::hash(&self.pw)?;
 
-        UserEntry {
+        Ok(UserEntry {
             id: (),
             name: self.name,
             password_hash: hash,
             user_type: self.user_type.unwrap_or(UserType::User),
             active: self.active.unwrap_or(false),
             flat: self.flat_id,
-        }
+        })
     }
 
-    fn into_entry(self, id: u32) -> UserEntry<u32, u32> {
-        let hash = crypto::hash(&self.pw);
+    fn into_entry(self, id: u32) -> Result<UserEntry<u32, u32>, Self::Error> {
+        let hash = crypto::hash(&self.pw)?;
 
-        UserEntry {
+        Ok(UserEntry {
             id,
             name: self.name,
             password_hash: hash,
             user_type: self.user_type.unwrap_or(UserType::User),
             active: self.active.unwrap_or(false),
             flat: self.flat_id,
-        }
+        })
     }
 }
 
@@ -88,6 +89,7 @@ pub fn post_create_data(
     user_data
         .into_inner()
         .into_insertable()
+        .map_err(|e| e.into_redirect_flash(uri!(get_create)))?
         .create(&conn)
         .map_err(|e| e.into_redirect_flash(uri!(get_create)))?;
 
@@ -178,7 +180,10 @@ pub fn admin_post_change_data(
             .map_err(|e| e.into_redirect_flash(uri!(get_change: id)))?;
     }
 
-    let entry = user_data.into_inner().into_entry(id);
+    let entry = user_data
+        .into_inner()
+        .into_entry(id)
+        .map_err(|e| e.into_redirect_flash(uri!(get_change: id)))?;
 
     match changed_password {
         true => entry.update(&conn),
@@ -208,9 +213,9 @@ pub fn user_post_change_data(
     // A non-admin isn't allowed to change these fields
     (user_data.user_type.is_none() && user_data.active.is_none() && user_data.flat_id.is_none())
         .err_with(|| {
-            "Don't manipulate the user-type, active-Flag or flat-ID"
-                .into_redirect_flash(uri!(get_change: id))
-        })?;
+        "Don't manipulate the user-type, active-Flag or flat-ID"
+            .into_redirect_flash(uri!(get_change: id))
+    })?;
 
     user_data
         .name
@@ -227,7 +232,10 @@ pub fn user_post_change_data(
             .map_err(|e| e.into_redirect_flash(uri!(get_change: id)))?;
     }
 
-    let entry = user_data.into_inner().into_entry(id);
+    let entry = user_data
+        .into_inner()
+        .into_entry(id)
+        .map_err(|e| e.into_redirect_flash(uri!(get_change: id)))?;
 
     match changed_password {
         true => entry.update_unprivileged(&conn),
