@@ -213,9 +213,9 @@ pub fn user_post_change_data(
     // A non-admin isn't allowed to change these fields
     (user_data.user_type.is_none() && user_data.active.is_none() && user_data.flat_id.is_none())
         .err_with(|| {
-        "Don't manipulate the user-type, active-Flag or flat-ID"
-            .into_redirect_flash(uri!(get_change: id))
-    })?;
+            "Don't manipulate the user-type, active-Flag or flat-ID"
+                .into_redirect_flash(uri!(get_change: id))
+        })?;
 
     user_data
         .name
