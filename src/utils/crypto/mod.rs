@@ -67,7 +67,14 @@ fn default_hasher() -> Result<Argon2<'static>, argon2::Error> {
     }
 }
 
-pub fn pseudo_hash() {}
+/// This should sleep as long (+- random duration) as `hash` would take. This is needed to prevent a malicious actor from enumerating the valid users.
+pub fn pseudo_hash() {
+    let hashing_duration = rand::rngs::OsRng.gen_range(
+        CONFIG.security.minimal_hashing_duration..=CONFIG.security.maximal_hashing_duration,
+    );
+
+    std::thread::sleep(hashing_duration);
+}
 
 type Aes128Pcbc = Pcbc<Aes128, Iso7816>;
 

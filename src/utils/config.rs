@@ -47,7 +47,9 @@ lazy_static! {
                 memory_cost: 1,
                 time_cost: 1,
                 parallelism: 1,
-            })
+            }),
+            minimal_hashing_duration: Duration::from_millis(42),
+            maximal_hashing_duration: Duration::from_millis(170),
         },
     };
 }
@@ -66,6 +68,10 @@ pub enum Error {
     #[allow(dead_code)]
     #[error("The `{0}` entry has to be changed to a secret value.")]
     SecretDefaultValue(String),
+    #[error(
+        "The `security.minimal_hashing_duration` is bigger as `security.maximal_hashing_duration`."
+    )]
+    WrongHashingDurationOrdering,
     #[error("The `security.allowed_hash_configs` entry is empty.")]
     EmptyHashConfigs,
 }
@@ -164,6 +170,18 @@ pub struct Security {
 
     /// The password hash used to store new passwords.
     pub used_password_hash: PasswordHashConfig,
+
+    /// The minimal `Duration` which is needed to hash the password. This should be configured
+    /// according to the configured `used_password_hash` and the hardware. This is needed to prevent a
+    /// malicious actor from enumerating the valid users by th time differential.
+    #[serde(deserialize_with = "deserialize_duration")]
+    pub minimal_hashing_duration: Duration,
+
+    /// The maximal `Duration` which is needed to hash the password. This should be configured
+    /// according to the configured `used_password_hash` and the hardware. This is needed to prevent a
+    /// malicious actor from enumerating the valid users by th time differential.
+    #[serde(deserialize_with = "deserialize_duration")]
+    pub maximal_hashing_duration: Duration,
 }
 
 impl Security {
@@ -197,7 +215,10 @@ impl ConfigValidator for Security {
             .not()
             .err(Error::EmptyHashConfigs)?;
 
-        self.used_password_hash.validate()
+        self.used_password_hash.validate()?;
+
+        (self.minimal_hashing_duration <= self.maximal_hashing_duration)
+            .err(Error::WrongHashingDurationOrdering)
     }
 }
 

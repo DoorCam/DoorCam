@@ -13,6 +13,8 @@ hash_pepper = "0123456789abcdef0123456789abcdef"
 minimal_password_strength_score = 80
 encryption_key = "0123456789abcdef0123456789abcdef"
 allowed_hash_configs = ["argon2d", "plain"]
+minimal_hashing_duration = "120ms"
+maximal_hashing_duration = "170ms"
 
 [security.used_password_hash]
 algorithm = "argon2d"
