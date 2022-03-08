@@ -1,4 +1,4 @@
-use super::{ErrorIntoFlash, FormIntoEntry, ResultFlash};
+use super::{ErrorIntoFlash, ErrorTextIntoFlash, FormIntoEntry, ResultFlash};
 use crate::db_entry::{DbConn, Entry, FlatEntry};
 use crate::template_contexts::{FlatDetailsContext, FlatOverviewContext, Message};
 use crate::utils::crypto;
@@ -120,7 +120,7 @@ pub fn post_create_data(
         .into_insertable()
         .unwrap() // returns !
         .create(&conn)
-        .map_err(|e| e.into_redirect_flash(uri!(get_create)))?;
+        .err_redirect_flash(uri!(get_create))?;
 
     // sync iot::EventHandler
     flat_sync_event.set();
@@ -146,7 +146,7 @@ pub fn delete(
     flat_sync_event: State<Arc<AutoResetEvent>>,
     id: u32,
 ) -> ResultFlash<()> {
-    FlatEntry::delete_entry(&conn, id).map_err(|e| e.into_flash())?;
+    FlatEntry::delete_entry(&conn, id).err_flash()?;
 
     // sync iot::EventHandler
     flat_sync_event.set();
@@ -196,7 +196,7 @@ pub fn post_change_data(
         false => flat.update_without_password(&conn),
     };
 
-    update_result.map_err(|e| e.into_redirect_flash(uri!(get_change: id)))?;
+    update_result.err_redirect_flash(uri!(get_change: id))?;
 
     // sync iot::EventHandler
     flat_sync_event.set();

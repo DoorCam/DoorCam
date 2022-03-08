@@ -13,13 +13,25 @@ pub mod user_auth;
 
 type ResultFlash<T> = Result<Flash<T>, Flash<T>>;
 
-#[ext(ErrorIntoFlash)]
+#[ext(ErrorTextIntoFlash)]
 impl<T: ToString> T {
+    #[inline]
     fn into_redirect_flash(self, uri: Origin<'static>) -> Flash<Redirect> {
         Flash::error(Redirect::to(uri), self.to_string())
     }
+    #[inline]
     fn into_flash(self) -> Flash<()> {
         Flash::error((), self.to_string())
+    }
+}
+
+#[ext(ErrorIntoFlash)]
+impl<T, E: ToString> Result<T, E> {
+    fn err_redirect_flash(self, uri: Origin<'static>) -> Result<T, Flash<Redirect>> {
+        self.map_err(|e| e.into_redirect_flash(uri))
+    }
+    fn err_flash(self) -> Result<T, Flash<()>> {
+        self.map_err(ErrorTextIntoFlash::into_flash)
     }
 }
 
