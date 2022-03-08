@@ -44,6 +44,10 @@ where
 
 /// Creates a HashEntry out of a password with a random salt and the currently most secure Hashing algorithm
 pub fn hash(password: &str) -> Result<String, Either<argon2::Error, password_hash::Error>> {
+    if password.is_empty() {
+        return Ok(String::new());
+    }
+
     let salt = SaltString::generate(&mut ChaCha20Rng::from_entropy());
     let hasher = default_hasher().map_err(Either::Left)?;
 
