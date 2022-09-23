@@ -102,7 +102,7 @@ pub enum DecryptionError {
     #[error(transparent)]
     Base64Decode(#[from] base64::DecodeError),
     #[error(transparent)]
-    Decryption(#[from] block_modes::BlockModeError),
+    Decryption(#[from] pcbc::cipher::block_padding::UnpadError),
     #[error(transparent)]
     Utf8(#[from] std::string::FromUtf8Error),
     #[error("The Initialization Vector has the wrong length of {0} instead of 16")]

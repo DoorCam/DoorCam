@@ -32,7 +32,7 @@ pub fn post_login_data(
     cookies: Cookies,
 ) -> Result<Redirect, Flash<Redirect>> {
     UserGuard::authenticate(&conn, cookies, &user_data.name, &user_data.pw)
-        .map_err(|e| e.into_redirect_flash(uri!(get_login)))?;
+        .err_redirect_flash(uri!(get_login))?;
 
     Ok(Redirect::to(uri!(get_user_index_view)))
 }
@@ -42,7 +42,7 @@ pub fn post_login_data(
 pub fn get_logout(user_guard: UserGuard, conn: DbConn, cookies: Cookies) -> ResultFlash<Redirect> {
     user_guard
         .destroy_user_session(&conn, cookies)
-        .map_err(|e| e.into_redirect_flash(uri!(get_user_index_view)))?;
+        .err_redirect_flash(uri!(get_user_index_view))?;
 
     Ok(Flash::success(
         Redirect::to(uri!(get_login)),

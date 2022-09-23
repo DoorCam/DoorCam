@@ -1,10 +1,15 @@
 //! Are used for the authentification and authorization.
 
-use super::{config::CONFIG, crypto};
+use super::{
+    config::CONFIG,
+    crypto,
+    crypto::{DefaultWithSecret, Plaintext},
+};
 use crate::db_entry::{rusqlite, DbConn, Entry, UserEntry, UserSessionEntry};
-use blake2::{Blake2b, Digest};
+use argon2::{password_hash, Argon2};
 use bool_ext::BoolExt;
 use chrono::offset::Utc;
+use password_hash::PasswordHash;
 use passwords::{analyzer, scorer};
 use rocket::http::Status;
 use rocket::http::{Cookie, Cookies};
@@ -23,12 +28,10 @@ pub enum Error {
     Db(#[from] rusqlite::Error),
     #[error(transparent)]
     Serialization(#[from] serde_json::error::Error),
-    #[error(transparent)]
-    Decode(#[from] base64::DecodeError),
+    #[error("{0}")]
+    Hashing(password_hash::Error),
     #[error("The credentials are invalid")]
     InvalidCredentials,
-    #[error("The hash-config is unknown")]
-    UnknownHashConfig,
     #[error("The hash-config is blocked")]
     BlockedHashConfig,
     #[error("The password is to weak")]
@@ -79,31 +82,25 @@ impl UserGuard {
             Error::InvalidCredentials
         })?;
 
+        let hash = PasswordHash::new(&user.password_hash).map_err(Error::Hashing)?;
+
         CONFIG
             .security
             .allowed_hash_configs
-            .contains(&user.pw_hash.config)
+            .contains(&hash.algorithm.as_str().to_string())
             .err(Error::BlockedHashConfig)?;
 
-        // Create hash with matching config
-        let pw_hash = match user.pw_hash.config.as_str() {
-            "plain" => pw.to_string(),
-            "Blake2b" => {
-                let decoded_pw_salt = base64::decode(&user.pw_hash.salt)?;
-                base64::encode(
-                    Blake2b::new()
-                        .chain(pw)
-                        .chain(b"$")
-                        .chain(decoded_pw_salt)
-                        .chain(b"$")
-                        .chain(&CONFIG.security.hash_pepper)
-                        .finalize(),
-                )
-            }
-            _ => return Err(Error::UnknownHashConfig),
-        };
-
-        (user.pw_hash.hash == pw_hash).err(Error::InvalidCredentials)?;
+        hash.verify_password(
+            &[
+                &Argon2::default_with_secret(&CONFIG.security.hash_pepper),
+                &Plaintext,
+            ],
+            pw,
+        )
+        .map_err(|e| match e {
+            password_hash::Error::Password => Error::InvalidCredentials,
+            e => Error::Hashing(e),
+        })?;
 
         Self::create_user_session(conn, user.clone(), cookies)?;
 

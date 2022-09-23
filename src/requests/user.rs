@@ -1,4 +1,7 @@
-use super::{user_auth::rocket_uri_macro_get_login, ErrorIntoFlash, FormIntoEntry, ResultFlash};
+use super::{
+    user_auth::rocket_uri_macro_get_login, ErrorIntoFlash, ErrorTextIntoFlash, FormIntoEntry,
+    ResultFlash,
+};
 use crate::db_entry::{DbConn, Entry, FlatEntry, UserEntry, UserSessionEntry, UserType};
 use crate::template_contexts::{Message, UserDetailsContext, UserOverviewContext};
 use crate::utils::crypto;
@@ -23,30 +26,31 @@ pub struct UserForm {
 }
 
 impl FormIntoEntry<UserEntry<(), u32>, UserEntry<u32, u32>> for UserForm {
-    fn into_insertable(self) -> UserEntry<(), u32> {
-        let hash = crypto::hash(&self.pw);
+    type Error = either::Either<argon2::Error, argon2::password_hash::Error>;
+    fn into_insertable(self) -> Result<UserEntry<(), u32>, Self::Error> {
+        let hash = crypto::hash(&self.pw)?;
 
-        UserEntry {
+        Ok(UserEntry {
             id: (),
             name: self.name,
-            pw_hash: hash,
+            password_hash: hash,
             user_type: self.user_type.unwrap_or(UserType::User),
             active: self.active.unwrap_or(false),
             flat: self.flat_id,
-        }
+        })
     }
 
-    fn into_entry(self, id: u32) -> UserEntry<u32, u32> {
-        let hash = crypto::hash(&self.pw);
+    fn into_entry(self, id: u32) -> Result<UserEntry<u32, u32>, Self::Error> {
+        let hash = crypto::hash(&self.pw)?;
 
-        UserEntry {
+        Ok(UserEntry {
             id,
             name: self.name,
-            pw_hash: hash,
+            password_hash: hash,
             user_type: self.user_type.unwrap_or(UserType::User),
             active: self.active.unwrap_or(false),
             flat: self.flat_id,
-        }
+        })
     }
 }
 
@@ -67,31 +71,23 @@ pub fn post_create_data(
     _admin: AdminGuard,
     conn: DbConn,
 ) -> Result<Redirect, Flash<Redirect>> {
-    user_data
-        .name
-        .is_empty()
+    (user_data.name.is_empty() || user_data.pw.is_empty())
         .not()
-        .err_with(|| "Name is empty".into_redirect_flash(uri!(get_create)))?;
-
-    user_data
-        .pw
-        .is_empty()
-        .not()
-        .err_with(|| "Password is empty".into_redirect_flash(uri!(get_create)))?;
+        .err_with(|| "Mandatory field is empty".into_redirect_flash(uri!(get_create)))?;
 
     (user_data.pw == user_data.pw_repeat)
         .err_with(|| "Passwords are not the same".into_redirect_flash(uri!(get_create)))?;
 
-    UserGuard::check_password(&user_data.pw)
-        .map_err(|e| e.into_redirect_flash(uri!(get_create)))?;
+    UserGuard::check_password(&user_data.pw).err_redirect_flash(uri!(get_create))?;
 
     user_data
         .into_inner()
         .into_insertable()
+        .err_redirect_flash(uri!(get_create))?
         .create(&conn)
-        .map_err(|e| e.into_redirect_flash(uri!(get_create)))?;
+        .err_redirect_flash(uri!(get_create))?;
 
-    return Ok(Redirect::to(uri!(get_users)));
+    Ok(Redirect::to(uri!(get_users)))
 }
 
 /// Shows all users
@@ -111,7 +107,7 @@ pub fn delete(admin: AdminGuard, conn: DbConn, id: u32) -> ResultFlash<()> {
 
     UserSessionEntry::delete_by_user(&conn, id)
         .and_then(|_| UserEntry::<_>::delete_entry(&conn, id))
-        .map_err(|e| e.into_flash())?;
+        .err_flash()?;
 
     Err(Flash::success((), "User deleted"))
 }
@@ -125,7 +121,7 @@ pub fn get_change(
     id: u32,
 ) -> Result<Template, Status> {
     // An ordinary user is only allowed to modify himself
-    (user_guard.user.user_type.is_admin() || user_guard.user.id == id).err(Status::Forbidden)?;
+    (user_guard.is_admin() || user_guard.user.id == id).err(Status::Forbidden)?;
 
     // Get all FlatEntrys to display them in a select-box
     let flats = match FlatEntry::get_all(&conn) {
@@ -167,7 +163,7 @@ pub fn admin_post_change_data(
         .name
         .is_empty()
         .not()
-        .err_with(|| "Name is empty".into_redirect_flash(uri!(get_change: id)))?;
+        .err_with(|| "Mandatory field is empty".into_redirect_flash(uri!(get_change: id)))?;
 
     // If the password is updated, the two fields must be the same
     (unchanged_password || user_data.pw == user_data.pw_repeat)
@@ -178,7 +174,10 @@ pub fn admin_post_change_data(
             .map_err(|e| e.into_redirect_flash(uri!(get_change: id)))?;
     }
 
-    let entry = user_data.into_inner().into_entry(id);
+    let entry = user_data
+        .into_inner()
+        .into_entry(id)
+        .map_err(|e| e.into_redirect_flash(uri!(get_change: id)))?;
 
     match changed_password {
         true => entry.update(&conn),
@@ -187,7 +186,7 @@ pub fn admin_post_change_data(
     .and_then(|_| UserSessionEntry::delete_by_user(&conn, entry.get_id()))
     .map_err(|e| e.into_redirect_flash(uri!(get_change: id)))?;
 
-    return Ok(Redirect::to(uri!(get_users)));
+    Ok(Redirect::to(uri!(get_users)))
 }
 
 /// Post user data to modify the user
@@ -216,18 +215,20 @@ pub fn user_post_change_data(
         .name
         .is_empty()
         .not()
-        .err_with(|| "Name is empty".into_redirect_flash(uri!(get_change: id)))?;
+        .err_with(|| "Mandatory field is empty".into_redirect_flash(uri!(get_change: id)))?;
 
     // If the password is updated, the two fields must be the same
     (unchanged_password || user_data.pw == user_data.pw_repeat)
         .err_with(|| "Passwords are not the same".into_redirect_flash(uri!(get_change: id)))?;
 
     if changed_password {
-        UserGuard::check_password(&user_data.pw)
-            .map_err(|e| e.into_redirect_flash(uri!(get_change: id)))?;
+        UserGuard::check_password(&user_data.pw).err_redirect_flash(uri!(get_change: id))?;
     }
 
-    let entry = user_data.into_inner().into_entry(id);
+    let entry = user_data
+        .into_inner()
+        .into_entry(id)
+        .err_redirect_flash(uri!(get_change: id))?;
 
     match changed_password {
         true => entry.update_unprivileged(&conn),
@@ -238,6 +239,6 @@ pub fn user_post_change_data(
 
     Ok(Flash::success(
         Redirect::to(uri!(get_login)),
-        "Your account has been successfully updated. Please log in again.".to_string(),
+        "Your account has been successfully updated. Please log in again.",
     ))
 }

@@ -63,7 +63,7 @@ impl UserSessionEntry<u32, u32> {
     pub fn get_all(conn: &Connection) -> Result<Vec<Self>, rusqlite::Error> {
         let mut stmt = conn.prepare("SELECT id, login_datetime, user_id FROM user_session")?;
         return stmt
-            .query_map(&[], |row| Self::row_2_user(row))?
+            .query_map(&[], Self::row_2_user)?
             .map(|r| match r {
                 Ok(x) => x,
                 Err(e) => Err(e),
@@ -75,7 +75,7 @@ impl UserSessionEntry<u32, u32> {
         let mut stmt = conn
             .prepare("SELECT id, login_datetime, user_id FROM user_session WHERE id=?1 LIMIT 1")?;
         return stmt
-            .query_map(&[&id], |row| Self::row_2_user(row))?
+            .query_map(&[&id], Self::row_2_user)?
             .map(|r| match r {
                 Ok(x) => x,
                 Err(e) => Err(e),

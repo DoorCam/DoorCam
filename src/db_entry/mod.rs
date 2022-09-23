@@ -73,7 +73,7 @@ impl Entry for u32 {
 }
 
 mod user;
-pub use user::{HashEntry, UserEntry};
+pub use user::UserEntry;
 mod user_type;
 pub use user_type::UserType;
 

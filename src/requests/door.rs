@@ -11,7 +11,7 @@ pub fn get_open_door(
 ) -> ResultFlash<Redirect> {
     door_ctrl
         .activate_opener()
-        .map_err(|e| e.into_redirect_flash(uri!(get_user_index_view)))?;
+        .err_redirect_flash(uri!(get_user_index_view))?;
 
     Ok(Flash::success(
         Redirect::to(uri!(get_user_index_view)),

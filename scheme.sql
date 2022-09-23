@@ -16,9 +16,7 @@ CREATE TABLE flat (
 CREATE TABLE client_user (
    id INTEGER PRIMARY KEY AUTOINCREMENT,
    name TEXT NOT NULL UNIQUE,
-   pw_hash TEXT NOT NULL,
-   pw_salt TEXT NOT NULL,
-   pw_config TEXT NOT NULL,
+   password_hash TEXT NOT NULL,
    user_type  INTEGER NOT NULL,
    active BOOL NOT NULL,
    flat_id INTEGER,
@@ -33,4 +31,4 @@ CREATE TABLE user_session (
 );
 
 
-INSERT INTO client_user (name, pw_hash, pw_salt, pw_config, user_type, active) VALUES ("admin", "admin", "", "plain", 2, 1);
+INSERT INTO client_user (name, password_hash, user_type, active) VALUES ("admin", "$plain$salt$AAAAAABhZG1pbg", 2, 1);

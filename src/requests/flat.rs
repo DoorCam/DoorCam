@@ -1,4 +1,4 @@
-use super::{ErrorIntoFlash, FormIntoEntry, ResultFlash};
+use super::{ErrorIntoFlash, ErrorTextIntoFlash, FormIntoEntry, ResultFlash};
 use crate::db_entry::{DbConn, Entry, FlatEntry};
 use crate::template_contexts::{FlatDetailsContext, FlatOverviewContext, Message};
 use crate::utils::crypto;
@@ -43,10 +43,11 @@ impl FlatForm {
 }
 
 impl FormIntoEntry<FlatEntry<()>, FlatEntry> for FlatForm {
-    fn into_insertable(self) -> FlatEntry<()> {
+    type Error = ();
+    fn into_insertable(self) -> Result<FlatEntry<()>, Self::Error> {
         let (broker_pw_iv, encrypted_broker_password) = self.encrypt();
 
-        FlatEntry {
+        Ok(FlatEntry {
             id: (),
             name: self.name,
             active: self.active,
@@ -63,13 +64,13 @@ impl FormIntoEntry<FlatEntry<()>, FlatEntry> for FlatForm {
             broker_user: self.broker_user,
             broker_password: encrypted_broker_password,
             broker_password_iv: broker_pw_iv,
-        }
+        })
     }
 
-    fn into_entry(self, id: u32) -> FlatEntry {
+    fn into_entry(self, id: u32) -> Result<FlatEntry, Self::Error> {
         let (broker_pw_iv, encrypted_broker_password) = self.encrypt();
 
-        FlatEntry {
+        Ok(FlatEntry {
             id,
             name: self.name,
             active: self.active,
@@ -86,7 +87,7 @@ impl FormIntoEntry<FlatEntry<()>, FlatEntry> for FlatForm {
             broker_user: self.broker_user,
             broker_password: encrypted_broker_password,
             broker_password_iv: broker_pw_iv,
-        }
+        })
     }
 }
 
@@ -117,8 +118,9 @@ pub fn post_create_data(
     flat_data
         .into_inner()
         .into_insertable()
+        .unwrap() // returns !
         .create(&conn)
-        .map_err(|e| e.into_redirect_flash(uri!(get_create)))?;
+        .err_redirect_flash(uri!(get_create))?;
 
     // sync iot::EventHandler
     flat_sync_event.set();
@@ -144,7 +146,7 @@ pub fn delete(
     flat_sync_event: State<Arc<AutoResetEvent>>,
     id: u32,
 ) -> ResultFlash<()> {
-    FlatEntry::delete_entry(&conn, id).map_err(|e| e.into_flash())?;
+    FlatEntry::delete_entry(&conn, id).err_flash()?;
 
     // sync iot::EventHandler
     flat_sync_event.set();
@@ -187,14 +189,14 @@ pub fn post_change_data(
     .err_with(|| "Mandatory field is empty".into_redirect_flash(uri!(get_create)))?;
 
     let update_password = !flat_data.broker_password.is_empty();
-    let flat = flat_data.into_inner().into_entry(id);
+    let flat = flat_data.into_inner().into_entry(id).unwrap(); // returns !
 
     let update_result = match update_password {
         true => flat.update(&conn),
         false => flat.update_without_password(&conn),
     };
 
-    update_result.map_err(|e| e.into_redirect_flash(uri!(get_change: id)))?;
+    update_result.err_redirect_flash(uri!(get_change: id))?;
 
     // sync iot::EventHandler
     flat_sync_event.set();
