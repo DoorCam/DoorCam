@@ -189,7 +189,7 @@ pub struct Security {
 }
 
 impl Security {
-    #[cfg(not(all(debug_assertions, test)))]
+    #[cfg(not(any(debug_assertions, test)))]
     fn validate_secret(secret: Secret128Bit, name: String) -> Result<(), Error> {
         const DEFAULT_SECRET: Secret128Bit = [
             0x01, 0x23, 0x45, 0x67, 0x89, 0xab, 0xcd, 0xef, 0x01, 0x23, 0x45, 0x67, 0x89, 0xab,
