@@ -72,7 +72,7 @@ impl TryFrom<PlaintextParams> for ParamsString {
 pub struct Plaintext;
 
 impl Plaintext {
-    pub const IDENT: Ident<'static> = Ident::new("plain");
+    pub const IDENT: Ident<'static> = Ident::new_unwrap("plain");
     pub const DEFAULT_SALT: &'static str = "salt";
 }
 

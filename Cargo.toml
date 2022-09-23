@@ -18,26 +18,26 @@ rusqlite = { version = "0.14.0", features = ["chrono"] }
 serde = { version = "~1.0", features = ["derive"] }
 serde_json = "~1.0"
 serde_with = { version = "~1.8", features = ["hex"] }
-duration-str = "~0.3"
+duration-str = "~0.4"
 rand = "~0.8"
 rand_chacha = "~0.3"
-aes = "~0.6"
-block-modes = "~0.7"
+aes = "~0.8"
+pcbc = { version = "~0.1", features = ["std"] }
 base64 = "~0.13"
-argon2 = "~0.3"
+argon2 = "~0.4"
 passwords = "~3.1"
-rumqttc = "~0.5"
-rppal = { version = "~0.12", optional = true }
-log4rs = "~1.0"
+rumqttc = "~0.10"
+rppal = { version = "~0.13", optional = true }
+log4rs = "~1.1"
 log = "~0.4"
-rsevents = "~0.2"
+rsevents = "~0.3"
 config = "~0.11"
 lazy_static = "~1.4"
-either = "~1.6"
+either = "~1.8"
 thiserror = "~1.0"
 derive-try-from-primitive = "~1.0"
 bool_ext = "~0.5"
-easy-ext = "~0.2"
+easy-ext = "~1.0"
 chrono = { version = "~0.4", features = ["serde"] }
 
 [dependencies.rocket_contrib]

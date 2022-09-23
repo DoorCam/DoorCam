@@ -1,12 +1,13 @@
 //! Cryptographic helper/wrapper function(s).
 use super::config::{PasswordHashConfig, CONFIG};
-use aes::Aes128;
 use argon2::{password_hash, Argon2};
-use block_modes::block_padding::Iso7816;
-use block_modes::{BlockMode, BlockModeError, Pcbc};
 use easy_ext::ext;
 use either::Either;
 use password_hash::{PasswordHasher, SaltString};
+use pcbc::cipher::{
+    block_padding::{Pkcs7, UnpadError},
+    BlockDecryptMut, BlockEncryptMut, KeyIvInit,
+};
 use rand::prelude::*;
 use rand_chacha::ChaCha20Rng;
 use std::convert::TryInto;
@@ -80,18 +81,19 @@ pub fn pseudo_hash() {
     std::thread::sleep(hashing_duration);
 }
 
-type Aes128Pcbc = Pcbc<Aes128, Iso7816>;
+type Aes128PcbcEnc = pcbc::Encryptor<aes::Aes128>;
+type Aes128PcbcDec = pcbc::Decryptor<aes::Aes128>;
 
 pub fn symetric_encrypt(key: &[u8; 16], init_vec: &[u8; 16], plaintext: &[u8]) -> Vec<u8> {
-    let cipher = Aes128Pcbc::new_var(key, init_vec).unwrap();
-    cipher.encrypt_vec(plaintext)
+    let cipher = Aes128PcbcEnc::new_from_slices(key, init_vec).unwrap();
+    cipher.encrypt_padded_vec_mut::<Pkcs7>(plaintext)
 }
 
 pub fn symetric_decrypt(
     key: &[u8; 16],
     init_vec: &[u8; 16],
     ciphertext: &[u8],
-) -> Result<Vec<u8>, BlockModeError> {
-    let cipher = Aes128Pcbc::new_var(key, init_vec).unwrap();
-    cipher.decrypt_vec(ciphertext)
+) -> Result<Vec<u8>, UnpadError> {
+    let cipher = Aes128PcbcDec::new_from_slices(key, init_vec).unwrap();
+    cipher.decrypt_padded_vec_mut::<Pkcs7>(ciphertext)
 }
