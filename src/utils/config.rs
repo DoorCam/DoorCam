@@ -10,6 +10,10 @@ use std::convert::{TryFrom, TryInto};
 use std::ops::Not;
 use std::time::Duration;
 
+#[cfg(test)]
+#[path = "./config_test.rs"]
+mod config_test;
+
 #[cfg(not(test))]
 lazy_static! {
     pub static ref CONFIG: Config = match Config::new() {
@@ -185,7 +189,7 @@ pub struct Security {
 }
 
 impl Security {
-    #[cfg(not(debug_assertions))]
+    #[cfg(not(all(debug_assertions, test)))]
     fn validate_secret(secret: Secret128Bit, name: String) -> Result<(), Error> {
         const DEFAULT_SECRET: Secret128Bit = [
             0x01, 0x23, 0x45, 0x67, 0x89, 0xab, 0xcd, 0xef, 0x01, 0x23, 0x45, 0x67, 0x89, 0xab,
@@ -193,7 +197,7 @@ impl Security {
         ];
         (secret != DEFAULT_SECRET).err(Error::SecretDefaultValue(name))
     }
-    #[cfg(debug_assertions)]
+    #[cfg(any(debug_assertions, test))]
     fn validate_secret(_secret: Secret128Bit, _name: String) -> Result<(), Error> {
         Ok(())
     }
@@ -301,11 +305,10 @@ pub struct Config {
 
 impl Config {
     pub fn new() -> Result<Self, Error> {
-        let mut conf = config::Config::new();
-
-        conf.merge(config::File::with_name("Config.toml"))?;
-
-        let conf: Self = conf.try_into()?;
+        let conf: Self = config::Config::builder()
+            .add_source(config::File::with_name("Config"))
+            .build()?
+            .try_deserialize()?;
 
         conf.validate()?;
 
