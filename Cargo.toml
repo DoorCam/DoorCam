@@ -26,7 +26,7 @@ pcbc = { version = "~0.1", features = ["std"] }
 base64 = "~0.13"
 argon2 = "~0.4"
 passwords = "~3.1"
-rumqttc = "~0.10"
+rumqttc = "~0.16"
 rppal = { version = "~0.13", optional = true }
 log4rs = "~1.1"
 log = "~0.4"
